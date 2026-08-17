@@ -2,7 +2,6 @@
 
 ## NỀN TẢNG CHIA SẺ VÀ TÌM KIẾM VIỆC LÀM VIỆT NAM
 ## Kiến trúc N-Layer (Monolithic) - Web (React + Vite) + Mobile (Flutter)
-## Dự án sinh viên - Tập trung học Backend và kiến trúc phân lớp
 
 ---
 
@@ -77,7 +76,7 @@ flowchart TB
 
 | Thành phần | Công nghệ | Mục đích học tập |
 |:---|:---|:---|
-| **Backend Framework** | Spring Boot | N-Layer architecture, REST API, Dependency Injection |
+| **Backend Framework** | Spring Boot 4.x (Spring Framework 7, Java 25 LTS) | N-Layer architecture, REST API, Dependency Injection |
 | **Controller Layer** | Spring MVC | Xử lý request/response, validation |
 | **Service Layer** | Spring Service | Business logic, transaction management |
 | **Repository Layer** | Spring Data JPA | Database access, ORM |
@@ -85,7 +84,7 @@ flowchart TB
 | **Search Engine** | Elasticsearch | Full-text search, Indexing |
 | **Cache** | Redis | Caching, Rate limiting, Session storage |
 | **Crawler** | Python + Scrapy | Web scraping, Data pipeline |
-| **Web Frontend** | React + Vite | SPA, Component-based architecture |
+| **Web Frontend** | React 19 + Vite | SPA, Component-based architecture |
 | **Mobile** | Flutter | Cross-platform development |
 | **Container** | Docker + Docker Compose | Containerization, Environment setup |
 | **Monorepo** | Single Repository | Code organization, Shared modules |
@@ -336,21 +335,21 @@ gantt
     title Tuần 1 - Thiết lập Monorepo
     dateFormat  YYYY-MM-DD
     section TM1 - Backend Lead
-    Monorepo structure            :a1, 2024-01-01, 1d
+    Monorepo structure            :a1, 2026-08-17, 1d
     Spring Boot setup             :a2, after a1, 1d
     Security Config               :a3, after a2, 2d
     JWT Utility                   :a4, after a3, 2d
     section TM2 - Backend + Crawler
-    Database schema design        :b1, 2024-01-01, 2d
+    Database schema design        :b1, 2026-08-17, 2d
     JPA Entities                  :b2, after b1, 2d
     Repositories                  :b3, after b2, 2d
     section TM3 - Frontend Web
-    React + Vite setup            :c1, 2024-01-01, 1d
+    React + Vite setup            :c1, 2026-08-17, 1d
     Tailwind CSS                  :c2, after c1, 1d
     API client setup              :c3, after c2, 2d
     Layout components             :c4, after c3, 2d
     section TM4 - Mobile
-    Flutter setup                 :d1, 2024-01-01, 1d
+    Flutter setup                 :d1, 2026-08-17, 1d
     Theme & Navigation            :d2, after d1, 2d
     API service setup             :d3, after d2, 2d
     Models                        :d4, after d3, 1d
@@ -731,7 +730,7 @@ flowchart TB
         A[Unit Tests] --> B[JUnit + Mockito]
         C[Integration Tests] --> D[TestContainers]
         E[API Tests] --> F[RestAssured]
-        G[Frontend Tests] --> H[Jest + React Testing Library]
+        G[Frontend Tests] --> H[Vitest + React Testing Library]
         I[Mobile Tests] --> J[Flutter Test]
     end
 ```
@@ -740,7 +739,7 @@ flowchart TB
 |:---|:---|
 | **TM1** | Service Layer unit tests, Security tests |
 | **TM2** | Repository tests, Integration tests |
-| **TM3** | Component tests, E2E tests (Cypress) |
+| **TM3** | Component tests (Vitest + React Testing Library), E2E tests (Playwright) |
 | **TM4** | Widget tests, Integration tests (Flutter) |
 
 **Kết quả đầu ra tuần 7:**
@@ -1092,7 +1091,7 @@ gantt
     title Timeline 16 tuần - N-Layer + Monorepo
     dateFormat  YYYY-MM-DD
     section Giai đoạn 1
-    Tuần 1 - Setup & Structure    :a1, 2024-01-01, 7d
+    Tuần 1 - Setup & Structure    :a1, 2026-08-17, 7d
     Tuần 2 - Controller & Service :a2, after a1, 7d
     Tuần 3 - Search & Cache       :a3, after a2, 7d
     section Giai đoạn 2
@@ -1178,7 +1177,7 @@ gantt
 |:---|:---|
 | Version Control | Git + GitHub (Monorepo) |
 | Build Tool | Maven/Gradle |
-| Testing | JUnit, Mockito, TestContainers |
+| Testing | JUnit 5, Mockito, Testcontainers, Vitest, Playwright |
 | API Testing | Postman, RestAssured |
 | Performance | k6, JMeter |
 | Monitoring | Prometheus, Grafana |
@@ -1188,7 +1187,7 @@ gantt
 
 ---
 
-**Ngày bắt đầu:** [Ngày khởi động]
-**Ngày kết thúc:** [Ngày khởi động + 16 tuần]
-**Phiên bản:** 4.0 - N-Layer + Monorepo
+**Ngày bắt đầu:** 17/08/2026 (Thứ Hai)
+**Ngày kết thúc:** 06/12/2026 (Chủ Nhật, sau 16 tuần)
+**Phiên bản:** 4.1 - N-Layer + Monorepo (cập nhật 17/08/2026 — timeline và công nghệ theo best practice 2026)
 **Người lập:** Đội ngũ phát triển

@@ -2,7 +2,6 @@
 
 ## NỀN TẢNG CHIA SẺ VÀ TÌM KIẾM VIỆC LÀM VIỆT NAM
 ## Kiến trúc Microservices - Web (React + Vite) + Mobile (Flutter)
-## Dự án sinh viên - Tập trung học Backend
 
 ---
 
@@ -46,15 +45,15 @@ quadrantChart
 
 | Thành phần | Công nghệ | Mục đích học tập |
 |:---|:---|:---|
-| **Backend Framework** | Spring Boot | Microservices, REST API, Dependency Injection |
+| **Backend Framework** | Spring Boot 4.x (Spring Framework 7, Java 25 LTS) | Microservices, REST API, Dependency Injection |
 | **API Gateway** | Spring Cloud Gateway | Routing, Rate Limiting, Authentication |
-| **Service Discovery** | Eureka | Service registration và discovery |
-| **Message Broker** | Apache Kafka | Event-driven architecture, Async communication |
+| **Service Discovery** | Eureka (Spring Cloud Netflix) | Service registration và discovery (lưu ý 2026: Eureka ở chế độ maintenance — khi chạy trên Kubernetes ưu tiên dùng K8s Service/DNS) |
+| **Message Broker** | Apache Kafka 4.x (KRaft mode — ZooKeeper đã bị loại bỏ từ Kafka 4.0, 03/2025) | Event-driven architecture, Async communication |
 | **Database** | PostgreSQL | ACID, Database per service |
 | **Search Engine** | Elasticsearch | Full-text search, Indexing |
 | **Cache** | Redis | Caching, Rate limiting, Session storage |
 | **Crawler** | Python + Scrapy | Web scraping, Data pipeline |
-| **Web Frontend** | React + Vite | SPA, Component-based architecture |
+| **Web Frontend** | React 19 + Vite | SPA, Component-based architecture |
 | **Mobile** | Flutter | Cross-platform development |
 | **Container** | Docker + Docker Compose | Containerization, Environment setup |
 | **CI/CD** | GitHub Actions | Automated build, test, deploy |
@@ -115,22 +114,22 @@ gantt
     title Tuần 1 - Thiết lập môi trường
     dateFormat  YYYY-MM-DD
     section TM1 - Backend Lead
-    Docker Compose setup          :a1, 2024-01-01, 2d
+    Docker Compose setup          :a1, 2026-08-17, 2d
     Auth Service (JWT)           :a2, after a1, 2d
     API Gateway                  :a3, after a2, 2d
     Service Discovery            :a4, after a3, 1d
     section TM2 - Crawl Specialist
-    Nghiên cứu data schema       :b1, 2024-01-01, 1d
+    Nghiên cứu data schema       :b1, 2026-08-17, 1d
     Setup Scrapy                 :b2, after b1, 1d
     Spider cho vieclam.gov.vn    :b3, after b2, 2d
     Crawl 50 jobs                :b4, after b3, 2d
     section TM3 - Frontend Web
-    React + Vite setup           :c1, 2024-01-01, 1d
+    React + Vite setup           :c1, 2026-08-17, 1d
     Tailwind CSS                 :c2, after c1, 1d
     Login/Register page          :c3, after c2, 2d
     Dashboard layout             :c4, after c3, 2d
     section TM4 - Mobile
-    Flutter setup                :d1, 2024-01-01, 1d
+    Flutter setup                :d1, 2026-08-17, 1d
     Theme & Navigation           :d2, after d1, 2d
     Login/Register screen        :d3, after d2, 2d
     API integration              :d4, after d3, 2d
@@ -146,7 +145,7 @@ gantt
 - TM4: Khởi tạo Flutter project, thiết kế theme
 
 **Thứ 3**
-- TM1: Docker Compose setup: PostgreSQL, Redis, Elasticsearch, Kafka/Zookeeper
+- TM1: Docker Compose setup: PostgreSQL, Redis, Elasticsearch, Kafka 4.x (KRaft mode, không cần ZooKeeper)
 - TM2: Setup Scrapy project, phân tích cấu trúc vieclam.gov.vn
 - TM3: Thiết kế hệ thống màu, typography, layout base
 - TM4: Setup navigation, color scheme cho mobile
@@ -173,7 +172,7 @@ gantt
 - Tất cả: Kiểm tra tích hợp, review code, giải quyết lỗi
 
 **Kết quả đầu ra tuần 1:**
-- Docker chạy được 5 services
+- Docker chạy được 4 services hạ tầng (PostgreSQL, Redis, Elasticsearch, Kafka KRaft)
 - Auth Service hoàn chỉnh (đăng ký/đăng nhập/JWT)
 - Crawl được 50+ jobs từ vieclam.gov.vn
 - Web có trang login + dashboard cơ bản
@@ -201,7 +200,7 @@ flowchart LR
 **Công việc chi tiết:**
 
 **Thứ 2**
-- TM1: Cấu hình Kafka/Zookeeper, tạo topic `job-events`
+- TM1: Cấu hình Kafka (KRaft mode), tạo topic `job-events`
 - TM2: Tối ưu crawler, thêm retry mechanism
 - TM3: Xây dựng trang danh sách job với pagination
 - TM4: Thiết kế màn hình danh sách job
@@ -425,7 +424,7 @@ flowchart LR
 **Thứ 5**
 - TM1: Setup CI/CD với GitHub Actions
 - TM2: Tối ưu performance, connection pool
-- TM3: Tối ưu SEO (React Helmet)
+- TM3: Tối ưu SEO (document metadata native của React 19 — react-helmet đã ngừng bảo trì)
 - TM4: Tối ưu kích thước APK/IPA
 
 **Thứ 6**
@@ -686,7 +685,7 @@ flowchart LR
 |:---|:---|
 | Thứ 2 | TM1+TM2: Integration testing toàn bộ services |
 | Thứ 3 | TM3: Cross-browser testing (Chrome, Firefox, Safari) |
-| Thứ 4 | TM4: Mobile testing (iOS 15+, Android 10+) |
+| Thứ 4 | TM4: Mobile testing (iOS 16+, Android 12+) |
 | Thứ 5 | Tất cả: Performance testing với k6 (100 concurrent users) |
 | Thứ 6 | Tất cả: Bug fixing priority |
 | Thứ 7 | Tất cả: Bug fixing tiếp tục |
@@ -1010,7 +1009,7 @@ gantt
     title Timeline tổng quan 16 tuần
     dateFormat  YYYY-MM-DD
     section Giai đoạn 1
-    Tuần 1 - Setup & Auth           :a1, 2024-01-01, 7d
+    Tuần 1 - Setup & Auth           :a1, 2026-08-17, 7d
     Tuần 2 - Core Services          :a2, after a1, 7d
     Tuần 3 - App & Profile          :a3, after a2, 7d
     section Giai đoạn 2
@@ -1187,7 +1186,7 @@ quadrantChart
 
 ---
 
-**Ngày bắt đầu:** [Ngày khởi động]
-**Ngày kết thúc:** [Ngày khởi động + 16 tuần]
-**Phiên bản:** 3.0
+**Ngày bắt đầu:** 17/08/2026 (Thứ Hai)
+**Ngày kết thúc:** 06/12/2026 (Chủ Nhật, sau 16 tuần)
+**Phiên bản:** 3.1 (cập nhật 17/08/2026 — timeline và công nghệ theo best practice 2026)
 **Người lập:** Đội ngũ phát triển
