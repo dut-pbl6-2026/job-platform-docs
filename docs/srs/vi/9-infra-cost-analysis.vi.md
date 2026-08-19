@@ -1,6 +1,6 @@
 # Đặc tả Yêu cầu Phần mềm (SRS)
 
-[English](9-infra-cost-analysis.md) | [Tiếng Việt](9-infra-cost-analysis.vi.md)
+[English](../en/9-infra-cost-analysis.md) | [Tiếng Việt](9-infra-cost-analysis.vi.md)
 
 ## Nền tảng Việc làm Việt Nam - Kiến trúc Microservices
 

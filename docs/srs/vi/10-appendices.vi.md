@@ -1,6 +1,6 @@
 # Đặc tả Yêu cầu Phần mềm (SRS)
 
-[English](10-appendices.md) | [Tiếng Việt](10-appendices.vi.md)
+[English](../en/10-appendices.md) | [Tiếng Việt](10-appendices.vi.md)
 
 ## Nền tảng Việc làm Việt Nam - Kiến trúc Microservices
 

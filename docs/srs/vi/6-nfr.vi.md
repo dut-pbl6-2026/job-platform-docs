@@ -1,6 +1,6 @@
 # Đặc tả Yêu cầu Phần mềm (SRS)
 
-[English](6-nfr.md) | [Tiếng Việt](6-nfr.vi.md)
+[English](../en/6-nfr.md) | [Tiếng Việt](6-nfr.vi.md)
 
 ## Nền tảng Việc làm Việt Nam - Kiến trúc Microservices
 

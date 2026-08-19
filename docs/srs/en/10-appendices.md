@@ -1,6 +1,6 @@
 # Software Requirements Specification (SRS)
 
-[English](10-appendices.md) | [Tiếng Việt](10-appendices.vi.md)
+[English](10-appendices.md) | [Tiếng Việt](../vi/10-appendices.vi.md)
 
 ## Vietnam Job Platform - Microservices Architecture
 

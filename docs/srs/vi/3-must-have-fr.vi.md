@@ -1,6 +1,6 @@
 # Đặc tả Yêu cầu Phần mềm (SRS)
 
-[English](3-must-have-fr.md) | [Tiếng Việt](3-must-have-fr.vi.md)
+[English](../en/3-must-have-fr.md) | [Tiếng Việt](3-must-have-fr.vi.md)
 
 ## Nền tảng Việc làm Việt Nam - Microservices với .NET + Multirepo
 

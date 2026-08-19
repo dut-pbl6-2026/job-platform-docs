@@ -1,6 +1,6 @@
 # Đặc tả Yêu cầu Phần mềm (SRS)
 
-[English](5-nice-to-have-fr.md) | [Tiếng Việt](5-nice-to-have-fr.vi.md)
+[English](../en/5-nice-to-have-fr.md) | [Tiếng Việt](5-nice-to-have-fr.vi.md)
 
 ## Nền tảng Việc làm Việt Nam - Kiến trúc Microservices
 

@@ -1,6 +1,6 @@
 # Đặc tả Yêu cầu Phần mềm (SRS)
 
-[English](7-eir.md) | [Tiếng Việt](7-eir.vi.md)
+[English](../en/7-eir.md) | [Tiếng Việt](7-eir.vi.md)
 
 ## Nền tảng Việc làm Việt Nam - Kiến trúc Microservices
 

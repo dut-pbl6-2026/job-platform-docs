@@ -1,6 +1,6 @@
 # Software Requirements Specification (SRS)
 
-[English](4-should-have-fr.md) | [Tiếng Việt](4-should-have-fr.vi.md)
+[English](4-should-have-fr.md) | [Tiếng Việt](../vi/4-should-have-fr.vi.md)
 
 ## Vietnam Job Platform - Microservices Architecture
 

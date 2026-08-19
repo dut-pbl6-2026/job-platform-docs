@@ -1,6 +1,6 @@
 # Đặc tả Yêu cầu Phần mềm (SRS)
 
-[English](4-should-have-fr.md) | [Tiếng Việt](4-should-have-fr.vi.md)
+[English](../en/4-should-have-fr.md) | [Tiếng Việt](4-should-have-fr.vi.md)
 
 ## Nền tảng Việc làm Việt Nam - Kiến trúc Microservices
 

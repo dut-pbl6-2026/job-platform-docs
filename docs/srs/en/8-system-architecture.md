@@ -1,6 +1,6 @@
 # Software Requirements Specification (SRS)
 
-[English](8-system-architecture.md) | [Tiếng Việt](8-system-architecture.vi.md)
+[English](8-system-architecture.md) | [Tiếng Việt](../vi/8-system-architecture.vi.md)
 
 ## Vietnam Job Platform - Microservices Architecture
 

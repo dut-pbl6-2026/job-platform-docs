@@ -1,6 +1,6 @@
 # Software Requirements Specification (SRS)
 
-[English](3-must-have-fr.md) | [Tiếng Việt](3-must-have-fr.vi.md)
+[English](3-must-have-fr.md) | [Tiếng Việt](../vi/3-must-have-fr.vi.md)
 
 ## Vietnam Job Platform - Microservices with .NET + Multirepo
 

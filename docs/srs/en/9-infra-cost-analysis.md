@@ -1,6 +1,6 @@
 # Software Requirements Specification (SRS)
 
-[English](9-infra-cost-analysis.md) | [Tiếng Việt](9-infra-cost-analysis.vi.md)
+[English](9-infra-cost-analysis.md) | [Tiếng Việt](../vi/9-infra-cost-analysis.vi.md)
 
 ## Vietnam Job Platform - Microservices Architecture
 

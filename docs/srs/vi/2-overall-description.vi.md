@@ -1,6 +1,6 @@
 # Đặc tả Yêu cầu Phần mềm (SRS)
 
-[English](2-overall-description.md) | [Tiếng Việt](2-overall-description.vi.md)
+[English](../en/2-overall-description.md) | [Tiếng Việt](2-overall-description.vi.md)
 
 ## Nền tảng Việc làm Việt Nam - Kiến trúc Microservices
 

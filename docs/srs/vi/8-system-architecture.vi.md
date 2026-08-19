@@ -1,6 +1,6 @@
 # Đặc tả Yêu cầu Phần mềm (SRS)
 
-[English](8-system-architecture.md) | [Tiếng Việt](8-system-architecture.vi.md)
+[English](../en/8-system-architecture.md) | [Tiếng Việt](8-system-architecture.vi.md)
 
 ## Nền tảng Việc làm Việt Nam - Kiến trúc Microservices
 
