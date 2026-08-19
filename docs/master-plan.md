@@ -64,11 +64,11 @@
 
 ---
 
-## 2. TECHNICAL ARCHITECTURE - ADJUSTED FOR .NET MONOREPO
+## 2. TECHNICAL ARCHITECTURE - ADJUSTED FOR .NET MULTIREPO
 
 ### 2.1. Overall Architecture Diagram
 
-```
+```text
 [Client Layer]
     Web React + Vite
     Flutter Mobile App
@@ -103,67 +103,34 @@
     Python Scrapy Crawler
 ```
 
-### 2.2. Monorepo Structure
+---
 
-```
-job-platform-monorepo/
-├── .github/
-│   └── workflows/
-│       ├── ci.yml              # Build & test all services
-│       └── deploy-staging.yml  # Deploy to staging (SHOULD HAVE)
-│
-├── src/
-│   ├── services/
-│   │   ├── AuthService/
-│   │   │   ├── AuthService.API/
-│   │   │   ├── AuthService.Core/
-│   │   │   ├── AuthService.Infrastructure/
-│   │   │   └── AuthService.Tests/
-│   │   ├── JobService/
-│   │   │   └── ... (same structure)
-│   │   ├── SearchService/
-│   │   ├── ApplicationService/
-│   │   ├── ProfileService/
-│   │   └── NotificationService/
-│   │
-│   ├── shared/
-│   │   ├── SharedKernel/       # DTOs, common interfaces
-│   │   ├── EventContracts/     # Kafka event definitions
-│   │   └── Infrastructure/     # Common DB, Redis, Kafka configs
-│   │
-│   ├── gateway/
-│   │   └── ApiGateway/         # YARP Reverse Proxy
-│   │
-│   └── web/                    # React + Vite
-│       ├── src/
-│       └── package.json
-│
-├── mobile/                     # Flutter
-│   └── lib/
-│
-├── crawler/                    # Python Scrapy
-│   ├── spiders/
-│   └── pipelines/
-│
-├── ai-service/                 # Python FastAPI (NICE TO HAVE)
-│   ├── app/
-│   └── requirements.txt
-│
-├── infrastructure/
-│   ├── docker/
-│   │   ├── docker-compose.yml          # Local development
-│   │   └── docker-compose.prod.yml     # Production (SHOULD HAVE)
-│   └── scripts/
-│       ├── init-db.sh
-│       └── seed-data.sh
-│
-├── docs/
-│   ├── api/                   # Swagger/OpenAPI
-│   └── architecture/
-│
-├── JobPlatform.sln            # Main solution file
-└── README.md
-```
+### 2.2. Repository Organization (Multirepo)
+
+The project must be implemented across **multiple repositories**, potentially distributed across **multiple GitHub organizations** as required by the academic course. Each microservice, shared library, and client application resides in its own dedicated repository to ensure independent versioning, deployment, and team ownership.
+
+**The following repositories must be created:**
+
+| Repository Name | Description | Technology |
+|:----------------|:------------|:-----------|
+| `job-platform-shared` | Shared kernel, DTOs, and Event Contracts (Kafka schemas) | .NET Class Library |
+| `job-platform-auth-svc` | Authentication and Authorization Service | .NET Web API |
+| `job-platform-job-svc` | Job Posting CRUD and Category Management | .NET Web API |
+| `job-platform-search-svc` | Elasticsearch Indexing and Search Queries | .NET Web API |
+| `job-platform-app-svc` | Job Application and CV Management | .NET Web API |
+| `job-platform-profile-svc` | User Profile, Skills, Experience, Education | .NET Web API |
+| `job-platform-notif-svc` | Email, Push, and In-App Notifications | .NET Web API |
+| `job-platform-gateway` | API Gateway (Routing, JWT Validation) | .NET Web API (YARP) |
+| `job-platform-web` | React Single Page Application | React + Vite |
+| `job-platform-mobile` | Flutter Cross-Platform Mobile App | Flutter |
+| `job-platform-crawler` | Python Scrapy Data Crawler | Python (Scrapy) |
+| `job-platform-ai-svc` | AI Copilot & Resume Scoring (Optional) | Python FastAPI |
+| `job-platform-infra` | Docker Compose, Kubernetes Manifests, Deployment Scripts | YAML / Shell |
+
+**Shared Library Management:**
+Since direct folder references (`../shared/`) are not possible across repositories, the `job-platform-shared` repository must be built and published as a **NuGet package** to a private feed (e.g., GitHub Packages, Azure Artifacts, or NuGet.org). All microservices must reference this package via `PackageReference` in their `.csproj` files.
+
+**Versioning Strategy:** Each repository follows semantic versioning (SemVer 2.0). When the shared library changes, a new version is published, and dependent services are updated incrementally.
 
 ---
 

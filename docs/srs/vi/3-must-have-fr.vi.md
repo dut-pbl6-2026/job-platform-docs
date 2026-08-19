@@ -533,43 +533,75 @@ flowchart TB
 
 ---
 
-### 3.13 CI/CD cơ bản
+### 3.13. CI/CD Cơ bản (Thích ứng với Multirepo)
 
-**ID thành phần:** CICD-01  
-**Mức độ ưu tiên:** BẮT BUỘC PHẢI CÓ  
-**Người phụ trách:** TM1  
-**Tuần mục tiêu:** Tuần 4  
+Vì dự án sử dụng kiến trúc đa repo (multirepo), các đường ống CI/CD phải được triển khai **cho từng repository** với sự phân tách rõ ràng giữa **Repo Thư viện dùng chung** và **Repo Dịch vụ**.
 
-#### 3.13.1 Mô tả
+#### 3.13.1. CI/CD cho Thư viện dùng chung (`job-platform-shared`)
 
-Tích hợp liên tục và Triển khai liên tục (CI/CD) tự động hóa quy trình xây dựng, kiểm thử và triển khai, đảm bảo chất lượng mã và vòng phản hồi nhanh.
+| Bước | Hành động | Xác nhận |
+|:-----|:----------|:---------|
+| 1 | Xây dựng thư viện .NET Class Library | Xây dựng thành công |
+| 2 | Chạy kiểm thử đơn vị | Tất cả kiểm thử đạt |
+| 3 | Đóng gói NuGet (`dotnet pack`) | Tệp `.nupkg` được tạo |
+| 4 | Xuất bản lên feed riêng tư (GitHub Packages / Azure Artifacts) | Gói xuất hiện trong feed |
+| 5 | Gắn thẻ phiên bản (SemVer) | Git tag được tạo |
 
-#### 3.13.2 Yêu cầu chức năng
+**Kích hoạt:** Mỗi lần đẩy lên nhánh `main`.
 
-| ID | Yêu cầu | Tiêu chí chấp nhận |
-|:---|:--------|:-------------------|
-| CICD-01-01 | Đường ống CI xây dựng tất cả dịch vụ .NET | - Xây dựng chạy trên mọi lần đẩy mã<br>- Thất bại nếu có lỗi biên dịch<br>- Báo cáo trạng thái về hệ thống kiểm soát phiên bản |
-| CICD-01-02 | Đường ống CI chạy kiểm thử đơn vị trên mọi lần đẩy | - Kiểm thử chạy cho từng dịch vụ<br>- Thất bại nếu bất kỳ kiểm thử nào thất bại<br>- Báo cáo kết quả kiểm thử |
-| CICD-01-03 | Đường ống CI xây dựng ứng dụng web | - Bản dựng sản phẩm chạy<br>- Thất bại nếu có lỗi xây dựng<br>- Artifact xây dựng được lưu |
-| CICD-01-04 | Đường ống CI xây dựng ứng dụng di động | - Xây dựng cho Android chạy<br>- Thất bại nếu có lỗi xây dựng<br>- Artifact xây dựng được lưu |
-| CICD-01-05 | Đường ống CI chạy các công cụ lint và kiểm tra chất lượng mã | - Kiểm tra phong cách mã<br>- Phân tích tĩnh<br>- Cổng chất lượng vượt qua trước khi hợp nhất |
-| CICD-01-06 | Đường ống CI gửi thông báo về trạng thái xây dựng | - Trạng thái hiển thị trong kiểm soát phiên bản<br>- Thông báo email khi thất bại<br>- Nhóm được thông báo về bản xây dựng thành công |
+#### 3.13.2. CI/CD cho Dịch vụ (`job-platform-*-svc`)
 
-#### 3.13.3 Các giai đoạn đường ống
+| Bước | Hành động | Xác nhận |
+|:-----|:----------|:---------|
+| 1 | Khôi phục gói NuGet (bao gồm thư viện dùng chung) | Khôi phục thành công |
+| 2 | Xây dựng dịch vụ | Xây dựng thành công |
+| 3 | Chạy kiểm thử đơn vị | Tất cả kiểm thử đạt |
+| 4 | Xây dựng hình ảnh Docker | Hình ảnh được tạo thành công |
+| 5 | Đẩy lên container registry (GHCR / Docker Hub) | Hình ảnh được đẩy |
+| 6 | Triển khai lên môi trường staging (Fly.io / Railway) | Dịch vụ phản hồi kiểm tra sức khỏe |
+
+**Kích hoạt:** Mỗi lần đẩy lên nhánh `main`.
+
+#### 3.13.3. Quản lý phụ thuộc giữa các Repo
+
+Khi thư viện dùng chung (`job-platform-shared`) được cập nhật và phiên bản NuGet mới được xuất bản:
+
+1. Đường ống của repo shared tự động xuất bản phiên bản mới.
+2. Mỗi repo dịch vụ phải cập nhật `PackageReference` lên phiên bản mới.
+3. Việc này có thể thực hiện thủ công hoặc tự động bằng **Dependabot** hoặc sự kiện `repository_dispatch`.
+
+**Khuyến nghị:** Sử dụng **Dependabot** để tự động tạo pull request trong các repo dịch vụ khi có phiên bản mới của gói shared.
+
+#### 3.13.4. Sơ đồ đường ống CI/CD (Multirepo)
 
 ```mermaid
-flowchart LR
-    Push["Đẩy mã"] --> Build["Giai đoạn Xây dựng"]
-    Build --> Test["Giai đoạn Kiểm thử"]
-    Test --> Lint["Giai đoạn Lint/Chất lượng"]
-    Lint --> Package["Giai đoạn Đóng gói"]
-    Package --> Deploy["Giai đoạn Triển khai"]
-    
-    Build -->|Thất bại| Fail["Xây dựng thất bại"]
-    Test -->|Thất bại| Fail
-    Lint -->|Thất bại| Fail
-    Fail --> Notify["Thông báo Nhóm"]
+flowchart TB
+    subgraph Shared["Repo Thư viện dùng chung"]
+        SharedPush["Push lên main"] -- SharedBuild["Xây dựng & Kiểm thử"]
+        SharedBuild -- SharedPack["Đóng gói NuGet"]
+        SharedPack -- SharedPublish["Xuất bản lên Feed"]
+    end
+
+    subgraph Service["Repo Dịch vụ (ví dụ: Auth)"]
+        ServicePush["Push lên main"] -- ServiceRestore["Khôi phục gói"]
+        ServiceRestore -- ServiceBuild["Xây dựng & Kiểm thử"]
+        ServiceBuild -- ServiceDocker["Xây dựng Docker Image"]
+        ServiceDocker -- ServiceDeploy["Triển khai lên Staging"]
+    end
+
+    SharedPublish -.-|Dependabot PR| ServicePush
 ```
+
+#### 3.13.5. Yêu cầu triển khai CI/CD
+
+| Yêu cầu | Mô tả | Mức độ ưu tiên |
+|:---------|:------|:---------------|
+| Mỗi repo có workflow GitHub Actions riêng | CI/CD độc lập cho từng repository | BẮT BUỘC |
+| Thư viện dùng chung xuất bản NuGet lên feed riêng tư | GitHub Packages hoặc Azure Artifacts | BẮT BUỘC |
+| Các dịch vụ tham chiếu thư viện dùng chung qua PackageReference | Không tham chiếu thư mục trực tiếp | BẮT BUỘC |
+| Bật Dependabot cho cập nhật thư viện dùng chung | Tự động tạo PR cho cập nhật phiên bản | NÊN CÓ |
+| Tự động triển khai staging khi push lên main | Continuous delivery lên staging | NÊN CÓ |
+| Triển khai sản phẩm thủ công (dựa trên tag) | Phát hành có kiểm soát | NÊN CÓ |
 
 ---
 

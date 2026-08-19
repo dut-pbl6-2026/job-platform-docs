@@ -533,43 +533,75 @@ flowchart TB
 
 ---
 
-### 3.13 Basic CI/CD
+### 3.13. Basic CI/CD (Multirepo Adaptation)
 
-**Component ID:** CICD-01  
-**Priority:** MUST HAVE  
-**Owner:** TM1  
-**Target Week:** Week 4  
+Since the project uses a multirepo architecture, CI/CD pipelines must be implemented **per repository** with a clear separation between **Shared Library Repo** and **Service Repos**.
 
-#### 3.13.1 Description
+#### 3.13.1. Shared Library CI/CD (`job-platform-shared`)
 
-Continuous Integration and Continuous Deployment (CI/CD) automates the build, test, and deployment processes, ensuring code quality and fast feedback loops.
+| Step | Action | Validation |
+|:-----|:-------|:-----------|
+| 1 | Build the .NET class library | Build succeeds |
+| 2 | Run unit tests | All tests pass |
+| 3 | Pack NuGet package (`dotnet pack`) | `.nupkg` file generated |
+| 4 | Publish to private feed (GitHub Packages / Azure Artifacts) | Package appears in feed |
+| 5 | Tag release with version number (SemVer) | Git tag created |
 
-#### 3.13.2 Functional Requirements
+**Trigger:** On every push to `main` branch.
 
-| ID | Requirement | Acceptance Criteria |
-|:---|:------------|:-------------------|
-| CICD-01-01 | The CI pipeline shall build all .NET services | - Build runs on every code push<br>- Fails if compilation errors<br>- Reports status back to version control |
-| CICD-01-02 | The CI pipeline shall run unit tests on every push | - Tests run for each service<br>- Fails if any test fails<br>- Test results reported |
-| CICD-01-03 | The CI pipeline shall build the web application | - Production build runs<br>- Fails if build errors<br>- Build artifacts saved |
-| CICD-01-04 | The CI pipeline shall build the mobile application | - Build runs for Android<br>- Fails if build errors<br>- Build artifacts saved |
-| CICD-01-05 | The CI pipeline shall run linters and code quality checks | - Code style checks<br>- Static analysis<br>- Quality gate passes before merge |
-| CICD-01-06 | The CI pipeline shall send notifications on build status | - Status visible in version control<br>- Email notification on failure<br>- Team notified of successful builds |
+#### 3.13.2. Service CI/CD (`job-platform-*-svc`)
 
-#### 3.13.3 Pipeline Stages
+| Step | Action | Validation |
+|:-----|:-------|:-----------|
+| 1 | Restore NuGet packages (including shared library) | Restore succeeds |
+| 2 | Build the service | Build succeeds |
+| 3 | Run unit tests | All tests pass |
+| 4 | Build Docker image | Image created successfully |
+| 5 | Push to container registry (GHCR / Docker Hub) | Image pushed |
+| 6 | Deploy to staging environment (Fly.io / Railway) | Service responds to health check |
+
+**Trigger:** On every push to `main` branch.
+
+#### 3.13.3. Dependency Management Between Repos
+
+When the shared library (`job-platform-shared`) is updated and a new NuGet package version is published:
+
+1. The shared repo pipeline automatically publishes the new version.
+2. Each service repo must update its `PackageReference` to the new version.
+3. This can be done manually (via Dependabot or Renovate) or automated using `repository_dispatch` events.
+
+**Recommended:** Use **Dependabot** to automatically create pull requests in service repos when a new version of the shared package is available.
+
+#### 3.13.4. CI/CD Pipeline Diagram (Multirepo)
 
 ```mermaid
-flowchart LR
-    Push["Code Push"] --> Build["Build Phase"]
-    Build --> Test["Test Phase"]
-    Test --> Lint["Lint/Quality Phase"]
-    Lint --> Package["Package Phase"]
-    Package --> Deploy["Deploy Phase"]
-    
-    Build -->|Failure| Fail["Build Failed"]
-    Test -->|Failure| Fail
-    Lint -->|Failure| Fail
-    Fail --> Notify["Notify Team"]
+flowchart TB
+    subgraph Shared["Shared Library Repo"]
+        SharedPush["Push to main"] -- SharedBuild["Build & Test"]
+        SharedBuild -- SharedPack["Pack NuGet"]
+        SharedPack -- SharedPublish["Publish to Feed"]
+    end
+
+    subgraph Service["Service Repo (e.g., Auth Service)"]
+        ServicePush["Push to main"] -- ServiceRestore["Restore Packages"]
+        ServiceRestore -- ServiceBuild["Build & Test"]
+        ServiceBuild -- ServiceDocker["Build Docker Image"]
+        ServiceDocker -- ServiceDeploy["Deploy to Staging"]
+    end
+
+    SharedPublish -.-|Dependabot PR| ServicePush
 ```
+
+#### 3.13.5. CI/CD Implementation Requirements
+
+| Requirement | Description | Priority |
+|:------------|:------------|:----------|
+| Each repo has its own GitHub Actions workflow | Independent CI/CD per repository | MUST |
+| Shared library publishes NuGet to private feed | GitHub Packages or Azure Artifacts | MUST |
+| Services reference shared library via PackageReference | No direct folder references | MUST |
+| Dependabot enabled for shared library updates | Automatic PRs for version updates | SHOULD |
+| Staging deployment automated on main branch push | Continuous delivery to staging | SHOULD |
+| Production deployment manual (tag-based) | Controlled releases | SHOULD |
 
 ---
 

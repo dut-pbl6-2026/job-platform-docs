@@ -64,7 +64,7 @@
 
 ---
 
-## 2. KIẾN TRÚC KỸ THUẬT - ĐIỀU CHỈNH CHO .NET MONOREPO
+## 2. KIẾN TRÚC KỸ THUẬT - ĐIỀU CHỈNH CHO .NET Multirepo
 
 ### 2.1. Sơ đồ kiến trúc tổng thể
 
@@ -103,68 +103,30 @@
     Trình thu thập Python Scrapy
 ```
 
-### 2.2. Cấu trúc Monorepo
+### 2.2. Tổ chức Repository (Đa Repo - Multirepo)
 
-```
-job-platform-monorepo/
-├── .github/
-│   └── workflows/
-│       ├── ci.yml              # Xây dựng & kiểm thử tất cả dịch vụ
-│       └── deploy-staging.yml  # Triển khai lên staging (NÊN CÓ)
-│
-├── src/
-│   ├── services/
-│   │   ├── AuthService/
-│   │   │   ├── AuthService.API/
-│   │   │   ├── AuthService.Core/
-│   │   │   ├── AuthService.Infrastructure/
-│   │   │   └── AuthService.Tests/
-│   │   ├── JobService/
-│   │   │   └── ... (cấu trúc tương tự)
-│   │   ├── SearchService/
-│   │   ├── ApplicationService/
-│   │   ├── ProfileService/
-│   │   └── NotificationService/
-│   │
-│   ├── shared/
-│   │   ├── SharedKernel/       # DTO, giao diện chung
-│   │   ├── EventContracts/     # Định nghĩa sự kiện Kafka
-│   │   └── Infrastructure/     # Cấu hình chung DB, Redis, Kafka
-│   │
-│   ├── gateway/
-│   │   └── ApiGateway/         # YARP Reverse Proxy
-│   │
-│   └── web/                    # React + Vite
-│       ├── src/
-│       └── package.json
-│
-├── mobile/                     # Flutter
-│   └── lib/
-│
-├── crawler/                    # Python Scrapy
-│   ├── spiders/
-│   └── pipelines/
-│
-├── ai-service/                 # Python FastAPI (TỐT NÊN CÓ)
-│   ├── app/
-│   └── requirements.txt
-│
-├── infrastructure/
-│   ├── docker/
-│   │   ├── docker-compose.yml          # Phát triển cục bộ
-│   │   └── docker-compose.prod.yml     # Sản phẩm (NÊN CÓ)
-│   └── scripts/
-│       ├── init-db.sh
-│       └── seed-data.sh
-│
-├── docs/
-│   ├── api/                   # Swagger/OpenAPI
-│   └── architecture/
-│
-├── JobPlatform.sln            # Tệp giải pháp chính
-└── README.md
-```
+Dự án phải được triển khai trên nhiều repository (kho lưu trữ), có thể phân bố trên nhiều tổ chức (Organization) khác nhau trên GitHub theo đúng yêu cầu của môn học. Mỗi microservice, thư viện dùng chung và ứng dụng client đều có repository riêng để đảm bảo quản lý phiên bản, triển khai và quyền sở hữu độc lập.
 
+Các repository sau đây phải được tạo:
+
+Tên Repository	Mô tả	Công nghệ
+job-platform-shared	Shared kernel, DTO và Event Contracts (schema Kafka)	.NET Class Library
+job-platform-auth-svc	Dịch vụ Xác thực và Phân quyền	.NET Web API
+job-platform-job-svc	Quản lý CRUD Tin tuyển dụng và Danh mục	.NET Web API
+job-platform-search-svc	Lập chỉ mục và Truy vấn tìm kiếm Elasticsearch	.NET Web API
+job-platform-app-svc	Quản lý Ứng tuyển và CV	.NET Web API
+job-platform-profile-svc	Hồ sơ, Kỹ năng, Kinh nghiệm, Giáo dục	.NET Web API
+job-platform-notif-svc	Thông báo Email, Push và In-App	.NET Web API
+job-platform-gateway	API Gateway (Định tuyến, Xác thực JWT)	.NET Web API (YARP)
+job-platform-web	Ứng dụng React Single Page	React + Vite
+job-platform-mobile	Ứng dụng Di động đa nền tảng Flutter	Flutter
+job-platform-crawler	Trình thu thập dữ liệu Python Scrapy	Python (Scrapy)
+job-platform-ai-svc	Trợ lý AI và Chấm điểm CV (Tùy chọn)	Python FastAPI
+job-platform-infra	Docker Compose, Kubernetes Manifests, Scripts triển khai	YAML / Shell
+Quản lý thư viện dùng chung:
+Vì không thể tham chiếu thư mục trực tiếp (../shared/) giữa các repository khác nhau, repository job-platform-shared phải được xây dựng và xuất bản dưới dạng gói NuGet lên một feed riêng tư (ví dụ: GitHub Packages, Azure Artifacts, hoặc NuGet.org). Tất cả các microservice phải tham chiếu gói này thông qua `<PackageReference>` trong file .csproj.
+
+Chiến lược quản lý phiên bản: Mỗi repository tuân theo quy tắc Semantic Versioning (SemVer 2.0). Khi thư viện dùng chung thay đổi, một phiên bản mới được xuất bản và các dịch vụ phụ thuộc sẽ được cập nhật dần dần.
 ---
 
 ## 3. LỘ TRÌNH 16 TUẦN - CHI TIẾT THEO MỨC ĐỘ ƯU TIÊN
