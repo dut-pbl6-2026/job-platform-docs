@@ -254,32 +254,27 @@ Các ràng buộc sau đây chi phối thiết kế và triển khai hệ thốn
 
 #### 2.4.2 Ràng buộc cấu trúc kho lưu trữ
 
-Dự án phải được triển khai dưới dạng **monorepo** với cấu trúc sau:
+Dự án phải được triển khai theo mô hình **đa repo (multirepo)**: mỗi microservice, thư viện dùng chung và ứng dụng client đều có repository riêng, có thể phân bố trên nhiều tổ chức (Organization) khác nhau trên GitHub theo đúng yêu cầu của môn học. Điều này đảm bảo quản lý phiên bản, triển khai và quyền sở hữu độc lập.
 
-```
-job-platform-monorepo/
-├── .github/workflows/          # Đường ống CI/CD
-├── src/
-│   ├── services/               # Tất cả microservices phụ trợ
-│   │   ├── AuthService/
-│   │   ├── JobService/
-│   │   ├── SearchService/
-│   │   ├── ApplicationService/
-│   │   ├── ProfileService/
-│   │   └── NotificationService/
-│   ├── shared/                 # Thư viện dùng chung, DTO, hợp đồng sự kiện
-│   │   ├── SharedKernel/
-│   │   ├── EventContracts/
-│   │   └── Infrastructure/
-│   ├── gateway/                # API Gateway
-│   └── web/                    # Ứng dụng web
-├── mobile/                     # Ứng dụng di động
-├── crawler/                    # Trình thu thập dữ liệu
-├── ai-service/                 # Dịch vụ AI (Tốt nên có)
-├── infrastructure/docker/      # Cấu hình Docker Compose
-├── docs/                       # Tài liệu
-└── README.md
-```
+**Các repository sau đây phải được tạo:**
+
+| Tên Repository | Mô tả | Công nghệ |
+|:----------------|:------------|:-----------|
+| `job-platform-shared` | Shared kernel, DTO và Event Contracts (schema Kafka) | .NET Class Library |
+| `job-platform-auth-svc` | Dịch vụ Xác thực và Phân quyền | .NET Web API |
+| `job-platform-job-svc` | CRUD tin tuyển dụng và Quản lý danh mục | .NET Web API |
+| `job-platform-search-svc` | Đánh chỉ mục Elasticsearch và Truy vấn tìm kiếm | .NET Web API |
+| `job-platform-app-svc` | Quản lý ứng tuyển và CV | .NET Web API |
+| `job-platform-profile-svc` | Hồ sơ người dùng, Kỹ năng, Kinh nghiệm, Học vấn | .NET Web API |
+| `job-platform-notif-svc` | Thông báo Email, Push và trong ứng dụng | .NET Web API |
+| `job-platform-gateway` | API Gateway (Định tuyến, Xác thực JWT) | .NET Web API (YARP) |
+| `job-platform-web` | Ứng dụng trang đơn React | React + Vite |
+| `job-platform-mobile` | Ứng dụng di động đa nền tảng Flutter | Flutter |
+| `job-platform-crawler` | Trình thu thập dữ liệu Python Scrapy | Python (Scrapy) |
+| `job-platform-ai-svc` | AI Copilot & Chấm điểm CV (Tùy chọn) | Python FastAPI |
+| `job-platform-infra` | Docker Compose, Manifests Kubernetes, Kịch bản triển khai | YAML / Shell |
+
+Vì không thể tham chiếu thư mục trực tiếp (`../shared/`) giữa các repository khác nhau, repository `job-platform-shared` phải được xây dựng và xuất bản dưới dạng gói **NuGet** lên một feed riêng tư (ví dụ: GitHub Packages, Azure Artifacts, hoặc NuGet.org). Tất cả các microservice phải tham chiếu gói này thông qua `<PackageReference>` trong file .csproj. Mỗi repository tuân theo quy tắc Semantic Versioning (SemVer 2.0); khi thư viện dùng chung thay đổi, một phiên bản mới được xuất bản và các dịch vụ phụ thuộc được cập nhật dần dần.
 
 #### 2.4.3 Ràng buộc hạ tầng không chi phí
 

@@ -426,84 +426,41 @@ flowchart LR
 
 ---
 
-### 8.7 Monorepo Structure
+### 8.7 Multirepo Structure
 
 #### 8.7.1 Source Code Organisation
 
+The project is organised as a **multirepo**: each service and application resides in its own dedicated repository (see Section 2.4.2). The shared library (`job-platform-shared`) is built and published as a **NuGet package**; all services reference it via `PackageReference` — no direct folder references are used.
+
+```text
+job-platform/                     # GitHub organization (or namespace)
+├── job-platform-shared/          # Shared kernel, DTOs, EventContracts (NuGet package)
+├── job-platform-auth-svc/        # Auth microservice
+├── job-platform-job-svc/         # Job microservice
+├── job-platform-search-svc/      # Search microservice
+├── job-platform-app-svc/         # Application microservice
+├── job-platform-profile-svc/     # Profile microservice
+├── job-platform-notif-svc/       # Notification microservice
+├── job-platform-gateway/         # API Gateway (YARP)
+├── job-platform-web/             # React web application
+├── job-platform-mobile/          # Flutter mobile application
+├── job-platform-crawler/         # Python Scrapy crawler
+├── job-platform-ai-svc/          # Python FastAPI AI service (optional)
+└── job-platform-infra/           # Docker Compose, K8s manifests, deployment scripts
 ```
-job-platform-monorepo/
-├── .github/
-│   └── workflows/          # CI/CD pipeline definitions
-│       ├── ci.yml          # Build and test
-│       └── deploy.yml      # Deployment to staging/prod
-│
-├── src/                    # Main source code
-│   ├── services/           # Backend microservices
-│   │   ├── AuthService/
-│   │   │   ├── API/        # Controllers, endpoints
-│   │   │   ├── Core/       # Business logic, domain models
-│   │   │   ├── Infrastructure/ # Database, external services
-│   │   │   └── Tests/      # Unit and integration tests
-│   │   ├── JobService/     # Same structure
-│   │   ├── SearchService/  # Same structure
-│   │   ├── ApplicationService/ # Same structure
-│   │   ├── ProfileService/ # Same structure
-│   │   └── NotificationService/ # Same structure
-│   │
-│   ├── shared/             # Shared code across services
-│   │   ├── SharedKernel/   # DTOs, common interfaces
-│   │   ├── EventContracts/ # Kafka event definitions
-│   │   └── Infrastructure/ # Common DB, Redis, Kafka configs
-│   │
-│   ├── gateway/            # API Gateway
-│   │   └── ApiGateway/
-│   │
-│   └── web/                # React Web Application
-│       ├── src/
-│       │   ├── components/
-│       │   ├── pages/
-│       │   ├── hooks/
-│       │   ├── services/
-│       │   └── utils/
-│       ├── public/
-│       └── package.json
-│
-├── mobile/                 # Flutter Mobile Application
-│   └── lib/
-│       ├── screens/
-│       ├── widgets/
-│       ├── models/
-│       ├── services/
-│       └── utils/
-│
-├── crawler/                # Python Scrapy Crawler
-│   ├── spiders/
-│   ├── pipelines/
-│   ├── items.py
-│   ├── settings.py
-│   └── requirements.txt
-│
-├── ai-service/             # Python FastAPI AI Service (Optional)
-│   ├── app/
-│   ├── requirements.txt
-│   └── Dockerfile
-│
-├── infrastructure/         # Infrastructure as Code
-│   ├── docker/
-│   │   ├── docker-compose.yml      # Local development
-│   │   └── docker-compose.prod.yml # Production
-│   ├── kubernetes/         # Kubernetes manifests (Optional)
-│   │   ├── deployments/
-│   │   ├── services/
-│   │   └── ingress/
-│   └── scripts/
-│       ├── init-db.sh
-│       └── seed-data.sh
-│
-├── docs/                   # Documentation
-│   ├── api/                # Swagger/OpenAPI
-│   └── architecture/       # Architecture diagrams
-│
+
+Each service repository follows the same internal layout (Clean Architecture style):
+
+```text
+<service-repo>/
+├── .github/workflows/            # Per-repo CI/CD pipeline
+├── src/
+│   ├── <Service>.Api/            # Controllers, endpoints
+│   ├── <Service>.Core/           # Business logic, domain models
+│   └── <Service>.Infrastructure/ # Database, external services
+├── tests/
+│   └── <Service>.Tests/          # Unit and integration tests
+├── Dockerfile
 └── README.md
 ```
 
@@ -511,7 +468,7 @@ job-platform-monorepo/
 
 ```mermaid
 flowchart TB
-    subgraph Shared["Shared Modules"]
+    subgraph Shared["Shared Library (NuGet package)"]
         Kernel["SharedKernel"]
         Events["EventContracts"]
         Infra["Infrastructure"]
@@ -564,16 +521,20 @@ flowchart TB
     Mobile -.-> GW
 ```
 
-#### 8.7.3 Monorepo Benefits for This Project
+All shared modules are consumed from the published NuGet package rather than referenced from a shared folder; new versions propagate to service repositories via Dependabot or `repository_dispatch` events, as described in Section 3.13.
+
+#### 8.7.3 Multirepo Benefits for This Project
 
 | Benefit | Rationale |
 |:---------|:-----------|
-| **Simplified dependency management** | All code in one repository; shared libraries easily referenced |
-| **Consistent code sharing** | SharedKernel, EventContracts easily shared across services |
-| **Atomic commits** | Changes across multiple services in a single commit |
-| **Unified CI/CD** | Single pipeline for all services reduces complexity |
-| **Easier refactoring** | Cross-service changes can be made in one commit |
-| **Simplified onboarding** | New developers see the entire system in one place |
+| **Independent versioning and deployment** | Each repository versions and deploys on its own schedule |
+| **Per-repository CI/CD** | Pipelines are scoped to a single service; a change only rebuilds that service |
+| **Team ownership** | Each team member owns and manages their repository independently |
+| **Course requirement compliance** | Distribution across multiple repositories/organizations matches the academic requirements |
+| **Clearer boundaries** | Service and technology boundaries are enforced by repository structure |
+| **Simplified onboarding** | New developers focus on a single repository instead of the entire system |
+
+**Trade-offs:** Shared code is distributed via a NuGet package, so a change to the shared library requires a version bump and update of dependent services rather than an atomic commit.
 
 ---
 

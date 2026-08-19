@@ -53,7 +53,7 @@ Phụ lục này định nghĩa các thuật ngữ kỹ thuật, từ viết t�
 | **KRaft** | Kafka Raft – giao thức đồng thuận mới được sử dụng trong Kafka 4.x, thay thế ZooKeeper |
 | **LTS** | Hỗ trợ dài hạn – phiên bản phát hành với hỗ trợ và bảo trì mở rộng |
 | **Microservices** | Phong cách kiến trúc cấu trúc ứng dụng như một tập hợp các dịch vụ kết nối lỏng lẻo |
-| **Monorepo** | Một kho lưu trữ duy nhất chứa nhiều dự án hoặc dịch vụ |
+| **Multirepo** | Chiến lược phát triển sử dụng nhiều kho lưu trữ độc lập, mỗi kho chứa một dự án hoặc dịch vụ duy nhất |
 | **RAG** | Tạo sinh tăng cường truy xuất – kỹ thuật AI truy xuất tài liệu liên quan để bổ sung phản hồi LLM |
 | **RBAC** | Kiểm soát truy cập dựa trên vai trò – phương pháp hạn chế truy cập hệ thống dựa trên vai trò người dùng |
 | **REST** | Chuyển trạng thái biểu diễn – một phong cách kiến trúc cho thiết kế ứng dụng mạng |

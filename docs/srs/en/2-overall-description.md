@@ -254,32 +254,27 @@ The following constraints govern the design and implementation of the system.
 
 #### 2.4.2 Repository Structure Constraint
 
-The project must be implemented as a **monorepo** with the following structure:
+The project must be implemented as a **multirepo**: each microservice, shared library, and client application resides in its own dedicated repository, potentially distributed across multiple GitHub organizations as required by the academic course. This ensures independent versioning, deployment, and team ownership.
 
-```
-job-platform-monorepo/
-├── .github/workflows/          # CI/CD pipelines
-├── src/
-│   ├── services/               # All backend microservices
-│   │   ├── AuthService/
-│   │   ├── JobService/
-│   │   ├── SearchService/
-│   │   ├── ApplicationService/
-│   │   ├── ProfileService/
-│   │   └── NotificationService/
-│   ├── shared/                 # Shared libraries, DTOs, event contracts
-│   │   ├── SharedKernel/
-│   │   ├── EventContracts/
-│   │   └── Infrastructure/
-│   ├── gateway/                # API Gateway
-│   └── web/                    # Web application
-├── mobile/                     # Mobile application
-├── crawler/                    # Data crawler
-├── ai-service/                 # AI Service (Nice to Have)
-├── infrastructure/docker/      # Docker Compose configurations
-├── docs/                       # Documentation
-└── README.md
-```
+**The following repositories must be created:**
+
+| Repository Name | Description | Technology |
+|:----------------|:------------|:-----------|
+| `job-platform-shared` | Shared kernel, DTOs, and Event Contracts (Kafka schemas) | .NET Class Library |
+| `job-platform-auth-svc` | Authentication and Authorization Service | .NET Web API |
+| `job-platform-job-svc` | Job Posting CRUD and Category Management | .NET Web API |
+| `job-platform-search-svc` | Elasticsearch Indexing and Search Queries | .NET Web API |
+| `job-platform-app-svc` | Job Application and CV Management | .NET Web API |
+| `job-platform-profile-svc` | User Profile, Skills, Experience, Education | .NET Web API |
+| `job-platform-notif-svc` | Email, Push, and In-App Notifications | .NET Web API |
+| `job-platform-gateway` | API Gateway (Routing, JWT Validation) | .NET Web API (YARP) |
+| `job-platform-web` | React Single Page Application | React + Vite |
+| `job-platform-mobile` | Flutter Cross-Platform Mobile App | Flutter |
+| `job-platform-crawler` | Python Scrapy Data Crawler | Python (Scrapy) |
+| `job-platform-ai-svc` | AI Copilot & Resume Scoring (Optional) | Python FastAPI |
+| `job-platform-infra` | Docker Compose, Kubernetes Manifests, Deployment Scripts | YAML / Shell |
+
+Since direct folder references (`../shared/`) are not possible across repositories, the `job-platform-shared` repository must be built and published as a **NuGet package** to a private feed (e.g., GitHub Packages, Azure Artifacts, or NuGet.org). All microservices must reference this package via `PackageReference` in their `.csproj` files. Each repository follows semantic versioning (SemVer 2.0); when the shared library changes, a new version is published and dependent services are updated incrementally.
 
 #### 2.4.3 Zero-Cost Infrastructure Constraint
 

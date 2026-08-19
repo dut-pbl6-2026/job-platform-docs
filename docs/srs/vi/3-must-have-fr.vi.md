@@ -2,7 +2,7 @@
 
 [English](3-must-have-fr.md) | [Tiếng Việt](3-must-have-fr.vi.md)
 
-## Nền tảng Việc làm Việt Nam - Microservices với .NET + Monorepo
+## Nền tảng Việc làm Việt Nam - Microservices với .NET + Multirepo
 
 **Phiên bản:** 1.0  
 **Ngày:** 17 tháng 8 năm 2026  

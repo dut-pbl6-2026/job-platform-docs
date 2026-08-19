@@ -2,7 +2,7 @@
 
 [English](master-plan.md) | [Tiếng Việt](master-plan.vi.md)
 
-## Microservices Architecture with .NET + Monorepo
+## Microservices Architecture with .NET + Multirepo
 
 ---
 
@@ -145,7 +145,7 @@ Since direct folder references (`../shared/`) are not possible across repositori
 
 | Day | Tasks | Assignee | Validation |
 |:---|:---|:---|:---|
-| Monday | Kickoff meeting, align architecture, create repository, setup monorepo structure, setup Docker Compose with PostgreSQL, Redis, Elasticsearch, Kafka | TM1 (Lead) | Docker runs successfully |
+| Monday | Kickoff meeting, align architecture, create and initialize the multirepo repositories, setup Docker Compose with PostgreSQL, Redis, Elasticsearch, Kafka | TM1 (Lead) | Docker runs successfully |
 | Tuesday | Setup .NET solution, shared kernel, AuthService with Entity Framework, JWT configuration | TM1 | Database migration successful |
 | Wednesday | AuthService: Register, Login API endpoints, unit tests for Auth | TM1 | Postman tests pass |
 | Thursday | React: Setup Vite, Tailwind, Axios, Login/Register page | TM3 | UI renders correctly |

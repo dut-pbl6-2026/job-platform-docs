@@ -2,7 +2,7 @@
 
 [English](3-must-have-fr.md) | [Tiếng Việt](3-must-have-fr.vi.md)
 
-## Vietnam Job Platform - Microservices with .NET + Monorepo
+## Vietnam Job Platform - Microservices with .NET + Multirepo
 
 **Version:** 1.0  
 **Date:** August 17, 2026  

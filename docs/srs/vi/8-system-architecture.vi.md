@@ -426,84 +426,41 @@ flowchart LR
 
 ---
 
-### 8.7 Cấu trúc Monorepo
+### 8.7 Cấu trúc Multirepo (Đa Repo)
 
 #### 8.7.1 Tổ chức mã nguồn
 
+Dự án được tổ chức theo mô hình **multirepo (đa repo)**: mỗi dịch vụ và ứng dụng nằm trong một repository riêng (xem Phần 2.4.2). Thư viện dùng chung (`job-platform-shared`) được xây dựng và xuất bản dưới dạng gói **NuGet**; tất cả các dịch vụ tham chiếu gói này thông qua `PackageReference` — không sử dụng tham chiếu thư mục trực tiếp.
+
+```text
+job-platform/                     # Tổ chức GitHub (hoặc namespace)
+├── job-platform-shared/          # Shared kernel, DTO, EventContracts (gói NuGet)
+├── job-platform-auth-svc/        # Dịch vụ Xác thực
+├── job-platform-job-svc/         # Dịch vụ Tin
+├── job-platform-search-svc/      # Dịch vụ Tìm kiếm
+├── job-platform-app-svc/         # Dịch vụ Ứng tuyển
+├── job-platform-profile-svc/     # Dịch vụ Hồ sơ
+├── job-platform-notif-svc/       # Dịch vụ Thông báo
+├── job-platform-gateway/         # API Gateway (YARP)
+├── job-platform-web/             # Ứng dụng web React
+├── job-platform-mobile/          # Ứng dụng di động Flutter
+├── job-platform-crawler/         # Trình thu thập Python Scrapy
+├── job-platform-ai-svc/          # Dịch vụ AI Python FastAPI (tùy chọn)
+└── job-platform-infra/           # Docker Compose, manifest K8s, kịch bản triển khai
 ```
-job-platform-monorepo/
-├── .github/
-│   └── workflows/          # Định nghĩa đường ống CI/CD
-│       ├── ci.yml          # Xây dựng và kiểm thử
-│       └── deploy.yml      # Triển khai lên staging/prod
-│
-├── src/                    # Mã nguồn chính
-│   ├── services/           # Microservices phụ trợ
-│   │   ├── AuthService/
-│   │   │   ├── API/        # Controllers, endpoints
-│   │   │   ├── Core/       # Logic nghiệp vụ, mô hình miền
-│   │   │   ├── Infrastructure/ # Cơ sở dữ liệu, dịch vụ bên ngoài
-│   │   │   └── Tests/      # Kiểm thử đơn vị và tích hợp
-│   │   ├── JobService/     # Cấu trúc tương tự
-│   │   ├── SearchService/  # Cấu trúc tương tự
-│   │   ├── ApplicationService/ # Cấu trúc tương tự
-│   │   ├── ProfileService/ # Cấu trúc tương tự
-│   │   └── NotificationService/ # Cấu trúc tương tự
-│   │
-│   ├── shared/             # Mã dùng chung giữa các dịch vụ
-│   │   ├── SharedKernel/   # DTO, giao diện chung
-│   │   ├── EventContracts/ # Định nghĩa sự kiện Kafka
-│   │   └── Infrastructure/ # Cấu hình chung DB, Redis, Kafka
-│   │
-│   ├── gateway/            # API Gateway
-│   │   └── ApiGateway/
-│   │
-│   └── web/                # Ứng dụng Web React
-│       ├── src/
-│       │   ├── components/
-│       │   ├── pages/
-│       │   ├── hooks/
-│       │   ├── services/
-│       │   └── utils/
-│       ├── public/
-│       └── package.json
-│
-├── mobile/                 # Ứng dụng Di động Flutter
-│   └── lib/
-│       ├── screens/
-│       ├── widgets/
-│       ├── models/
-│       ├── services/
-│       └── utils/
-│
-├── crawler/                # Trình thu thập Python Scrapy
-│   ├── spiders/
-│   ├── pipelines/
-│   ├── items.py
-│   ├── settings.py
-│   └── requirements.txt
-│
-├── ai-service/             # Dịch vụ AI Python FastAPI (Tùy chọn)
-│   ├── app/
-│   ├── requirements.txt
-│   └── Dockerfile
-│
-├── infrastructure/         # Hạ tầng dưới dạng mã
-│   ├── docker/
-│   │   ├── docker-compose.yml      # Phát triển cục bộ
-│   │   └── docker-compose.prod.yml # Sản phẩm
-│   ├── kubernetes/         # Manifests Kubernetes (Tùy chọn)
-│   │   ├── deployments/
-│   │   ├── services/
-│   │   └── ingress/
-│   └── scripts/
-│       ├── init-db.sh
-│       └── seed-data.sh
-│
-├── docs/                   # Tài liệu
-│   ├── api/                # Swagger/OpenAPI
-│   └── architecture/       # Sơ đồ kiến trúc
-│
+
+Mỗi repository dịch vụ tuân theo cùng một cấu trúc nội bộ (theo phong cách Clean Architecture):
+
+```text
+<service-repo>/
+├── .github/workflows/            # Đường ống CI/CD cho từng repo
+├── src/
+│   ├── <Service>.Api/            # Controllers, endpoints
+│   ├── <Service>.Core/           # Logic nghiệp vụ, mô hình miền
+│   └── <Service>.Infrastructure/ # Cơ sở dữ liệu, dịch vụ bên ngoài
+├── tests/
+│   └── <Service>.Tests/          # Kiểm thử đơn vị và tích hợp
+├── Dockerfile
 └── README.md
 ```
 
@@ -511,7 +468,7 @@ job-platform-monorepo/
 
 ```mermaid
 flowchart TB
-    subgraph Shared["Mô-đun dùng chung"]
+    subgraph Shared["Thư viện dùng chung (gói NuGet)"]
         Kernel["SharedKernel"]
         Events["EventContracts"]
         Infra["Infrastructure"]
@@ -564,16 +521,20 @@ flowchart TB
     Mobile -.-> GW
 ```
 
-#### 8.7.3 Lợi ích của Monorepo cho dự án này
+Tất cả các mô-đun dùng chung được tiêu thụ từ gói NuGet đã xuất bản thay vì tham chiếu từ một thư mục dùng chung; các phiên bản mới được lan truyền tới các repository dịch vụ thông qua Dependabot hoặc sự kiện `repository_dispatch`, như mô tả trong Phần 3.13.
+
+#### 8.7.3 Lợi ích của Multirepo cho dự án này
 
 | Lợi ích | Lý do |
 |:--------|:------|
-| **Quản lý phụ thuộc đơn giản hóa** | Tất cả mã trong một kho lưu trữ; thư viện dùng chung dễ tham chiếu |
-| **Chia sẻ mã nhất quán** | SharedKernel, EventContracts dễ dàng chia sẻ giữa các dịch vụ |
-| **Cam kết nguyên tử** | Thay đổi trên nhiều dịch vụ trong một cam kết duy nhất |
-| **CI/CD thống nhất** | Một đường ống duy nhất cho tất cả dịch vụ giảm độ phức tạp |
-| **Tái cấu trúc dễ dàng hơn** | Thay đổi xuyên dịch vụ có thể thực hiện trong một cam kết |
-| **Đơn giản hóa việc gia nhập** | Nhà phát triển mới thấy toàn bộ hệ thống ở một nơi |
+| **Quản lý phiên bản và triển khai độc lập** | Mỗi repository có lịch trình phát hành và triển khai riêng |
+| **CI/CD cho từng repository** | Đường ống giới hạn trong một dịch vụ; một thay đổi chỉ xây dựng lại dịch vụ đó |
+| **Quyền sở hữu của nhóm** | Mỗi thành viên sở hữu và quản lý repository của mình một cách độc lập |
+| **Tuân thủ yêu cầu môn học** | Phân bố trên nhiều repository/tổ chức phù hợp với yêu cầu học thuật |
+| **Ranh giới rõ ràng hơn** | Ranh giới dịch vụ và công nghệ được đảm bảo bởi cấu trúc repository |
+| **Đơn giản hóa việc gia nhập** | Nhà phát triển mới tập trung vào một repository thay vì toàn bộ hệ thống |
+
+**Đánh đổi:** Mã dùng chung được phân phối qua gói NuGet, vì vậy một thay đổi trong thư viện dùng chung đòi hỏi tăng phiên bản và cập nhật các dịch vụ phụ thuộc thay vì một cam kết nguyên tử.
 
 ---
 

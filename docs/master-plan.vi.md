@@ -2,7 +2,7 @@
 
 [English](master-plan.md) | [Tiếng Việt](master-plan.vi.md)
 
-## Kiến trúc Microservices với .NET + Monorepo
+## Kiến trúc Microservices với .NET + Multirepo
 
 ---
 
@@ -140,7 +140,7 @@ Chiến lược quản lý phiên bản: Mỗi repository tuân theo quy tắc S
 
 | Ngày | Nhiệm vụ | Người phụ trách | Xác nhận |
 |:---|:---|:---|:---|
-| Thứ Hai | Họp khởi động, thống nhất kiến trúc, tạo kho lưu trữ, thiết lập cấu trúc monorepo, thiết lập Docker Compose với PostgreSQL, Redis, Elasticsearch, Kafka | TM1 (Trưởng nhóm) | Docker chạy thành công |
+| Thứ Hai | Họp khởi động, thống nhất kiến trúc, tạo và khởi tạo các repository đa repo, thiết lập Docker Compose với PostgreSQL, Redis, Elasticsearch, Kafka | TM1 (Trưởng nhóm) | Docker chạy thành công |
 | Thứ Ba | Thiết lập giải pháp .NET, shared kernel, AuthService với Entity Framework, cấu hình JWT | TM1 | Migration cơ sở dữ liệu thành công |
 | Thứ Tư | AuthService: API đăng ký, đăng nhập, kiểm thử đơn vị cho Auth | TM1 | Kiểm thử Postman thành công |
 | Thứ Năm | React: Thiết lập Vite, Tailwind, Axios, trang Đăng nhập/Đăng ký | TM3 | Giao diện hiển thị đúng |

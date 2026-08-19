@@ -53,7 +53,7 @@ This appendix defines technical terms, acronyms, and domain-specific terminology
 | **KRaft** | Kafka Raft – the new consensus protocol used in Kafka 4.x, replacing ZooKeeper |
 | **LTS** | Long Term Support – a release with extended support and maintenance |
 | **Microservices** | An architectural style that structures an application as a collection of loosely coupled services |
-| **Monorepo** | A single repository containing multiple projects or services |
+| **Multirepo** | A development strategy using multiple independent repositories, each containing a single project or service |
 | **RAG** | Retrieval-Augmented Generation – an AI technique that retrieves relevant documents to augment LLM responses |
 | **RBAC** | Role-Based Access Control – a method of restricting system access based on user roles |
 | **REST** | Representational State Transfer – an architectural style for designing networked applications |

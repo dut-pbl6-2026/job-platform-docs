@@ -98,7 +98,7 @@ Requirements are categorised into three priority levels, as defined in the *Mast
 
 By the end of the 16-week project, the team will deliver:
 
-- Complete source code in a monorepo structure, with a clear separation of backend, frontend, mobile, and supporting services.
+- Complete source code distributed across multiple repositories (multirepo), with a clear separation of backend, frontend, mobile, and supporting services.
 - Infrastructure-as-code (Docker Compose) for local development and production.
 - Deployment scripts for zero-cost staging and production environments (as detailed in Part 9).
 - API documentation (Swagger/OpenAPI) for all services.
