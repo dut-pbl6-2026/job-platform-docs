@@ -1,4 +1,7 @@
 # Software Requirements Specification (SRS)
+
+[English](3-must-have-fr.md) | [Tiếng Việt](3-must-have-fr.vi.md)
+
 ## Vietnam Job Platform - Microservices with .NET + Monorepo
 
 **Version:** 1.0  

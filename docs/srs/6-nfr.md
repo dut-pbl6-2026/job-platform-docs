@@ -1,4 +1,7 @@
 # Software Requirements Specification (SRS)
+
+[English](6-nfr.md) | [Tiếng Việt](6-nfr.vi.md)
+
 ## Vietnam Job Platform - Microservices Architecture
 
 **Version:** 1.0  

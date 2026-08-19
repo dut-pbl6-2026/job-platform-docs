@@ -1,4 +1,7 @@
 # MASTER PLAN - VIETNAM JOB PLATFORM
+
+[English](master-plan.md) | [Tiếng Việt](master-plan.vi.md)
+
 ## Microservices Architecture with .NET + Monorepo
 
 ---
