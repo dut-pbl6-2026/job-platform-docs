@@ -434,6 +434,7 @@ Dự án được tổ chức theo mô hình **multirepo (đa repo)**: mỗi d�
 
 ```text
 job-platform/                     # Tổ chức GitHub (hoặc namespace)
+├── job-platform-docs/            # Kế hoạch tổng thể, SRS, chiến lược Git, quản trị, mẫu tài liệu
 ├── job-platform-shared/          # Shared kernel, DTO, EventContracts (gói NuGet)
 ├── job-platform-auth-svc/        # Dịch vụ Xác thực
 ├── job-platform-job-svc/         # Dịch vụ Tin

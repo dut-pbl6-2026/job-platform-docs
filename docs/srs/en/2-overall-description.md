@@ -273,6 +273,7 @@ The project must be implemented as a **multirepo**: each microservice, shared li
 | `job-platform-crawler` | Python Scrapy Data Crawler | Python (Scrapy) |
 | `job-platform-ai-svc` | AI Copilot & Resume Scoring (Optional) | Python FastAPI |
 | `job-platform-infra` | Docker Compose, Kubernetes Manifests, Deployment Scripts | YAML / Shell |
+| `job-platform-docs` | Master plan, SRS (EN/VI), Git strategy, project governance, and templates | Markdown |
 
 Since direct folder references (`../shared/`) are not possible across repositories, the `job-platform-shared` repository must be built and published as a **NuGet package** to a private feed (e.g., GitHub Packages, Azure Artifacts, or NuGet.org). All microservices must reference this package via `PackageReference` in their `.csproj` files. Each repository follows semantic versioning (SemVer 2.0); when the shared library changes, a new version is published and dependent services are updated incrementally.
 

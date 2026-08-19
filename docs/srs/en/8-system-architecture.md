@@ -434,6 +434,7 @@ The project is organised as a **multirepo**: each service and application reside
 
 ```text
 job-platform/                     # GitHub organization (or namespace)
+├── job-platform-docs/            # Master plan, SRS, git strategy, governance, templates
 ├── job-platform-shared/          # Shared kernel, DTOs, EventContracts (NuGet package)
 ├── job-platform-auth-svc/        # Auth microservice
 ├── job-platform-job-svc/         # Job microservice

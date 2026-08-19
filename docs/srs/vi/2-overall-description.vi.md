@@ -273,6 +273,7 @@ Dự án phải được triển khai theo mô hình **đa repo (multirepo)**: m
 | `job-platform-crawler` | Trình thu thập dữ liệu Python Scrapy | Python (Scrapy) |
 | `job-platform-ai-svc` | AI Copilot & Chấm điểm CV (Tùy chọn) | Python FastAPI |
 | `job-platform-infra` | Docker Compose, Manifests Kubernetes, Kịch bản triển khai | YAML / Shell |
+| `job-platform-docs` | Kế hoạch tổng thể, SRS (EN/VI), chiến lược Git, quản trị dự án và mẫu tài liệu | Markdown |
 
 Vì không thể tham chiếu thư mục trực tiếp (`../shared/`) giữa các repository khác nhau, repository `job-platform-shared` phải được xây dựng và xuất bản dưới dạng gói **NuGet** lên một feed riêng tư (ví dụ: GitHub Packages, Azure Artifacts, hoặc NuGet.org). Tất cả các microservice phải tham chiếu gói này thông qua `<PackageReference>` trong file .csproj. Mỗi repository tuân theo quy tắc Semantic Versioning (SemVer 2.0); khi thư viện dùng chung thay đổi, một phiên bản mới được xuất bản và các dịch vụ phụ thuộc được cập nhật dần dần.
 

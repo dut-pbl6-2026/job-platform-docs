@@ -107,7 +107,7 @@
 
 ### 2.2. Repository Organization (Multirepo)
 
-The project must be implemented across **multiple repositories**, potentially distributed across **multiple GitHub organizations** as required by the academic course. Each microservice, shared library, and client application resides in its own dedicated repository to ensure independent versioning, deployment, and team ownership.
+The project must be implemented across **multiple repositories**, potentially distributed across **multiple GitHub organizations** as required by the academic course. Each microservice, shared library, client application, and the project documentation reside in their own dedicated repository to ensure independent versioning, deployment, and team ownership. All repositories are centralized under the `dut-pbl6-2026` GitHub organization.
 
 **The following repositories must be created:**
 
@@ -126,6 +126,7 @@ The project must be implemented across **multiple repositories**, potentially di
 | `job-platform-crawler` | Python Scrapy Data Crawler | Python (Scrapy) |
 | `job-platform-ai-svc` | AI Copilot & Resume Scoring (Optional) | Python FastAPI |
 | `job-platform-infra` | Docker Compose, Kubernetes Manifests, Deployment Scripts | YAML / Shell |
+| `job-platform-docs` | Master plan, SRS (EN/VI), Git strategy, project governance, and templates | Markdown |
 
 **Shared Library Management:**
 Since direct folder references (`../shared/`) are not possible across repositories, the `job-platform-shared` repository must be built and published as a **NuGet package** to a private feed (e.g., GitHub Packages, Azure Artifacts, or NuGet.org). All microservices must reference this package via `PackageReference` in their `.csproj` files.
