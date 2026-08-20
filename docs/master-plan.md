@@ -21,7 +21,7 @@
 | API Gateway | Routing, basic JWT validation | Security and request orchestration |
 | PostgreSQL Database | Data storage for all services | No data persistence without database |
 | Docker Compose | Run entire system locally | Development and demo essential |
-| Basic Crawler | Crawl data from external platform like ITViec, TopCV | Provide data for search and testing |
+| Basic Crawler | Crawl data from external platform like vieclam.gov.vn | Provide data for search and testing |
 | Web App (React) | Login, Register, Job List, Job Detail, Apply screens | Basic web interface |
 | Mobile App (Flutter) | Login, Register, Job List, Job Detail, Apply screens | Basic mobile interface |
 | Basic CI/CD | Automated build and test on code push | Code quality assurance |
