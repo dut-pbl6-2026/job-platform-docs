@@ -129,7 +129,7 @@ Các repository sau đây phải được tạo:
 **Quản lý thư viện dùng chung:**
 Vì không thể tham chiếu thư mục trực tiếp (`../shared/`) giữa các repository khác nhau, repository `job-platform-shared` phải được xây dựng và xuất bản dưới dạng gói NuGet lên một feed riêng tư (ví dụ: GitHub Packages, Azure Artifacts, hoặc NuGet.org). Tất cả các microservice phải tham chiếu gói này thông qua `<PackageReference>` trong file .csproj.
 
-**Chiến lược quản lý phiên bản:** Mỗi repository tuân theo quy tắc Semantic Versioning (SemVer 2.0). Khi thư viện dùng chung thay đổi, một phiên bản mới được xuất bản và các dịch vụ phụ thuộc sẽ được cập nhật dần dần.
+**Chiến lược quản lý phiên bản:** Mỗi repository tuân theo quy tắc Semantic Versioning (SemVer 2.0). Khi thư viện dùng chung thay đổi, một phiên bản mới được xuất bản và các dịch vụ phụ thuộc sẽ được cập nhật dần dần.**
 ---
 
 ## 3. LỘ TRÌNH 16 TUẦN - CHI TIẾT THEO MỨC ĐỘ ƯU TIÊN
