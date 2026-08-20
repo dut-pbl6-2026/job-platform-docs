@@ -21,7 +21,7 @@
 | API Gateway | Định tuyến, xác thực JWT cơ bản | Bảo mật và điều phối yêu cầu |
 | Cơ sở dữ liệu PostgreSQL | Lưu trữ dữ liệu cho tất cả dịch vụ | Không có lưu trữ dữ liệu nếu thiếu DB |
 | Docker Compose | Chạy toàn bộ hệ thống cục bộ | Cần thiết cho phát triển và demo |
-| Trình thu thập cơ bản | Thu thập ít nhất 500 tin từ vieclam.gov.vn | Cung cấp dữ liệu cho tìm kiếm và kiểm thử |
+| Trình thu thập cơ bản | Thu thập công việc từ các nền tảng việc làm như ITViec, TopCV | Cung cấp dữ liệu cho tìm kiếm và kiểm thử |
 | Ứng dụng Web (React) | Màn hình Đăng nhập, Đăng ký, Danh sách việc làm, Chi tiết việc làm, Ứng tuyển | Giao diện web cơ bản |
 | Ứng dụng Di động (Flutter) | Màn hình Đăng nhập, Đăng ký, Danh sách việc làm, Chi tiết việc làm, Ứng tuyển | Giao diện di động cơ bản |
 | CI/CD cơ bản | Tự động xây dựng và kiểm thử khi đẩy mã | Đảm bảo chất lượng mã |
