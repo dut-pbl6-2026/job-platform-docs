@@ -88,7 +88,7 @@ Dịch vụ Xác thực quản lý danh tính người dùng, đăng ký, đăng
 
 #### 3.3.1 Mô tả
 
-Dịch vụ Tin tuyển dụng cung cấp các thao tác CRUD cho tin tuyển dụng và quản lý danh mục. Đây là thành phần nghiệp vụ cốt lõi của nền tảng, cho phép nhà tuyển dụng đăng tin và người tìm việc duyệt các cơ hội.
+Dịch vụ Tin tuyển dụng cung cấp các thao tác CRUD cho tin tuyển dụng và quản lý danh mục. Đây là thành phần nghiệp vụ cốt lõi của nền tảng, cho phép nhà tuyển dụng đăng tin và người tìm việc tìm đến các cơ hội việc làm.
 
 #### 3.3.2 Yêu cầu chức năng
 
