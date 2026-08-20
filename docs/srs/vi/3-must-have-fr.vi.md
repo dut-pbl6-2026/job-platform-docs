@@ -577,19 +577,19 @@ Khi thư viện dùng chung (`job-platform-shared`) được cập nhật và ph
 ```mermaid
 flowchart TB
     subgraph Shared["Repo Thư viện dùng chung"]
-        SharedPush["Push lên main"] -- SharedBuild["Xây dựng & Kiểm thử"]
-        SharedBuild -- SharedPack["Đóng gói NuGet"]
-        SharedPack -- SharedPublish["Xuất bản lên Feed"]
+        SharedPush["Push lên main"] --> SharedBuild["Xây dựng & Kiểm thử"]
+        SharedBuild --> SharedPack["Đóng gói NuGet"]
+        SharedPack --> SharedPublish["Xuất bản lên Feed"]
     end
 
     subgraph Service["Repo Dịch vụ (ví dụ: Auth)"]
-        ServicePush["Push lên main"] -- ServiceRestore["Khôi phục gói"]
-        ServiceRestore -- ServiceBuild["Xây dựng & Kiểm thử"]
-        ServiceBuild -- ServiceDocker["Xây dựng Docker Image"]
-        ServiceDocker -- ServiceDeploy["Triển khai lên Staging"]
+        ServicePush["Push lên main"] --> ServiceRestore["Khôi phục gói"]
+        ServiceRestore --> ServiceBuild["Xây dựng & Kiểm thử"]
+        ServiceBuild --> ServiceDocker["Xây dựng Docker Image"]
+        ServiceDocker --> ServiceDeploy["Triển khai lên Staging"]
     end
 
-    SharedPublish -.-|Dependabot PR| ServicePush
+    SharedPublish -.->|Dependabot PR| ServicePush
 ```
 
 #### 3.13.5. Yêu cầu triển khai CI/CD
