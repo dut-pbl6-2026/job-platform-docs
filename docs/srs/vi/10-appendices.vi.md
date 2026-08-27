@@ -115,16 +115,16 @@ Phụ lục này cung cấp phân tích chi tiết về trách nhiệm của t�
 
 ### B.1 Tổng quan thành viên nhóm
 
-| Mã | Vai trò | Kỹ năng chính | Trách nhiệm |
-|:---|:--------|:--------------|:------------|
-| **TM1** | Trưởng nhóm Backend + DevOps | Phát triển backend, DevOps, Hạ tầng | Dịch vụ Xác thực, API Gateway, Docker, Kafka, CI/CD, Giám sát, Triển khai |
-| **TM2** | Backend + Tìm kiếm + AI | Backend, Tìm kiếm, Dữ liệu, AI | Dịch vụ Tin, Dịch vụ Tìm kiếm, Trình thu thập, Elasticsearch, Dịch vụ AI |
-| **TM3** | Frontend Web (React) | React, TypeScript, UI/UX | Ứng dụng web, Bảng quản trị, Tích hợp API, UI/UX |
-| **TM4** | Di động (Flutter) + QA | Flutter, Di động, Kiểm thử | Ứng dụng di động, Thông báo đẩy, Kiểm thử, Theo dõi lỗi |
+| Mã | Thành viên | Vai trò | Kỹ năng chính | Trách nhiệm |
+|:---|:-----------|:--------|:--------------|:------------|
+| **TM1** | **Nguyễn Văn Hoài** | Trưởng nhóm Backend + DevOps | Phát triển backend, DevOps, Hạ tầng | Dịch vụ Xác thực, API Gateway, Docker, Kafka, CI/CD, Giám sát, Triển khai |
+| **TM2** | **Nguyễn Chí Thanh** | Backend + Tìm kiếm + AI | Backend, Tìm kiếm, Dữ liệu, AI | Dịch vụ Tin, Dịch vụ Tìm kiếm, Trình thu thập, Elasticsearch, Dịch vụ AI |
+| **TM3** | **Nguyễn Chí Bảo** | Frontend Web (React) | React, TypeScript, UI/UX | Ứng dụng web, Bảng quản trị, Tích hợp API, UI/UX |
+| **TM4** | **Phạm Minh Khoa** | Di động (Flutter) + QA | Flutter, Di động, Kiểm thử | Ứng dụng di động, Thông báo đẩy, Kiểm thử, Theo dõi lỗi |
 
 ### B.2 Ma trận phân công hàng tuần
 
-| Tuần | TM1 | TM2 | TM3 | TM4 |
+| Tuần | TM1 – Nguyễn Văn Hoài | TM2 – Nguyễn Chí Thanh | TM3 – Nguyễn Chí Bảo | TM4 – Phạm Minh Khoa |
 |:-----|:----|:----|:----|:----|
 | 1 | Docker Compose, Dịch vụ Xác thực, JWT | Lược đồ dữ liệu, Thiết lập trình thu thập, Thu thập lần đầu | Thiết lập React + Vite, Đăng nhập/Đăng ký | Thiết lập Flutter, Theme, Đăng nhập/Đăng ký |
 | 2 | Cấu hình Kafka, Dịch vụ Tin | Dịch vụ Tìm kiếm, Thu thập 200+ tin | Danh sách việc làm, Chi tiết việc làm, Phân trang | Danh sách việc làm, Chi tiết việc làm, Form ứng tuyển |
@@ -147,10 +147,10 @@ Phụ lục này cung cấp phân tích chi tiết về trách nhiệm của t�
 
 | Thành viên | Kỹ năng cần học | Tài nguyên |
 |:-----------|:----------------|:-----------|
-| **TM1** | .NET 8/9, YARP, Docker, Kafka, Kubernetes | Tài liệu .NET, Tài liệu Docker |
-| **TM2** | .NET 8/9, Elasticsearch, Scrapy, AI/LangChain | Hướng dẫn Elasticsearch, Hướng dẫn Scrapy |
-| **TM3** | React 19, Vite, Tailwind, React Query | Tài liệu React, Hướng dẫn Vite |
-| **TM4** | Flutter, Firebase, Thông báo đẩy | Tài liệu Flutter, Hướng dẫn Firebase |
+| **TM1 – Nguyễn Văn Hoài** | .NET 8/9, YARP, Docker, Kafka, Kubernetes | Tài liệu .NET, Tài liệu Docker |
+| **TM2 – Nguyễn Chí Thanh** | .NET 8/9, Elasticsearch, Scrapy, AI/LangChain | Hướng dẫn Elasticsearch, Hướng dẫn Scrapy |
+| **TM3 – Nguyễn Chí Bảo** | React 19, Vite, Tailwind, React Query | Tài liệu React, Hướng dẫn Vite |
+| **TM4 – Phạm Minh Khoa** | Flutter, Firebase, Thông báo đẩy | Tài liệu Flutter, Hướng dẫn Firebase |
 
 ---
 

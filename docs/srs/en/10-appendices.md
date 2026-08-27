@@ -115,16 +115,16 @@ This appendix provides a detailed breakdown of team member responsibilities acro
 
 ### B.1 Team Member Overview
 
-| Code | Role | Primary Skills | Responsibilities |
-|:-----|:-----|:---------------|:-----------------|
-| **TM1** | Backend Lead + DevOps | Backend development, DevOps, Infrastructure | Auth Service, API Gateway, Docker, Kafka, CI/CD, Monitoring, Deployment |
-| **TM2** | Backend + Search + AI | Backend, Search, Data, AI | Job Service, Search Service, Crawler, Elasticsearch, AI Service |
-| **TM3** | Frontend Web (React) | React, TypeScript, UI/UX | Web application, Admin Panel, API integration, UI/UX |
-| **TM4** | Mobile (Flutter) + QA | Flutter, Mobile, Testing | Mobile application, Push notifications, Testing, Bug tracking |
+| Code | Member | Role | Primary Skills | Responsibilities |
+|:-----|:-------|:-----|:---------------|:-----------------|
+| **TM1** | **Nguyen Van Hoai** | Backend Lead + DevOps | Backend development, DevOps, Infrastructure | Auth Service, API Gateway, Docker, Kafka, CI/CD, Monitoring, Deployment |
+| **TM2** | **Nguyen Chi Thanh** | Backend + Search + AI | Backend, Search, Data, AI | Job Service, Search Service, Crawler, Elasticsearch, AI Service |
+| **TM3** | **Nguyen Chi Bao** | Frontend Web (React) | React, TypeScript, UI/UX | Web application, Admin Panel, API integration, UI/UX |
+| **TM4** | **Pham Minh Khoa** | Mobile (Flutter) + QA | Flutter, Mobile, Testing | Mobile application, Push notifications, Testing, Bug tracking |
 
 ### B.2 Weekly Assignment Matrix
 
-| Week | TM1 | TM2 | TM3 | TM4 |
+| Week | TM1 – Nguyen Van Hoai | TM2 – Nguyen Chi Thanh | TM3 – Nguyen Chi Bao | TM4 – Pham Minh Khoa |
 |:-----|:----|:----|:----|:----|
 | 1 | Docker Compose, Auth Service, JWT | Data schema, Crawler setup, Initial crawl | React + Vite setup, Login/Register | Flutter setup, Theme, Login/Register |
 | 2 | Kafka config, Job Service | Search Service, Crawl 200+ jobs | Job List, Job Detail, Pagination | Job List, Job Detail, Apply form |
@@ -147,10 +147,10 @@ This appendix provides a detailed breakdown of team member responsibilities acro
 
 | Team Member | Skills to Learn | Resources |
 |:------------|:----------------|:----------|
-| **TM1** | .NET 8/9, YARP, Docker, Kafka, Kubernetes | .NET documentation, Docker docs |
-| **TM2** | .NET 8/9, Elasticsearch, Scrapy, AI/LangChain | Elasticsearch guide, Scrapy tutorial |
-| **TM3** | React 19, Vite, Tailwind, React Query | React docs, Vite guide |
-| **TM4** | Flutter, Firebase, Push notifications | Flutter docs, Firebase guide |
+| **TM1 – Nguyen Van Hoai** | .NET 8/9, YARP, Docker, Kafka, Kubernetes | .NET documentation, Docker docs |
+| **TM2 – Nguyen Chi Thanh** | .NET 8/9, Elasticsearch, Scrapy, AI/LangChain | Elasticsearch guide, Scrapy tutorial |
+| **TM3 – Nguyen Chi Bao** | React 19, Vite, Tailwind, React Query | React docs, Vite guide |
+| **TM4 – Pham Minh Khoa** | Flutter, Firebase, Push notifications | Flutter docs, Firebase guide |
 
 ---
 
