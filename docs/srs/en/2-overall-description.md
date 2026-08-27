@@ -311,7 +311,7 @@ This requires the use of:
 |:---|:-----------|:-----------|
 | A-01 | The team has basic knowledge of modern web development, APIs, and databases | Medium |
 | A-02 | The team can access the internet for cloud services and documentation | Low |
-| A-03 | vieclam.gov.vn remains accessible and does not implement anti-crawling measures | Medium |
+| A-03 | vieclam.gov.vn remains accessible and does not implement anti-crawling measures | Medium | → If violated, trigger CRAWL-01-07 (seed-data fallback + detailed error logging; see 3.10.2) |
 | A-04 | Free-tier services (Supabase, Upstash, etc.) will remain available with current limits | Low |
 | A-05 | AI service providers (OpenAI/Gemini) maintain their free tier offerings | Medium |
 | A-06 | All team members have capable development machines | Medium |
@@ -340,11 +340,13 @@ The following user stories represent the primary functionality of the system, or
 |:---|:-----------|:-------------------|
 | US-01 | As a **Job Seeker**, I want to **register** for an account so that I can access the platform | - Registration form with validation<br>- Account created in database<br>- Confirmation of successful registration |
 | US-02 | As a **Job Seeker**, I want to **log in** so that I can access my account | - Login with email/password<br>- Token-based authentication<br>- Role-based redirection |
+| US-02b | As a **User**, I want to **request a password reset via email** when I forget my password so I can regain access | - “Forgot password” link on login screen<br>- Enter email → system sends reset link (does not reveal whether email exists)<br>- Link TTL 15 minutes, one-time use<br>- Successful reset → new password applied, all old refresh tokens revoked |
 | US-03 | As a **Job Seeker**, I want to **search for jobs** by keyword and location | - Search bar on homepage<br>- Results with pagination<br>- Sort by date/relevance |
 | US-04 | As a **Job Seeker**, I want to **view job details** so that I can assess the opportunity | - Job title, description, company<br>- Salary, location, requirements<br>- Application button |
 | US-05 | As a **Job Seeker**, I want to **apply for a job** so that I can be considered | - Apply form with CV upload<br>- Application stored in database<br>- Status tracking |
 | US-06 | As a **Job Seeker**, I want to **view my application history** | - List of applications with status<br>- Filter by status<br>- Application details |
-| US-07 | As a **Recruiter**, I want to **post a new job** so that I can attract candidates | - Job posting form<br>- Category selection<br>- Publish/Draft states |
+| US-07 | As a **Recruiter**, I want to **post a new job** so that I can attract candidates | - Job posting form<br>- Category selection<br>- Job linked to verified Company (company_id)<br>- Publish/Draft states |
+| US-07b | As a **Recruiter**, I want to **create and manage a company profile** so that my postings are consistently linked to one company | - Create Company on first use (name, tax_code, website, logo, description)<br>- Select existing Company when posting<br>- One Company has many Recruiters; one Recruiter belongs to one Company |
 | US-08 | As a **Recruiter**, I want to **edit my job postings** | - Update form<br>- Changes saved to database<br>- Search index updated |
 | US-09 | As a **Recruiter**, I want to **view applicants** for my jobs | - Applicant list per job<br>- Applicant details and CV<br>- Status update ability |
 | US-10 | As an **Administrator**, I want to **approve job postings** | - Pending jobs list<br>- Approve/Reject actions<br>- Notification to recruiter |
@@ -387,6 +389,7 @@ flowchart TB
     subgraph UseCases["Use Cases"]
         Reg["Register"]
         Login["Login"]
+        ResetPwd["Reset Password (Forgot Password)"]
         Search["Search Jobs"]
         ViewJob["View Job Details"]
         Apply["Apply for Job"]
@@ -394,6 +397,7 @@ flowchart TB
         PostJob["Post Job"]
         EditJob["Edit Job"]
         ManageApps["Manage Applications"]
+        Company["Manage Company Profile"]
         ApproveJob["Approve Jobs"]
         ManageUsers["Manage Users"]
         ViewStats["View Statistics"]
@@ -405,6 +409,7 @@ flowchart TB
 
     JS --> Reg
     JS --> Login
+    JS --> ResetPwd
     JS --> Search
     JS --> ViewJob
     JS --> Apply
@@ -416,11 +421,14 @@ flowchart TB
 
     RC --> Reg
     RC --> Login
+    RC --> ResetPwd
+    RC --> Company
     RC --> PostJob
     RC --> EditJob
     RC --> ManageApps
 
     AD --> Login
+    AD --> ResetPwd
     AD --> ApproveJob
     AD --> ManageUsers
     AD --> ViewStats

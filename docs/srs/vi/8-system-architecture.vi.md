@@ -234,7 +234,9 @@ Mỗi microservice sở hữu cơ sở dữ liệu/schema riêng để đảm b�
 erDiagram
     AUTH_DB ||--o{ USERS : chứa
     AUTH_DB ||--o{ REFRESH_TOKENS : chứa
+    AUTH_DB ||--o{ PASSWORD_RESET_TOKENS : chứa
     
+    JOB_DB ||--o{ COMPANIES : chứa
     JOB_DB ||--o{ JOBS : chứa
     JOB_DB ||--o{ CATEGORIES : chứa
     JOB_DB ||--o{ SAVED_JOBS : chứa
@@ -249,19 +251,22 @@ erDiagram
     
     NOTIF_DB ||--o{ NOTIFICATIONS : chứa
     NOTIF_DB ||--o{ EMAIL_LOGS : chứa
+
+    COMPANIES ||--o{ JOBS : có
+    COMPANIES ||--o{ USERS : có
 ```
 
 #### 8.4.2 Quyền sở hữu dữ liệu
 
 | Dịch vụ | Dữ liệu sở hữu | Dữ liệu chia sẻ (Chỉ đọc) |
 |:--------|:---------------|:------------------------|
-| Dịch vụ Xác thực | Thông tin đăng nhập, refresh tokens | Không có |
-| Dịch vụ Tin tuyển dụng | Tin, danh mục, tin đã lưu | Không có |
-| Dịch vụ Ứng tuyển | Ứng tuyển, lịch sử trạng thái | Tin (qua API) |
-| Dịch vụ Hồ sơ | Hồ sơ, kỹ năng, kinh nghiệm, giáo dục | Không có |
-| Dịch vụ Tìm kiếm | Chỉ mục tìm kiếm (Elasticsearch) | Tin (qua sự kiện) |
+| Dịch vụ Xác thực | Thông tin đăng nhập, refresh tokens (hash SHA-256, TTL 7/30 ngày), password reset tokens (TTL 15 phút) | Company (qua Job Service API) |
+| Dịch vụ Tin tuyển dụng | Companies, Tin, danh mục, tin đã lưu | Users (qua Auth API) |
+| Dịch vụ Ứng tuyển | Ứng tuyển, lịch sử trạng thái | Tin + Company (qua API) |
+| Dịch vụ Hồ sơ | Hồ sơ (phone/address/DOB mã hóa AES-256-GCM), kỹ năng, kinh nghiệm, giáo dục | Không có |
+| Dịch vụ Tìm kiếm | Chỉ mục tìm kiếm (Elasticsearch) | Tin + Company (qua sự kiện `job.created` chứa `company_id`) |
 | Dịch vụ Thông báo | Nhật ký thông báo, nhật ký email | Không có |
-| Dịch vụ AI | Lịch sử chat, đệm chấm điểm (Redis) | Tin, hồ sơ (qua API) |
+| Dịch vụ AI | Lịch sử chat (TTL 24h Redis, 30 ngày DB tóm tắt), đệm chấm điểm (Redis), context window 20 tin / 8000 token | Tin, Company, hồ sơ (qua API) |
 
 #### 8.4.3 Mô hình luồng dữ liệu
 
@@ -524,6 +529,14 @@ flowchart TB
 
 Tất cả các mô-đun dùng chung được tiêu thụ từ gói NuGet đã xuất bản thay vì tham chiếu từ một thư mục dùng chung; các phiên bản mới được lan truyền tới các repository dịch vụ thông qua Dependabot hoặc sự kiện `repository_dispatch`, như mô tả trong Phần 3.13.
 
+#### 8.7.4 Kiểm thử hợp đồng và khả năng tương thích Event Schema
+
+Để tránh lỗi runtime khi `job-platform-shared` thay đổi Event Schema (ví dụ: thêm/xóa trường trong `job.created`):
+
+- **Contract Test bắt buộc:** Trong CI của mỗi dịch vụ, chạy consumer-driven contract test (Pact / schema verifier) với phiên bản `job-platform-shared` mới nhất trước khi merge vào `main`; chặn merge nếu có breaking change.
+- **Versioning SemVer:** Breaking change → tăng major version; hỗ trợ **dual-read** (chấp nhận cả trường cũ và mới) trong một phiên bản để rolling update an toàn.
+- **Chiến lược tương thích:** Consumer bỏ qua field lạ (ignore unknown fields), Producer chỉ thêm optional field trong minor version; mọi breaking change phải có ADR và migration guide.
+
 #### 8.7.3 Lợi ích của Multirepo cho dự án này
 
 | Lợi ích | Lý do |
@@ -550,21 +563,43 @@ sequenceDiagram
     participant Auth as Dịch vụ Xác thực
     participant DB as PostgreSQL
 
-    Client->>Gateway: Yêu cầu Đăng nhập (email, password)
+    Client->>Gateway: Yêu cầu Đăng nhập (email, password, rememberMe?)
     Gateway->>Auth: Chuyển tiếp Yêu cầu Đăng nhập
     Auth->>DB: Xác minh thông tin đăng nhập
     DB-->>Auth: Dữ liệu người dùng
-    Auth->>Auth: Tạo JWT
+    Auth->>Auth: Tạo JWT (TTL 60 phút) + Refresh Token (TTL 7/30 ngày, hash SHA-256)
+    Auth->>DB: Lưu refresh_tokens (expiry_date, is_revoked=false)
     Auth-->>Gateway: JWT + Refresh Token
     Gateway-->>Client: JWT + Refresh Token
 
+    Client->>Gateway: POST /api/auth/refresh (refreshToken)
+    Gateway->>Auth: Chuyển tiếp
+    Auth->>DB: Kiểm tra token_hash, expiry_date > now(), is_revoked=false
+    alt reuse phát hiện (token đã thu hồi nhưng dùng lại)
+        Auth->>DB: Thu hồi cả family
+        Auth-->>Client: 401 + yêu cầu đăng nhập lại
+    else hợp lệ
+        Auth->>DB: Thu hồi token cũ, tạo cặp mới
+        Auth-->>Client: JWT mới + Refresh mới
+    end
+
+    Client->>Gateway: POST /api/auth/forgot-password (email)
+    Gateway->>Auth: Chuyển tiếp
+    Auth->>DB: Tạo password_reset_tokens (hash, TTL 15 phút)
+    Auth-->>Client: 200 OK (luôn) + gửi email link
+
     Client->>Gateway: Yêu cầu với JWT
-    Gateway->>Gateway: Xác thực JWT
-    Gateway->>Service: Chuyển tiếp Yêu cầu (với claims)
-    Service->>Service: Kiểm tra quyền
+    Gateway->>Gateway: Xác thực JWT (chữ ký, expiry, audience)
+    Gateway->>Service: Chuyển tiếp Yêu cầu (với claims X-User-Id, X-User-Role)
+    Service->>Service: Kiểm tra quyền (RBAC) + giải mã AES-256-GCM cho field nhạy cảm nếu cần
     Service-->>Gateway: Phản hồi
     Gateway-->>Client: Phản hồi
 ```
+
+#### 8.8.1.1 Mã hóa dữ liệu nhạy cảm (SEC-08)
+
+- Trường `phone`, `address`, `date_of_birth` trong `profile_db` được mã hóa **AES-256-GCM** ở tầng ứng dụng với IV riêng mỗi bản ghi; khóa lấy từ Secret Manager / Env Var, rotation 90 ngày (xem `6.3.1`).
+- Mật khẩu băm `bcrypt cost 12`; CV truy cập qua pre-signed URL 1h; secret qua K8s Secret/Vault.
 
 #### 8.8.2 Luồng phân quyền
 

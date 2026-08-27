@@ -42,11 +42,11 @@ Performance requirements define the system's responsiveness, throughput, and res
 |:---|:------------|:-------------------|:----------|
 | PERF-01 | The system shall respond to API requests within acceptable time limits | - 95% of requests complete within 500ms<br>- 99% of requests complete within 1000ms<br>- Response time measured at API Gateway | MUST |
 | PERF-02 | The system shall handle search queries efficiently | - 95% of search queries complete within 200ms<br>- 99% of search queries complete within 500ms<br>- Measured from search service | SHOULD |
-| PERF-03 | The system shall support concurrent users | - Support at least 100 concurrent users<br>- Support at least 1,000 requests per minute<br>- Performance degrades gracefully under load | MUST |
+| PERF-03 | The system shall handle 100 RPS search load on the API Gateway | - **100 HTTP requests/second (RPS) sustained** on `GET /api/search/jobs` in job-search scenario (≈ 100 concurrent users with short think-time)<br>- **p95 < 500ms, p99 < 1000ms** measured at API Gateway, **error rate < 1%**<br>- **k6** scenario: ramp 0→100 RPS in 2 min, sustain 5 min, burst 200 RPS for 30s → graceful degrade (429, no crash)<br>- Weekly via **k6 + Grafana APM**; still guarantees **≥1,000 req/min** as minimum | MUST |
 | PERF-04 | The web application shall load quickly | - First Contentful Paint (FCP) < 1.5 seconds<br>- Largest Contentful Paint (LCP) < 2.5 seconds<br>- Time to Interactive (TTI) < 3.0 seconds | SHOULD |
 | PERF-05 | The mobile application shall be responsive | - App launches within 3 seconds (cold start)<br>- Screen transitions < 300ms<br>- Scrolling is smooth (60fps) | SHOULD |
 | PERF-06 | The system shall use database connection pooling | - Connection pool size appropriate for expected load<br>- Connection timeout < 30 seconds<br>- No connection leaks | MUST |
-| PERF-07 | The system shall utilise caching effectively | - Cache hit rate > 60% for search results<br>- Cache hit rate > 80% for popular job listings<br>- Cache miss penalty < 200ms | SHOULD |
+| PERF-07 | The system shall utilise caching effectively | - Measured over **≥10,000 requests** under normal load (no DDoS, no mass flush), **continuous 15-minute window**<br>- Hit rate **>60% for `search:{query}`** (search results) and **>80% for `job:{id}`** (popular jobs) via Redis `INFO stats` + Search Service instrumentation, Grafana dashboard<br>- **Cache miss penalty** (p95 DB/ES fallback − cache hit) **< 200ms**<br>- Distinguish cold start (<40%) vs warmed (>60%); linked to `CACHE-01` TTLs (5 min search, 1h job) | SHOULD |
 | PERF-08 | The system shall optimise file uploads | - File upload time < 5 seconds for 1MB file<br>- Upload progress indicator provided<br>- Chunked upload for large files (> 5MB) | NICE |
 
 ---
@@ -64,9 +64,22 @@ Security requirements define how the system protects data, prevents unauthorised
 | SEC-05 | The system shall protect against common web vulnerabilities | - SQL injection prevention (parameterised queries)<br>- XSS prevention (output encoding)<br>- CSRF protection (tokens)<br>- Input validation on all user inputs | MUST |
 | SEC-06 | The system shall implement rate limiting | - Rate limiting per IP address<br>- Rate limiting per API key/user<br>- 100 requests per minute default limit | SHOULD |
 | SEC-07 | The system shall provide audit logging | - Log all authentication attempts (success/failure)<br>- Log all authorisation failures<br>- Log all administrative actions | SHOULD |
-| SEC-08 | The system shall protect sensitive data | - Personal information encrypted at rest<br>- CV files stored with restricted access<br>- API keys and secrets not exposed | MUST |
-| SEC-09 | The system shall implement secure session management | - JWT tokens with appropriate expiry (1 hour)<br>- Refresh token rotation<br>- Token revocation on logout | MUST |
+| SEC-08 | The system shall protect sensitive data | - Sensitive fields (`profile.phone`, `profile.address`, `profile.date_of_birth`) encrypted at application layer with **AES-256-GCM** and per-record IV before DB write; key stored in **Secret Manager / Environment Variable**, rotated every 90 days<br>- Passwords are hashed only (bcrypt cost 12) — out of scope for this encryption; see SEC-03<br>- CVs stored on Object Storage with private ACL, accessed via **pre-signed URL TTL 1 hour** (see STORE-01-04); no public ACL<br>- API keys / secrets stored in **K8s Secret / Vault**, never committed or logged; via Secrets, not ConfigMaps | MUST |
+| SEC-09 | The system shall implement secure session management | - Access JWT TTL **60 minutes**, signed with key from Secret Manager<br>- Refresh TTL **7 days** (default) / **30 days** if “Remember Me” (`REFRESH_TOKEN_TTL_DAYS` / `REFRESH_TOKEN_REMEMBER_ME_TTL_DAYS`), stored as **SHA-256 hash** with absolute `expiry_date`, indexed + daily purge<br>- Rotation: old refresh revoked on use; reuse detection → revoke entire family and force re-login<br>- Revoke on logout; password reset (AUTH-01-08) revokes all refresh tokens | MUST |
 | SEC-10 | The system shall implement proper CORS policy | - CORS configured for trusted origins only<br>- Preflight requests handled correctly<br>- Cross-origin requests validated | MUST |
+
+#### 6.3.1 Sensitive Data Classification (SEC-08 detail)
+
+| Data | Location | Encryption at Rest | In Transit | Access Control |
+|:-----|:---------|:-------------------|:-----------|:---------------|
+| `profile.phone`, `profile.address`, `profile.date_of_birth` | `profile_db.profiles` | AES-256-GCM (application-layer, per-record IV) | TLS 1.2+ | Owner + Admin only; not in PublicProfileDTO |
+| `users.email` | `auth_db.users` | Not encrypted (searchable); optional pseudonymization | TLS | Limited public |
+| `users.password_hash` | `auth_db.users` | bcrypt cost 12 + salt | TLS | Never returned |
+| `cv_url` (CV file) | Object Storage (R2) | Provider SSE + private ACL | TLS + pre-signed URL 1h | Applicant + owning recruiter only |
+| `refresh_tokens.token_hash`, `password_reset_tokens.token_hash` | `auth_db` | SHA-256 hash (no plaintext) | TLS | Auth Service only |
+| `API keys / secrets` | Secret Manager / K8s Secret | Vault encryption | TLS | Only required service |
+
+**SEC-08 test criteria:** (1) Direct read of `profile_db.profiles.phone` is Base64 ciphertext, decryptable only with key from Secret Manager; (2) `GET /api/profile/{id}` public omits phone/address; (3) CV URL is pre-signed, unsigned access → 403; (4) No secret found in repo / logs.
 
 ---
 

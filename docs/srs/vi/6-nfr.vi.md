@@ -42,11 +42,11 @@ Yêu cầu hiệu năng xác định khả năng phản hồi, thông lượng v
 |:---|:--------|:-------------------|:---------------|
 | PERF-01 | Hệ thống phản hồi các yêu cầu API trong thời gian chấp nhận được | - 95% yêu cầu hoàn thành trong 500ms<br>- 99% yêu cầu hoàn thành trong 1000ms<br>- Thời gian phản hồi được đo tại API Gateway | BẮT BUỘC |
 | PERF-02 | Hệ thống xử lý truy vấn tìm kiếm hiệu quả | - 95% truy vấn tìm kiếm hoàn thành trong 200ms<br>- 99% truy vấn tìm kiếm hoàn thành trong 500ms<br>- Đo từ dịch vụ tìm kiếm | NÊN CÓ |
-| PERF-03 | Hệ thống hỗ trợ người dùng đồng thời | - Hỗ trợ ít nhất 100 người dùng đồng thời<br>- Hỗ trợ ít nhất 1.000 yêu cầu mỗi phút<br>- Hiệu năng giảm dần một cách mượt mà khi có tải | BẮT BUỘC |
+| PERF-03 | Hệ thống xử lý tải tìm kiếm ở mức 100 RPS trên API Gateway | - **100 yêu cầu HTTP/giây (RPS) sustained** trên `GET /api/search/jobs` trong kịch bản tìm kiếm việc làm (tương đương ~100 người dùng đồng thời với think-time ngắn)<br>- **p95 < 500ms, p99 < 1000ms** đo tại API Gateway, **error rate < 1%**<br>- Kịch bản kiểm thử tải **k6**: ramp 0→100 RPS trong 2 phút, giữ tải 5 phút, burst 200 RPS trong 30s → hệ thống degrade graceful (trả 429, không crash)<br>- Thực hiện hàng tuần; đo bằng **k6 + Grafana APM**; vẫn đảm bảo **≥1.000 yêu cầu/phút** như ngưỡng tối thiểu | BẮT BUỘC |
 | PERF-04 | Ứng dụng web tải nhanh | - First Contentful Paint (FCP) < 1.5 giây<br>- Largest Contentful Paint (LCP) < 2.5 giây<br>- Time to Interactive (TTI) < 3.0 giây | NÊN CÓ |
 | PERF-05 | Ứng dụng di động phản hồi nhanh | - Ứng dụng khởi động trong 3 giây (cold start)<br>- Chuyển màn hình < 300ms<br>- Cuộn mượt mà (60fps) | NÊN CÓ |
 | PERF-06 | Hệ thống sử dụng nhóm kết nối cơ sở dữ liệu | - Kích thước nhóm kết nối phù hợp với tải dự kiến<br>- Thời gian chờ kết nối < 30 giây<br>- Không có rò rỉ kết nối | BẮT BUỘC |
-| PERF-07 | Hệ thống sử dụng bộ nhớ đệm hiệu quả | - Tỷ lệ truy cập đệm > 60% cho kết quả tìm kiếm<br>- Tỷ lệ truy cập đệm > 80% cho tin phổ biến<br>- Hình phạt khi bỏ lỡ đệm < 200ms | NÊN CÓ |
+| PERF-07 | Hệ thống sử dụng bộ nhớ đệm hiệu quả | - Đo trên **tối thiểu 10.000 request** trong điều kiện tải bình thường (không DDoS, không flush hàng loạt), **cửa sổ 15 phút liên tục**<br>- Tỷ lệ hit **>60% cho `search:{query}`** (kết quả tìm kiếm) và **>80% cho `job:{id}`** (tin phổ biến) đo qua Redis `INFO stats` + instrumentation Search Service, dashboard Grafana<br>- **Cache miss penalty** (p95 DB/ES fallback − cache hit) **< 200ms**<br>- Phân biệt cold start (<40%) vs warmed (>60%); liên kết `CACHE-01` TTL (5 phút search, 1 giờ job) | NÊN CÓ |
 | PERF-08 | Hệ thống tối ưu tải lên tệp | - Thời gian tải tệp < 5 giây cho tệp 1MB<br>- Có chỉ báo tiến trình tải lên<br>- Tải lên theo khúc cho tệp lớn (> 5MB) | TỐT NÊN CÓ |
 
 ---
@@ -64,9 +64,22 @@ Yêu cầu bảo mật xác định cách hệ thống bảo vệ dữ liệu, n
 | SEC-05 | Hệ thống bảo vệ chống lại các lỗ hổng web phổ biến | - Ngăn chặn SQL injection (truy vấn có tham số)<br>- Ngăn chặn XSS (mã hóa đầu ra)<br>- Bảo vệ CSRF (token)<br>- Xác thực đầu vào trên tất cả đầu vào của người dùng | BẮT BUỘC |
 | SEC-06 | Hệ thống triển khai giới hạn tốc độ | - Giới hạn tốc độ theo địa chỉ IP<br>- Giới hạn tốc độ theo API key/người dùng<br>- Giới hạn mặc định 100 yêu cầu mỗi phút | NÊN CÓ |
 | SEC-07 | Hệ thống cung cấp ghi nhật ký kiểm tra | - Ghi nhật ký tất cả nỗ lực xác thực (thành công/thất bại)<br>- Ghi nhật ký tất cả thất bại phân quyền<br>- Ghi nhật ký tất cả hành động quản trị | NÊN CÓ |
-| SEC-08 | Hệ thống bảo vệ dữ liệu nhạy cảm | - Thông tin cá nhân được mã hóa khi lưu trữ<br>- Tệp CV được lưu với quyền truy cập hạn chế<br>- API key và bí mật không bị lộ | BẮT BUỘC |
-| SEC-09 | Hệ thống triển khai quản lý phiên an toàn | - Token JWT với thời gian hết hạn phù hợp (1 giờ)<br>- Cơ chế làm mới token<br>- Thu hồi token khi đăng xuất | BẮT BUỘC |
+| SEC-08 | Hệ thống bảo vệ dữ liệu nhạy cảm | - Các trường nhạy cảm (`profile.phone`, `profile.address`, `profile.date_of_birth`) được mã hóa ở tầng ứng dụng bằng **AES-256-GCM** với IV riêng mỗi bản ghi trước khi ghi DB; khóa lưu trong **Secret Manager / Environment Variable**, rotation 90 ngày<br>- Mật khẩu chỉ băm (bcrypt cost 12) — không thuộc phạm vi mã hóa này; xem SEC-03<br>- CV lưu trên Object Storage với ACL private, truy cập qua **pre-signed URL TTL 1 giờ** (liên kết STORE-01-04); không public ACL<br>- API key / secret lưu trong **K8s Secret / Vault**, không commit, không log; cấu hình qua Secret, không ConfigMap | BẮT BUỘC |
+| SEC-09 | Hệ thống triển khai quản lý phiên an toàn | - Access token JWT TTL **60 phút**, ký bằng khóa từ Secret Manager<br>- Refresh token TTL **7 ngày** (mặc định) / **30 ngày** nếu “Ghi nhớ đăng nhập” (env `REFRESH_TOKEN_TTL_DAYS` / `REFRESH_TOKEN_REMEMBER_ME_TTL_DAYS`), lưu dạng **hash SHA-256** với `expiry_date` tuyệt đối, index + purge cron<br>- Rotation: refresh cũ bị thu hồi khi dùng; phát hiện reuse → thu hồi cả family và yêu cầu đăng nhập lại<br>- Thu hồi token khi đăng xuất; mật khẩu đặt lại (AUTH-01-08) thu hồi tất cả refresh tokens | BẮT BUỘC |
 | SEC-10 | Hệ thống triển khai chính sách CORS đúng cách | - CORS được cấu hình chỉ cho các nguồn gốc đáng tin cậy<br>- Yêu cầu Preflight được xử lý đúng<br>- Yêu cầu đa nguồn gốc được xác thực | BẮT BUỘC |
+
+#### 6.3.1 Phân loại dữ liệu nhạy cảm (SEC-08 chi tiết)
+
+| Dữ liệu | Vị trí | Mã hóa at-rest | In-transit | Kiểm soát truy cập |
+|:--------|:-------|:---------------|:-----------|:-------------------|
+| `profile.phone`, `profile.address`, `profile.date_of_birth` | `profile_db.profiles` | AES-256-GCM (application-layer, per-record IV) | TLS 1.2+ | Chỉ chủ sở hữu + Admin; không trả về trong PublicProfileDTO |
+| `users.email` | `auth_db.users` | Không mã hóa (cần tìm kiếm); pseudonymization tùy chọn | TLS | Public hạn chế |
+| `users.password_hash` | `auth_db.users` | Băm bcrypt cost 12 + salt | TLS | Không bao giờ trả về |
+| `cv_url` (file CV) | Object Storage (R2) | SSE của provider + ACL private | TLS + pre-signed URL 1h | Chỉ ứng viên + recruiter sở hữu job |
+| `refresh_tokens.token_hash`, `password_reset_tokens.token_hash` | `auth_db` | Hash SHA-256 (không lưu plaintext) | TLS | Chỉ Auth Service |
+| `API keys / secrets` | Secret Manager / K8s Secret | Vault encryption | TLS | Chỉ service cần thiết |
+
+**Tiêu chí kiểm thử SEC-08:** (1) Đọc trực tiếp `profile_db.profiles.phone` phải là ciphertext Base64, giải mã bằng khóa từ Secret Manager mới ra plaintext; (2) `GET /api/profile/{id}` public không chứa phone/address; (3) CV URL là pre-signed, truy cập không có chữ ký → 403; (4) Không tìm thấy secret nào trong repo / log.
 
 ---
 

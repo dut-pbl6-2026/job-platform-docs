@@ -234,7 +234,9 @@ Each microservice owns its own database/schema to ensure loose coupling and data
 erDiagram
     AUTH_DB ||--o{ USERS : contains
     AUTH_DB ||--o{ REFRESH_TOKENS : contains
+    AUTH_DB ||--o{ PASSWORD_RESET_TOKENS : contains
     
+    JOB_DB ||--o{ COMPANIES : contains
     JOB_DB ||--o{ JOBS : contains
     JOB_DB ||--o{ CATEGORIES : contains
     JOB_DB ||--o{ SAVED_JOBS : contains
@@ -249,19 +251,22 @@ erDiagram
     
     NOTIF_DB ||--o{ NOTIFICATIONS : contains
     NOTIF_DB ||--o{ EMAIL_LOGS : contains
+
+    COMPANIES ||--o{ JOBS : has
+    COMPANIES ||--o{ USERS : has
 ```
 
 #### 8.4.2 Data Ownership
 
 | Service | Owned Data | Shared Data (Read-Only) |
 |:--------|:-----------|:-----------------------|
-| Auth Service | User credentials, refresh tokens | None |
-| Job Service | Jobs, categories, saved jobs | None |
-| Application Service | Applications, status history | Jobs (via API) |
-| Profile Service | Profiles, skills, experience, education | None |
-| Search Service | Search index (Elasticsearch) | Jobs (via event) |
+| Auth Service | User credentials, refresh tokens (SHA-256 hash, TTL 7/30 days), password reset tokens (TTL 15 min) | Company (via Job Service API) |
+| Job Service | Companies, Jobs, categories, saved jobs | Users (via Auth API) |
+| Application Service | Applications, status history | Jobs + Company (via API) |
+| Profile Service | Profiles (phone/address/DOB encrypted AES-256-GCM), skills, experience, education | None |
+| Search Service | Search index (Elasticsearch) | Jobs + Company (via `job.created` event with `company_id`) |
 | Notification Service | Notification logs, email logs | None |
-| AI Service | Chat history, scoring cache (Redis) | Jobs, profiles (via API) |
+| AI Service | Chat history (TTL 24h Redis, 30 days DB summary), scoring cache (Redis), context window 20 msgs / 8000 tokens | Jobs, Company, profiles (via API) |
 
 #### 8.4.3 Data Flow Patterns
 
@@ -524,6 +529,14 @@ flowchart TB
 
 All shared modules are consumed from the published NuGet package rather than referenced from a shared folder; new versions propagate to service repositories via Dependabot or `repository_dispatch` events, as described in Section 3.13.
 
+#### 8.7.4 Contract Testing and Event Schema Compatibility
+
+To prevent runtime failures when `job-platform-shared` changes an Event Schema (e.g., adding/removing fields in `job.created`):
+
+- **Mandatory contract tests:** In each service’s CI, run consumer-driven contract tests (Pact / schema verifier) against the latest `job-platform-shared` before merging to `main`; block merge on breaking changes.
+- **SemVer versioning:** Breaking change → major version bump; support **dual-read** (accept both old and new fields) for one version to enable safe rolling updates.
+- **Compatibility strategy:** Consumers ignore unknown fields, Producers only add optional fields in minor versions; every breaking change requires an ADR and migration guide.
+
 #### 8.7.3 Multirepo Benefits for This Project
 
 | Benefit | Rationale |
@@ -550,21 +563,43 @@ sequenceDiagram
     participant Auth as Auth Service
     participant DB as PostgreSQL
 
-    Client->>Gateway: Login Request (email, password)
+    Client->>Gateway: Login Request (email, password, rememberMe?)
     Gateway->>Auth: Forward Login Request
     Auth->>DB: Verify credentials
     DB-->>Auth: User data
-    Auth->>Auth: Generate JWT
+    Auth->>Auth: Generate JWT (TTL 60 min) + Refresh Token (TTL 7/30 days, SHA-256 hash)
+    Auth->>DB: Store refresh_tokens (expiry_date, is_revoked=false)
     Auth-->>Gateway: JWT + Refresh Token
     Gateway-->>Client: JWT + Refresh Token
 
+    Client->>Gateway: POST /api/auth/refresh (refreshToken)
+    Gateway->>Auth: Forward
+    Auth->>DB: Check token_hash, expiry_date > now(), is_revoked=false
+    alt reuse detected (revoked token reused)
+        Auth->>DB: Revoke entire family
+        Auth-->>Client: 401 + require re-login
+    else valid
+        Auth->>DB: Revoke old token, create new pair
+        Auth-->>Client: New JWT + New Refresh
+    end
+
+    Client->>Gateway: POST /api/auth/forgot-password (email)
+    Gateway->>Auth: Forward
+    Auth->>DB: Create password_reset_tokens (hash, TTL 15 min)
+    Auth-->>Client: 200 OK (always) + send reset email link
+
     Client->>Gateway: Request with JWT
-    Gateway->>Gateway: Validate JWT
-    Gateway->>Service: Forward Request (with claims)
-    Service->>Service: Check permissions
+    Gateway->>Gateway: Validate JWT (signature, expiry, audience)
+    Gateway->>Service: Forward Request (with claims X-User-Id, X-User-Role)
+    Service->>Service: Check permissions (RBAC) + decrypt AES-256-GCM fields if needed
     Service-->>Gateway: Response
     Gateway-->>Client: Response
 ```
+
+#### 8.8.1.1 Sensitive Data Encryption (SEC-08)
+
+- Fields `phone`, `address`, `date_of_birth` in `profile_db` are encrypted with **AES-256-GCM** at the application layer with per-record IV; key from Secret Manager / Env Var, rotated every 90 days (see `6.3.1`).
+- Passwords hashed `bcrypt cost 12`; CVs via pre-signed URL 1h; secrets via K8s Secret/Vault.
 
 #### 8.8.2 Authorization Flow
 

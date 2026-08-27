@@ -54,18 +54,19 @@ Trợ lý AI việc làm là một trợ lý trò chuyện giúp người tìm v
 |:---|:--------|:-------------------|
 | AI-01-01 | Hệ thống cung cấp giao diện trò chuyện cho các truy vấn liên quan đến việc làm | - Điểm cuối trò chuyện: `POST /api/ai/chat`<br>- Người dùng có thể đặt câu hỏi về công việc, nghề nghiệp, công ty<br>- Phản hồi được tạo dựa trên dữ liệu việc làm và kiến thức chung |
 | AI-01-02 | Hệ thống hỗ trợ Phương pháp Tăng cường Truy xuất (RAG) | - Mô tả công việc được nhúng và lưu trong cơ sở dữ liệu vector<br>- Truy vấn người dùng được chuyển đổi thành embeddings<br>- Ngữ cảnh công việc liên quan được truy xuất và sử dụng trong tạo phản hồi |
-| AI-01-03 | Hệ thống duy trì ngữ cảnh hội thoại | - Lịch sử phiên được lưu cho mỗi người dùng<br>- Ngữ cảnh được duy trì qua nhiều tin nhắn<br>- Người dùng có thể bắt đầu hội thoại mới |
-| AI-01-04 | Hệ thống hỗ trợ phản hồi luồng | - Phản hồi được phát luồng token theo token (Server-Sent Events)<br>- Người dùng thấy phản hồi khi chúng được tạo<br>- Có thể hủy tạo phản hồi nếu cần |
+| AI-01-03 | Hệ thống duy trì ngữ cảnh hội thoại có giới hạn | - Lịch sử phiên được lưu cho mỗi người dùng (Redis + PostgreSQL)<br>- **Cửa sổ ngữ cảnh: tối đa 20 tin nhắn gần nhất hoặc 8.000 token** (cấu hình theo LLM)<br>- Khi vượt ngưỡng, loại bỏ tin nhắn cũ nhất, ghi log sự kiện cắt ngữ cảnh; thông báo cho người dùng: “Hội thoại đã dài, tôi sẽ chỉ nhớ 20 tin nhắn gần nhất” và đề xuất bắt đầu phiên mới<br>- Ngữ cảnh được duy trì qua nhiều tin nhắn trong cùng `sessionId`; **TTL phiên 24 giờ không hoạt động** (Redis), tóm tắt lưu 30 ngày trong DB<br>- Người dùng có thể bắt đầu hội thoại mới (`DELETE /api/ai/session/{id}`) |
+| AI-01-04 | Hệ thống hỗ trợ phản hồi luồng | - Phản hồi được phát luồng token theo token (Server-Sent Events)<br>- Người dùng thấy phản hồi khi chúng được tạo; first token < 500ms (PERF-01)<br>- Có thể hủy tạo phản hồi nếu cần |
 | AI-01-05 | Hệ thống bao gồm phản hồi theo công việc cụ thể | - Khi được hỏi về công việc, phản hồi với danh sách việc làm liên quan<br>- Bao gồm tiêu đề công việc, công ty, liên kết đến công việc<br>- Có thể giải thích yêu cầu công việc bằng ngôn ngữ tự nhiên |
 | AI-01-06 | Hệ thống hỗ trợ tư vấn nghề nghiệp | - Trả lời câu hỏi về viết CV, mẹo phỏng vấn<br>- Cung cấp kỳ vọng lương theo vai trò và địa điểm<br>- Đề xuất lộ trình nghề nghiệp dựa trên kỹ năng và kinh nghiệm |
 | AI-01-07 | Hệ thống xử lý truy vấn bằng tiếng Việt và tiếng Anh | - Hiểu và phản hồi bằng cả hai ngôn ngữ<br>- Ngôn ngữ phản hồi khớp với ngôn ngữ truy vấn<br>- Xử lý dấu và thanh tiếng Việt |
 | AI-01-08 | Hệ thống bao gồm các biện pháp bảo vệ cơ bản | - Từ chối các truy vấn không phù hợp hoặc không liên quan<br>- Giữ đúng chủ đề (nghề nghiệp và việc làm)<br>- Cung cấp tuyên bố miễn trừ về nội dung do AI tạo ra |
+| AI-01-09 | Hệ thống tóm tắt ngữ cảnh cũ và giới hạn chi phí | - Khi vượt 20 tin / 8.000 token, tóm tắt lịch sử cũ bằng LLM thành system prompt để giữ ngữ cảnh dài hạn<br>- Mỗi phản hồi giới hạn **512 tokens**, **20 requests / user / giờ** (Redis rate-limit), vượt → `429 Too Many Requests`<br>- Ghi log token usage để giám sát chi phí (Gemini free tier / OpenAI credits) |
 
 #### 5.2.3 Đặc tả API
 
 | Điểm cuối | Phương thức | Body yêu cầu | Phản hồi | Quy tắc xác thực |
 |:----------|:------------|:-------------|:---------|:-----------------|
-| `/api/ai/chat` | POST | `{ message, sessionId?, stream? }` | `{ response, sessionId }` hoặc Server-Sent Events stream | Người dùng được xác thực; tin nhắn không rỗng |
+| `/api/ai/chat` | POST | `{ message, sessionId?, stream?, maxTokens?, temperature? }` | `{ response, sessionId }` hoặc Server-Sent Events stream | Người dùng được xác thực; tin nhắn không rỗng; `429` khi vượt 20 req/giờ; `maxTokens` ≤ 512 |
 | `/api/ai/session` | POST | - | `{ sessionId }` | Người dùng được xác thực |
 | `/api/ai/session/{sessionId}` | DELETE | - | `{ message }` | Người dùng sở hữu phiên |
 | `/api/ai/session/{sessionId}/history` | GET | - | `[ { role, content, timestamp } ]` | Người dùng sở hữu phiên |

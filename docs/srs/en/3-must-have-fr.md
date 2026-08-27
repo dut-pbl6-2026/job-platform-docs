@@ -56,26 +56,35 @@ The Authentication Service manages user identity, registration, login, and sessi
 | AUTH-01-01 | The system shall allow users to register with email, password, and basic profile information | - Registration endpoint: `POST /api/auth/register`<br>- Email format validated<br>- Password strength enforced (minimum 8 characters, at least 1 number, 1 uppercase letter)<br>- User data persisted to database with hashed password |
 | AUTH-01-02 | The system shall allow users to login with email and password | - Login endpoint: `POST /api/auth/login`<br>- Returns access token and refresh token<br>- Invalid credentials return 401 Unauthorised |
 | AUTH-01-03 | The system shall issue access tokens with a limited validity period | - Access token valid for 1 hour<br>- Token contains user ID, email, and role claims<br>- Token is cryptographically signed |
-| AUTH-01-04 | The system shall support refresh token rotation | - Refresh endpoint: `POST /api/auth/refresh`<br>- Old refresh token invalidated on use<br>- New token pair returned |
-| AUTH-01-05 | The system shall support logout (token invalidation) | - Logout endpoint: `POST /api/auth/logout`<br>- Refresh token invalidated<br>- Access token remains valid until expiry |
-| AUTH-01-06 | The system shall assign roles during registration | - Role field in registration form<br>- Default role = User<br>- Recruiter role requires additional company information |
+| AUTH-01-04 | The system shall support refresh token rotation with a defined TTL | - Refresh endpoint: `POST /api/auth/refresh`<br>- Refresh token valid for **7 days** from issuance (configurable via `REFRESH_TOKEN_TTL_DAYS`); if “Remember Me” selected → **30 days** (`REFRESH_TOKEN_REMEMBER_ME_TTL_DAYS`)<br>- Refresh token stored as **SHA-256 hash** with `expiry_date` (absolute TTL, no sliding), indexed, purged by daily cron<br>- Old refresh token invalidated on use (rotation); reuse detection → revoke entire family and require re-login<br>- Expired → `401 Unauthorized`; new token pair returned when valid |
+| AUTH-01-05 | The system shall support logout (token invalidation) | - Logout endpoint: `POST /api/auth/logout`<br>- Refresh token invalidated<br>- Access token remains valid until expiry (no blocklist; short 1-hour TTL) |
+| AUTH-01-06 | The system shall assign roles and link Company during registration | - Role field in registration form<br>- Default role = User<br>- Recruiter role requires `companyId` (FK → Company); if no Company exists, client creates it first via `POST /api/companies` or sends `companyName` (deprecated) for server-side auto-create |
+| AUTH-01-07 | The system shall allow requesting a password reset via email | - Endpoint: `POST /api/auth/forgot-password { email }`<br>- If email exists, create reset_token (UUID), store **SHA-256 hash** + `expiry_date` = 15 minutes, `is_used=false`<br>- Send email with link `{WEB_URL}/reset-password?token=...` (15-min TTL, one-time)<br>- Always return `200 OK` even if email not found (anti-enumeration)<br>- Rate-limit: 5 requests / IP / hour |
+| AUTH-01-08 | The system shall allow resetting password with a token | - Endpoint: `POST /api/auth/reset-password { token, newPassword }`<br>- Token must be valid, not expired, not used<br>- `newPassword` must meet strength as AUTH-01-01<br>- Invalidate token after use (`is_used=true`), **revoke all refresh tokens** of the user (force re-login on other devices)<br>- Return `200 OK` + login guidance |
 
 #### 3.2.3 API Specifications
 
 | Endpoint | Method | Request Body | Response | Validation Rules |
 |:---------|:-------|:-------------|:---------|:-----------------|
-| `/api/auth/register` | POST | `{ email, password, fullName, role, companyName? }` | `{ userId, message }` | Email must be unique; password meets strength requirements; role must be valid |
-| `/api/auth/login` | POST | `{ email, password }` | `{ accessToken, refreshToken, user }` | Credentials must match; account must be active |
-| `/api/auth/refresh` | POST | `{ refreshToken }` | `{ accessToken, refreshToken }` | Token must be valid, not expired, and not revoked |
+| `/api/auth/register` | POST | `{ email, password, fullName, role, companyId?, companyName? (deprecated) }` | `{ userId, message }` | Email must be unique; password meets strength requirements; role must be valid; if `role=Recruiter` must provide `companyId` or `companyName`; `companyId` takes precedence |
+| `/api/auth/login` | POST | `{ email, password, rememberMe? }` | `{ accessToken, refreshToken, user }` | Credentials must match; account must be active; `rememberMe` decides refresh TTL (7 vs 30 days) |
+| `/api/auth/refresh` | POST | `{ refreshToken }` | `{ accessToken, refreshToken }` | Token must be valid, not expired (7/30 days) and not revoked; reuse → revoke family |
 | `/api/auth/logout` | POST | `{ refreshToken }` | `{ message }` | Token must be valid and not already revoked |
 | `/api/auth/me` | GET | (Bearer Token) | `{ user }` | Token must be valid; returns user profile |
+| `/api/auth/forgot-password` | POST | `{ email }` | `{ message }` | Always 200 OK; rate-limit 5/IP/hour |
+| `/api/auth/reset-password` | POST | `{ token, newPassword }` | `{ message }` | Token valid, not expired (15 min), not used; password meets strength |
+| `/api/companies` | POST | `{ name, tax_code?, website?, description?, logo_url?, address?, industry?, size? }` | `{ id, message }` | Requires Recruiter or Admin role; `name` unique; `tax_code` unique if provided |
+| `/api/companies/{id}` | GET | - | CompanyDetailDTO | Public; valid id |
+| `/api/companies` | GET | Query: `q, page, size` | Paginated `[Company]` | Public |
 
 #### 3.2.4 Data Model
 
 | Entity | Required Attributes | Relationships |
 |:-------|:--------------------|:--------------|
-| User | id, email (unique), password_hash, full_name, role, is_active, created_at, updated_at | One User has many Refresh Tokens |
-| Refresh Token | id, token (unique), user_id, expiry_date, is_revoked, created_at | Many Refresh Tokens belong to one User |
+| User | id, email (unique), password_hash, full_name, role, is_active, company_id (FK nullable, Recruiter only), created_at, updated_at | One User has many Refresh Tokens; One User (Recruiter) belongs to one Company |
+| Refresh Token | id, token_hash (unique, SHA-256), user_id, expiry_date (absolute TTL 7 days, 30 days if rememberMe), is_revoked, created_at | Many Refresh Tokens belong to one User |
+| Password Reset Token | id, user_id (FK), token_hash (SHA-256, unique), expiry_date (TTL 15 min), is_used, created_at | Many Password Reset Tokens belong to one User |
+| Company | id, name (unique), tax_code (unique, nullable), verified (bool, default false), logo_url, website, description, address, industry, size, created_at, updated_at | One Company has many Users (Recruiters); One Company has many Jobs |
 
 ---
 
@@ -94,7 +103,7 @@ The Job Service provides CRUD operations for job postings and category managemen
 
 | ID | Requirement | Acceptance Criteria |
 |:---|:------------|:-------------------|
-| JOB-01-01 | The system shall allow Recruiters to create job postings | - Create endpoint: `POST /api/jobs`<br>- Required fields: title, description, company, location, salary range, category, requirements<br>- Job saved to database with status = 'pending' or 'active' |
+| JOB-01-01 | The system shall allow Recruiters to create job postings linked to a Company | - Create endpoint: `POST /api/jobs`<br>- Required fields: title, description, company_id (FK), location, salary range, category, requirements<br>- Job saved to database with status = 'pending' or 'active' and `company_id` referencing a verified Company |
 | JOB-01-02 | The system shall allow Recruiters to retrieve their own job postings | - Get recruiter jobs endpoint: `GET /api/jobs/recruiter`<br>- Pagination support (page, size)<br>- Filter by status |
 | JOB-01-03 | The system shall allow Recruiters to update job postings | - Update endpoint: `PUT /api/jobs/{id}`<br>- Only the job owner can update<br>- Updated timestamp updated automatically |
 | JOB-01-04 | The system shall allow Recruiters to delete job postings | - Delete endpoint: `DELETE /api/jobs/{id}`<br>- Only the job owner can delete<br>- Soft delete (marked as deleted, not physically removed) |
@@ -117,7 +126,8 @@ The Job Service provides CRUD operations for job postings and category managemen
 | Entity | Required Attributes | Relationships |
 |:-------|:--------------------|:--------------|
 | Category | id, name (unique), description, created_at | One Category has many Jobs |
-| Job | id, title, description, company, company_logo_url, location, salary_min, salary_max, salary_currency, category_id, requirements, benefits, employment_type, experience_level, recruiter_id, status, view_count, created_at, updated_at | Many Jobs belong to one Category; One Recruiter has many Jobs |
+| Company | id, name (unique), tax_code (unique, nullable), verified (bool), logo_url, website, description, address, industry, size, created_at, updated_at | One Company has many Jobs; One Company has many Users (Recruiters) |
+| Job | id, title, description, company_id (FK → Company.id), location, salary_min, salary_max, salary_currency, category_id, requirements, benefits, employment_type, experience_level, recruiter_id, status, view_count, created_at, updated_at | Many Jobs belong to one Company and one Category; One Recruiter has many Jobs; `company` free-text is deprecated, replaced by `company_id` |
 | Saved Job | id, user_id, job_id, saved_at | Many Saved Jobs belong to one User and one Job |
 
 ---
@@ -387,12 +397,13 @@ The crawler extracts job data from external sources, primarily vieclam.gov.vn (t
 
 | ID | Requirement | Acceptance Criteria |
 |:---|:------------|:-------------------|
-| CRAWL-01-01 | The crawler shall extract job data from vieclam.gov.vn | - Extracts: title, company, location, salary, description, requirements<br>- Crawls at least 500 jobs<br>- Respects robots.txt and rate limits |
+| CRAWL-01-01 | The crawler shall extract job data from vieclam.gov.vn | - Extracts: title, company, location, salary, description, requirements<br>- Crawls at least 500 jobs<br>- Respects robots.txt and rate limits: delay 1–3s between requests, obeys `Crawl-Delay`, identified User-Agent |
 | CRAWL-01-02 | The crawler shall clean and transform extracted data | - Remove HTML tags<br>- Normalise salary formats<br>- Standardise location names<br>- Handle missing data gracefully |
 | CRAWL-01-03 | The crawler shall avoid duplicate entries | - Check existing jobs by URL or unique identifier<br>- Skip duplicates<br>- Update existing jobs if changed |
 | CRAWL-01-04 | The crawler shall save data to PostgreSQL | - Jobs saved to database<br>- Categories mapped or created<br>- Duplicate detection prevents re-insertion |
 | CRAWL-01-05 | The crawler shall index data in Elasticsearch | - After saving to PostgreSQL, sync to search index<br>- Searchable immediately |
-| CRAWL-01-06 | The crawler shall handle errors and retry | - Retry on network errors (3 attempts)<br>- Log failures with detailed context<br>- Continue crawling after failures |
+| CRAWL-01-06 | The crawler shall handle errors and retry | - Retry on network errors (3 attempts) with exponential backoff<br>- Log failures with detailed context (URL, status, HTML snippet)<br>- Continue crawling after failures |
+| CRAWL-01-07 | The crawler shall handle blocking and seed-data fallback | - If HTTP 403/429 or parse failures >5 consecutive times, stop crawling and log details<br>- Automatic fallback: load seed data from `seed/jobs.json` in `job-platform-crawler` repository (≥500 records) into PostgreSQL and sync to Elasticsearch so search demo remains unblocked<br>- Alert Admin via log/email; `infra` mounts seed on deployment |
 
 ---
 
@@ -556,6 +567,7 @@ Since the project uses a multirepo architecture, CI/CD pipelines must be impleme
 | 1 | Restore NuGet packages (including shared library) | Restore succeeds |
 | 2 | Build the service | Build succeeds |
 | 3 | Run unit tests | All tests pass |
+| 3b | Run contract tests against latest `job-platform-shared` | No breaking changes; Event Schema compatible |
 | 4 | Build Docker image | Image created successfully |
 | 5 | Push to container registry (GHCR / Docker Hub) | Image pushed |
 | 6 | Deploy to staging environment (Fly.io / Railway) | Service responds to health check |
@@ -599,6 +611,8 @@ flowchart TB
 | Each repo has its own GitHub Actions workflow | Independent CI/CD per repository | MUST |
 | Shared library publishes NuGet to private feed | GitHub Packages or Azure Artifacts | MUST |
 | Services reference shared library via PackageReference | No direct folder references | MUST |
+| Contract tests against `job-platform-shared` latest must pass before merge to `main` | Consumer-driven contract tests (Pact / Schema verifier); block merge on breaking Event/DTO changes | MUST |
+| Event Schema versioning via SemVer | Breaking change → major version, dual-read for one version to stay compatible | SHOULD |
 | Dependabot enabled for shared library updates | Automatic PRs for version updates | SHOULD |
 | Staging deployment automated on main branch push | Continuous delivery to staging | SHOULD |
 | Production deployment manual (tag-based) | Controlled releases | SHOULD |
@@ -609,7 +623,7 @@ flowchart TB
 
 | Component | ID | Key Features | Target Week | Owner |
 |:----------|:---|:-------------|:------------|:------|
-| Authentication Service | AUTH-01 | Register, Login, JWT, Refresh Tokens, Logout | 1 | TM1 |
+| Authentication Service | AUTH-01 | Register, Login, JWT, Refresh Tokens (7/30 days), Logout, Forgot/Reset Password (15-min TTL) | 1 | TM1 |
 | Job Service | JOB-01 | CRUD Jobs, Categories, Saved Jobs | 2 | TM2 |
 | Search Service | SEARCH-01 | Keyword Search, Location Filter, Pagination | 2 | TM2 |
 | Application Service | APP-01 | Apply, Upload CV, Status Tracking, History | 3 | TM1 |

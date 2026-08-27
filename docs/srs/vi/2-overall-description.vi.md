@@ -311,7 +311,7 @@ Tất cả hạ tầng sản phẩm và staging phải tận dụng các gói mi
 |:---|:---------|:--------------|
 | A-01 | Nhóm có kiến thức cơ bản về phát triển web hiện đại, API và cơ sở dữ liệu | Trung bình |
 | A-02 | Nhóm có thể truy cập internet cho các dịch vụ đám mây và tài liệu | Thấp |
-| A-03 | vieclam.gov.vn vẫn có thể truy cập và không áp dụng biện pháp chống thu thập | Trung bình |
+| A-03 | vieclam.gov.vn vẫn có thể truy cập và không áp dụng biện pháp chống thu thập | Trung bình | → Nếu vi phạm, kích hoạt CRAWL-01-07 (fallback seed data + ghi log chi tiết; xem 3.10.2) |
 | A-04 | Các dịch vụ gói miễn phí (Supabase, Upstash, v.v.) sẽ duy trì các giới hạn hiện tại | Thấp |
 | A-05 | Các nhà cung cấp dịch vụ AI (OpenAI/Gemini) duy trì các gói miễn phí của họ | Trung bình |
 | A-06 | Tất cả thành viên nhóm đều có máy phát triển đủ năng lực | Trung bình |
@@ -340,11 +340,13 @@ Các user stories sau đây đại diện cho chức năng chính của hệ th�
 |:---|:-----------|:-------------------|
 | US-01 | Với vai trò **Người tìm việc**, tôi muốn **đăng ký** tài khoản để có thể truy cập nền tảng | - Form đăng ký có xác thực<br>- Tài khoản được tạo trong cơ sở dữ liệu<br>- Xác nhận đăng ký thành công |
 | US-02 | Với vai trò **Người tìm việc**, tôi muốn **đăng nhập** để truy cập tài khoản | - Đăng nhập bằng email/mật khẩu<br>- Xác thực dựa trên token<br>- Chuyển hướng dựa theo vai trò |
+| US-02b | Với vai trò **Người dùng**, tôi muốn **yêu cầu đặt lại mật khẩu qua email** khi quên mật khẩu để khôi phục truy cập | - Link “Quên mật khẩu” trên màn hình đăng nhập<br>- Nhập email → hệ thống gửi email chứa link đặt lại (không tiết lộ email có tồn tại hay không)<br>- Link có TTL 15 phút, dùng một lần (one-time)<br>- Đặt lại thành công → mật khẩu mới được áp dụng, tất cả refresh tokens cũ bị thu hồi |
 | US-03 | Với vai trò **Người tìm việc**, tôi muốn **tìm kiếm việc làm** theo từ khóa và địa điểm | - Thanh tìm kiếm trên trang chủ<br>- Kết quả có phân trang<br>- Sắp xếp theo ngày/độ liên quan |
 | US-04 | Với vai trò **Người tìm việc**, tôi muốn **xem chi tiết công việc** để đánh giá cơ hội | - Tiêu đề, mô tả, công ty<br>- Lương, địa điểm, yêu cầu<br>- Nút ứng tuyển |
 | US-05 | Với vai trò **Người tìm việc**, tôi muốn **ứng tuyển** vào một công việc để được xem xét | - Form ứng tuyển có tải CV lên<br>- Hồ sơ ứng tuyển được lưu trong cơ sở dữ liệu<br>- Theo dõi trạng thái |
 | US-06 | Với vai trò **Người tìm việc**, tôi muốn **xem lịch sử ứng tuyển** | - Danh sách ứng tuyển với trạng thái<br>- Lọc theo trạng thái<br>- Chi tiết ứng tuyển |
-| US-07 | Với vai trò **Nhà tuyển dụng**, tôi muốn **đăng tin tuyển dụng mới** để thu hút ứng viên | - Form đăng tin<br>- Chọn danh mục<br>- Trạng thái Xuất bản/Nháp |
+| US-07 | Với vai trò **Nhà tuyển dụng**, tôi muốn **đăng tin tuyển dụng mới** để thu hút ứng viên | - Form đăng tin<br>- Chọn danh mục<br>- Tin gắn với Company đã xác minh (company_id)<br>- Trạng thái Xuất bản/Nháp |
+| US-07b | Với vai trò **Nhà tuyển dụng**, tôi muốn **tạo và quản lý hồ sơ công ty** để tin tuyển dụng được gắn với công ty nhất quán | - Tạo Company lần đầu (name, tax_code, website, logo, mô tả)<br>- Chọn Company đã tồn tại khi đăng tin<br>- Một Company có nhiều Recruiter; một Recruiter thuộc một Company |
 | US-08 | Với vai trò **Nhà tuyển dụng**, tôi muốn **chỉnh sửa tin tuyển dụng** | - Form cập nhật<br>- Thay đổi được lưu vào cơ sở dữ liệu<br>- Cập nhật chỉ mục tìm kiếm |
 | US-09 | Với vai trò **Nhà tuyển dụng**, tôi muốn **xem danh sách ứng viên** cho các tin tuyển dụng | - Danh sách ứng viên theo công việc<br>- Chi tiết ứng viên và CV<br>- Khả năng cập nhật trạng thái |
 | US-10 | Với vai trò **Quản trị viên**, tôi muốn **phê duyệt tin tuyển dụng** | - Danh sách tin chờ duyệt<br>- Phê duyệt/Từ chối<br>- Thông báo đến nhà tuyển dụng |
@@ -387,6 +389,7 @@ flowchart TB
     subgraph UseCases["Use Cases"]
         Reg["Đăng ký"]
         Login["Đăng nhập"]
+        ResetPwd["Đặt lại mật khẩu (quên mật khẩu)"]
         Search["Tìm kiếm việc làm"]
         ViewJob["Xem chi tiết công việc"]
         Apply["Ứng tuyển"]
@@ -394,6 +397,7 @@ flowchart TB
         PostJob["Đăng tin"]
         EditJob["Sửa tin"]
         ManageApps["Quản lý ứng tuyển"]
+        Company["Quản lý hồ sơ Công ty"]
         ApproveJob["Phê duyệt tin"]
         ManageUsers["Quản lý người dùng"]
         ViewStats["Xem thống kê"]
@@ -405,6 +409,7 @@ flowchart TB
 
     JS --> Reg
     JS --> Login
+    JS --> ResetPwd
     JS --> Search
     JS --> ViewJob
     JS --> Apply
@@ -416,11 +421,14 @@ flowchart TB
 
     RC --> Reg
     RC --> Login
+    RC --> ResetPwd
+    RC --> Company
     RC --> PostJob
     RC --> EditJob
     RC --> ManageApps
 
     AD --> Login
+    AD --> ResetPwd
     AD --> ApproveJob
     AD --> ManageUsers
     AD --> ViewStats

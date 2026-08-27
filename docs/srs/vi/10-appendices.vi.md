@@ -215,6 +215,11 @@ Phụ lục này cung cấp đặc tả API cho tất cả dịch vụ. Tài li�
 | **Xác thực** | `/api/auth/refresh` | POST | Làm mới token JWT | BẮT BUỘC |
 | **Xác thực** | `/api/auth/logout` | POST | Đăng xuất người dùng | BẮT BUỘC |
 | **Xác thực** | `/api/auth/me` | GET | Hồ sơ người dùng hiện tại | BẮT BUỘC |
+| **Xác thực** | `/api/auth/forgot-password` | POST | Yêu cầu đặt lại mật khẩu (TTL 15 phút, one-time, rate-limit 5/IP/giờ) | BẮT BUỘC |
+| **Xác thực** | `/api/auth/reset-password` | POST | Đặt lại mật khẩu bằng token | BẮT BUỘC |
+| **Công ty** | `/api/companies` | POST | Tạo Company | BẮT BUỘC |
+| **Công ty** | `/api/companies/{id}` | GET | Chi tiết Company | BẮT BUỘC |
+| **Công ty** | `/api/companies` | GET | Danh sách / tìm kiếm Company | BẮT BUỘC |
 | **Tin** | `/api/jobs` | POST | Tạo tin | BẮT BUỘC |
 | **Tin** | `/api/jobs/recruiter` | GET | Lấy tin của nhà tuyển dụng | BẮT BUỘC |
 | **Tin** | `/api/jobs/{id}` | PUT | Cập nhật tin | BẮT BUỘC |
@@ -240,8 +245,13 @@ Phụ lục này cung cấp đặc tả API cho tất cả dịch vụ. Tài li�
 | **Quản trị** | `/api/admin/categories` | POST | Tạo danh mục | NÊN CÓ |
 | **Quản trị** | `/api/admin/statistics` | GET | Thống kê nền tảng | NÊN CÓ |
 | **Quản trị** | `/api/admin/health` | GET | Sức khỏe hệ thống | NÊN CÓ |
-| **AI** | `/api/ai/chat` | POST | Chatbot AI | TỐT NÊN CÓ |
+| **AI** | `/api/ai/chat` | POST | Chatbot AI (context 20 tin / 8000 token, stream, 512 tokens, 20 req/h) | TỐT NÊN CÓ |
+| **AI** | `/api/ai/session` | POST | Tạo phiên chat | TỐT NÊN CÓ |
+| **AI** | `/api/ai/session/{sessionId}` | DELETE | Xóa phiên chat | TỐT NÊN CÓ |
+| **AI** | `/api/ai/session/{sessionId}/history` | GET | Lịch sử phiên | TỐT NÊN CÓ |
 | **AI** | `/api/ai/score-resume` | POST | Chấm điểm CV | TỐT NÊN CÓ |
+| **Trình thu thập** | `/api/crawler/trigger` | POST | Kích hoạt crawl thủ công (Admin) | BẮT BUỘC |
+| **Trình thu thập** | `/api/crawler/status` | GET | Trạng thái crawl + lỗi fallback | BẮT BUỘC |
 
 ---
 
@@ -253,15 +263,18 @@ Phụ lục này cung cấp lược đồ cơ sở dữ liệu cho tất cả d�
 
 | Bảng | Cột | Mô tả |
 |:-----|:----|:------|
-| **users** | id (UUID, PK), email (unique), password_hash, full_name, role, is_active, created_at, updated_at | Thông tin tài khoản người dùng |
-| **refresh_tokens** | id (UUID, PK), user_id (FK), token (unique), expiry_date, is_revoked, created_at | Refresh tokens cho cơ chế làm mới JWT |
+| **users** | id (UUID, PK), email (unique), password_hash, full_name, role, company_id (FK → companies.id, nullable, chỉ Recruiter), is_active, created_at, updated_at | Thông tin tài khoản người dùng; Recruiter thuộc một Company |
+| **refresh_tokens** | id (UUID, PK), user_id (FK), token_hash (SHA-256, unique), expiry_date (TTL tuyệt đối 7 ngày, 30 ngày nếu rememberMe, indexed), is_revoked, created_at | Refresh tokens cho cơ chế làm mới JWT; purge cron hàng ngày |
+| **password_reset_tokens** | id (UUID, PK), user_id (FK), token_hash (SHA-256, unique), expiry_date (TTL 15 phút, indexed), is_used, created_at | Token đặt lại mật khẩu (one-time) |
+| **companies** | id (UUID, PK), name (unique), tax_code (unique, nullable), verified (bool, default false), logo_url, website, description, address, industry, size, created_at, updated_at | Hồ sơ Company; một Company có nhiều Users và nhiều Jobs |
 
 ### E.2 Cơ sở dữ liệu Tin (job_db)
 
 | Bảng | Cột | Mô tả |
 |:-----|:----|:------|
 | **categories** | id (UUID, PK), name (unique), description, created_at | Danh mục tin tuyển dụng |
-| **jobs** | id (UUID, PK), title, description, company, company_logo_url, location, salary_min, salary_max, salary_currency, category_id (FK), requirements, benefits, employment_type, experience_level, recruiter_id, status, view_count, created_at, updated_at | Tin tuyển dụng |
+| **companies** | id (UUID, PK), name (unique), tax_code (unique, nullable), verified (bool, default false), logo_url, website, description, address, industry, size, created_at, updated_at | Hồ sơ Company (chuẩn hóa, thay free-text company) |
+| **jobs** | id (UUID, PK), title, description, company_id (FK → companies.id), location, salary_min, salary_max, salary_currency, category_id (FK), requirements, benefits, employment_type, experience_level, recruiter_id, status, view_count, created_at, updated_at | Tin tuyển dụng; `company` free-text deprecated → thay bằng `company_id` |
 | **saved_jobs** | id (UUID, PK), user_id, job_id (FK), saved_at | Tin được người dùng lưu |
 
 ### E.3 Cơ sở dữ liệu Ứng tuyển (app_db)

@@ -56,26 +56,35 @@ Dịch vụ Xác thực quản lý danh tính người dùng, đăng ký, đăng
 | AUTH-01-01 | Hệ thống cho phép người dùng đăng ký với email, mật khẩu và thông tin hồ sơ cơ bản | - Điểm cuối đăng ký: `POST /api/auth/register`<br>- Định dạng email được xác thực<br>- Độ mạnh mật khẩu được thực thi (tối thiểu 8 ký tự, ít nhất 1 số, 1 chữ hoa)<br>- Dữ liệu người dùng được lưu vào cơ sở dữ liệu với mật khẩu đã băm |
 | AUTH-01-02 | Hệ thống cho phép người dùng đăng nhập với email và mật khẩu | - Điểm cuối đăng nhập: `POST /api/auth/login`<br>- Trả về access token và refresh token<br>- Thông tin đăng nhập không hợp lệ trả về 401 Unauthorised |
 | AUTH-01-03 | Hệ thống cấp access token với thời gian hiệu lực giới hạn | - Access token có hiệu lực trong 1 giờ<br>- Token chứa user ID, email và các claim về vai trò<br>- Token được ký mã hóa bằng mật mã |
-| AUTH-01-04 | Hệ thống hỗ trợ cơ chế làm mới token | - Điểm cuối làm mới: `POST /api/auth/refresh`<br>- Refresh token cũ bị vô hiệu hóa khi sử dụng<br>- Cặp token mới được trả về |
-| AUTH-01-05 | Hệ thống hỗ trợ đăng xuất (vô hiệu hóa token) | - Điểm cuối đăng xuất: `POST /api/auth/logout`<br>- Refresh token bị vô hiệu hóa<br>- Access token vẫn có hiệu lực cho đến khi hết hạn |
-| AUTH-01-06 | Hệ thống gán vai trò trong quá trình đăng ký | - Trường vai trò trong form đăng ký<br>- Vai trò mặc định = Người dùng<br>- Vai trò Nhà tuyển dụng yêu cầu thông tin công ty bổ sung |
+| AUTH-01-04 | Hệ thống hỗ trợ cơ chế làm mới token có thời hạn xác định | - Điểm cuối làm mới: `POST /api/auth/refresh`<br>- Refresh token có hiệu lực **7 ngày** kể từ khi cấp (có thể cấu hình qua `REFRESH_TOKEN_TTL_DAYS`); nếu chọn “Ghi nhớ đăng nhập” → **30 ngày** (`REFRESH_TOKEN_REMEMBER_ME_TTL_DAYS`)<br>- Refresh token được lưu dạng **hash SHA-256** với `expiry_date` (TTL tuyệt đối, không sliding) và `is_revoked`, index trên `expiry_date`, purge cron hàng ngày<br>- Refresh token cũ bị vô hiệu hóa khi sử dụng (rotation); phát hiện reuse → thu hồi cả family và yêu cầu đăng nhập lại<br>- Hết hạn → `401 Unauthorized` và yêu cầu đăng nhập lại; cặp token mới được trả về khi hợp lệ |
+| AUTH-01-05 | Hệ thống hỗ trợ đăng xuất (vô hiệu hóa token) | - Điểm cuối đăng xuất: `POST /api/auth/logout`<br>- Refresh token bị vô hiệu hóa<br>- Access token vẫn có hiệu lực cho đến khi hết hạn (không blocklist; TTL ngắn 1 giờ) |
+| AUTH-01-06 | Hệ thống gán vai trò và liên kết Company trong quá trình đăng ký | - Trường vai trò trong form đăng ký<br>- Vai trò mặc định = Người dùng<br>- Vai trò Nhà tuyển dụng yêu cầu `companyId` (FK → Company); nếu chưa có Company, client tạo trước qua `POST /api/companies` hoặc gửi `companyName` (deprecated) để server tự tạo Company |
+| AUTH-01-07 | Hệ thống cho phép yêu cầu đặt lại mật khẩu qua email | - Điểm cuối: `POST /api/auth/forgot-password { email }`<br>- Nếu email tồn tại, tạo reset_token (UUID), lưu **hash SHA-256** + `expiry_date` = 15 phút, `is_used=false`<br>- Gửi email chứa link `{WEB_URL}/reset-password?token=...` (TTL 15 phút, one-time)<br>- Luôn trả `200 OK` kể cả khi email không tồn tại (chống enumeration)<br>- Rate-limit: 5 yêu cầu / IP / giờ |
+| AUTH-01-08 | Hệ thống cho phép đặt lại mật khẩu bằng token | - Điểm cuối: `POST /api/auth/reset-password { token, newPassword }`<br>- Token phải hợp lệ, chưa hết hạn, chưa dùng<br>- `newPassword` phải thỏa mãn độ mạnh như AUTH-01-01<br>- Vô hiệu hóa token sau khi dùng (`is_used=true`), **thu hồi tất cả refresh tokens** của user (bắt đăng nhập lại trên thiết bị khác)<br>- Trả về `200 OK` + hướng dẫn đăng nhập lại |
 
 #### 3.2.3 Đặc tả API
 
 | Điểm cuối | Phương thức | Body yêu cầu | Phản hồi | Quy tắc xác thực |
 |:----------|:------------|:-------------|:---------|:-----------------|
-| `/api/auth/register` | POST | `{ email, password, fullName, role, companyName? }` | `{ userId, message }` | Email phải là duy nhất; mật khẩu đáp ứng yêu cầu độ mạnh; vai trò phải hợp lệ |
-| `/api/auth/login` | POST | `{ email, password }` | `{ accessToken, refreshToken, user }` | Thông tin đăng nhập phải khớp; tài khoản phải đang hoạt động |
-| `/api/auth/refresh` | POST | `{ refreshToken }` | `{ accessToken, refreshToken }` | Token phải hợp lệ, chưa hết hạn và chưa bị thu hồi |
+| `/api/auth/register` | POST | `{ email, password, fullName, role, companyId?, companyName? (deprecated) }` | `{ userId, message }` | Email phải là duy nhất; mật khẩu đáp ứng yêu cầu độ mạnh; vai trò phải hợp lệ; nếu `role=Recruiter` phải có `companyId` hoặc `companyName`; `companyId` ưu tiên |
+| `/api/auth/login` | POST | `{ email, password, rememberMe? }` | `{ accessToken, refreshToken, user }` | Thông tin đăng nhập phải khớp; tài khoản phải đang hoạt động; `rememberMe` quyết định TTL refresh (7 vs 30 ngày) |
+| `/api/auth/refresh` | POST | `{ refreshToken }` | `{ accessToken, refreshToken }` | Token phải hợp lệ, chưa hết hạn (7/30 ngày) và chưa bị thu hồi; reuse → thu hồi family |
 | `/api/auth/logout` | POST | `{ refreshToken }` | `{ message }` | Token phải hợp lệ và chưa bị thu hồi |
 | `/api/auth/me` | GET | (Bearer Token) | `{ user }` | Token phải hợp lệ; trả về hồ sơ người dùng |
+| `/api/auth/forgot-password` | POST | `{ email }` | `{ message }` | Luôn 200 OK; rate-limit 5/IP/giờ |
+| `/api/auth/reset-password` | POST | `{ token, newPassword }` | `{ message }` | Token hợp lệ, chưa hết hạn (15 phút), chưa dùng; mật khẩu đạt độ mạnh |
+| `/api/companies` | POST | `{ name, tax_code?, website?, description?, logo_url?, address?, industry?, size? }` | `{ id, message }` | Yêu cầu vai trò Nhà tuyển dụng hoặc Quản trị viên; `name` duy nhất; `tax_code` duy nhất nếu có |
+| `/api/companies/{id}` | GET | - | CompanyDetailDTO | Public; id hợp lệ |
+| `/api/companies` | GET | Query: `q, page, size` | Paginated `[Company]` | Public |
 
 #### 3.2.4 Mô hình dữ liệu
 
 | Thực thể | Thuộc tính bắt buộc | Quan hệ |
 |:---------|:--------------------|:--------|
-| User | id, email (duy nhất), password_hash, full_name, role, is_active, created_at, updated_at | Một User có nhiều Refresh Tokens |
-| Refresh Token | id, token (duy nhất), user_id, expiry_date, is_revoked, created_at | Nhiều Refresh Tokens thuộc về một User |
+| User | id, email (duy nhất), password_hash, full_name, role, is_active, company_id (FK nullable, chỉ Recruiter), created_at, updated_at | Một User có nhiều Refresh Tokens; Một User (Recruiter) thuộc về một Company |
+| Refresh Token | id, token_hash (duy nhất, SHA-256), user_id, expiry_date (TTL tuyệt đối 7 ngày, 30 ngày nếu rememberMe), is_revoked, created_at | Nhiều Refresh Tokens thuộc về một User |
+| Password Reset Token | id, user_id (FK), token_hash (SHA-256, duy nhất), expiry_date (TTL 15 phút), is_used, created_at | Nhiều Password Reset Tokens thuộc về một User |
+| Company | id, name (duy nhất), tax_code (duy nhất, nullable), verified (bool, mặc định false), logo_url, website, description, address, industry, size, created_at, updated_at | Một Company có nhiều Users (Recruiters); Một Company có nhiều Jobs |
 
 ---
 
@@ -94,7 +103,7 @@ Dịch vụ Tin tuyển dụng cung cấp các thao tác CRUD cho tin tuyển d�
 
 | ID | Yêu cầu | Tiêu chí chấp nhận |
 |:---|:--------|:-------------------|
-| JOB-01-01 | Hệ thống cho phép Nhà tuyển dụng tạo tin tuyển dụng | - Điểm cuối tạo: `POST /api/jobs`<br>- Các trường bắt buộc: title, description, company, location, salary range, category, requirements<br>- Tin tuyển dụng được lưu vào cơ sở dữ liệu với status = 'pending' hoặc 'active' |
+| JOB-01-01 | Hệ thống cho phép Nhà tuyển dụng tạo tin tuyển dụng gắn với Company | - Điểm cuối tạo: `POST /api/jobs`<br>- Các trường bắt buộc: title, description, company_id (FK), location, salary range, category, requirements<br>- Tin tuyển dụng được lưu vào cơ sở dữ liệu với status = 'pending' hoặc 'active' và `company_id` tham chiếu Company đã xác minh |
 | JOB-01-02 | Hệ thống cho phép Nhà tuyển dụng xem tin tuyển dụng của chính họ | - Điểm cuối xem tin của nhà tuyển dụng: `GET /api/jobs/recruiter`<br>- Hỗ trợ phân trang (page, size)<br>- Lọc theo trạng thái |
 | JOB-01-03 | Hệ thống cho phép Nhà tuyển dụng cập nhật tin tuyển dụng | - Điểm cuối cập nhật: `PUT /api/jobs/{id}`<br>- Chỉ chủ sở hữu tin mới có thể cập nhật<br>- Thời gian cập nhật được tự động cập nhật |
 | JOB-01-04 | Hệ thống cho phép Nhà tuyển dụng xóa tin tuyển dụng | - Điểm cuối xóa: `DELETE /api/jobs/{id}`<br>- Chỉ chủ sở hữu tin mới có thể xóa<br>- Xóa mềm (đánh dấu đã xóa, không xóa vật lý) |
@@ -117,7 +126,8 @@ Dịch vụ Tin tuyển dụng cung cấp các thao tác CRUD cho tin tuyển d�
 | Thực thể | Thuộc tính bắt buộc | Quan hệ |
 |:---------|:--------------------|:--------|
 | Category | id, name (duy nhất), description, created_at | Một Category có nhiều Jobs |
-| Job | id, title, description, company, company_logo_url, location, salary_min, salary_max, salary_currency, category_id, requirements, benefits, employment_type, experience_level, recruiter_id, status, view_count, created_at, updated_at | Nhiều Jobs thuộc về một Category; Một Recruiter có nhiều Jobs |
+| Company | id, name (duy nhất), tax_code (duy nhất, nullable), verified (bool), logo_url, website, description, address, industry, size, created_at, updated_at | Một Company có nhiều Jobs; Một Company có nhiều Users (Recruiters) |
+| Job | id, title, description, company_id (FK → Company.id), location, salary_min, salary_max, salary_currency, category_id, requirements, benefits, employment_type, experience_level, recruiter_id, status, view_count, created_at, updated_at | Nhiều Jobs thuộc về một Company và một Category; Một Recruiter có nhiều Jobs; `company` free-text đã deprecated, thay bằng `company_id` |
 | Saved Job | id, user_id, job_id, saved_at | Nhiều Saved Jobs thuộc về một User và một Job |
 
 ---
@@ -387,12 +397,13 @@ Trình thu thập trích xuất dữ liệu tin tuyển dụng từ các nguồn
 
 | ID | Yêu cầu | Tiêu chí chấp nhận |
 |:---|:--------|:-------------------|
-| CRAWL-01-01 | Trình thu thập trích xuất dữ liệu tin tuyển dụng từ vieclam.gov.vn | - Trích xuất: title, company, location, salary, description, requirements<br>- Thu thập ít nhất 500 tin<br>- Tuân thủ robots.txt và giới hạn tốc độ |
+| CRAWL-01-01 | Trình thu thập trích xuất dữ liệu tin tuyển dụng từ vieclam.gov.vn | - Trích xuất: title, company, location, salary, description, requirements<br>- Thu thập ít nhất 500 tin<br>- Tuân thủ robots.txt và giới hạn tốc độ: delay 1–3s giữa các request, tuân thủ `Crawl-Delay`, User-Agent định danh |
 | CRAWL-01-02 | Trình thu thập làm sạch và chuyển đổi dữ liệu đã trích xuất | - Loại bỏ thẻ HTML<br>- Chuẩn hóa định dạng lương<br>- Chuẩn hóa tên địa điểm<br>- Xử lý dữ liệu bị thiếu một cách mượt mà |
 | CRAWL-01-03 | Trình thu thập tránh các mục trùng lặp | - Kiểm tra tin hiện có theo URL hoặc định danh duy nhất<br>- Bỏ qua các mục trùng lặp<br>- Cập nhật tin hiện có nếu thay đổi |
 | CRAWL-01-04 | Trình thu thập lưu dữ liệu vào PostgreSQL | - Tin được lưu vào cơ sở dữ liệu<br>- Danh mục được ánh xạ hoặc tạo mới<br>- Phát hiện trùng lặp ngăn chặn chèn lại |
 | CRAWL-01-05 | Trình thu thập lập chỉ mục dữ liệu trong Elasticsearch | - Sau khi lưu vào PostgreSQL, đồng bộ với chỉ mục tìm kiếm<br>- Có thể tìm kiếm ngay lập tức |
-| CRAWL-01-06 | Trình thu thập xử lý lỗi và thử lại | - Thử lại khi lỗi mạng (3 lần)<br>- Ghi nhật ký thất bại với ngữ cảnh chi tiết<br>- Tiếp tục thu thập sau khi thất bại |
+| CRAWL-01-06 | Trình thu thập xử lý lỗi và thử lại | - Thử lại khi lỗi mạng (3 lần) với backoff hàm mũ<br>- Ghi nhật ký thất bại với ngữ cảnh chi tiết (URL, status, HTML snippet)<br>- Tiếp tục thu thập sau khi thất bại |
+| CRAWL-01-07 | Trình thu thập xử lý khi bị chặn và fallback seed data | - Nếu gặp HTTP 403/429 hoặc parse thất bại >5 lần liên tiếp, dừng crawl và ghi log chi tiết<br>- Tự động fallback: nạp dữ liệu mẫu từ `seed/jobs.json` trong repository `job-platform-crawler` (≥500 bản ghi mẫu) vào PostgreSQL và đồng bộ Elasticsearch để demo tìm kiếm không gián đoạn<br>- Cảnh báo tới Admin qua log/email; `infra` mount seed khi triển khai |
 
 ---
 
@@ -556,6 +567,7 @@ Vì dự án sử dụng kiến trúc đa repo (multirepo), các đường ống
 | 1 | Khôi phục gói NuGet (bao gồm thư viện dùng chung) | Khôi phục thành công |
 | 2 | Xây dựng dịch vụ | Xây dựng thành công |
 | 3 | Chạy kiểm thử đơn vị | Tất cả kiểm thử đạt |
+| 3b | Chạy kiểm thử hợp đồng (Contract Test) với phiên bản mới nhất của `job-platform-shared` | Không có breaking change; Event Schema tương thích |
 | 4 | Xây dựng hình ảnh Docker | Hình ảnh được tạo thành công |
 | 5 | Đẩy lên container registry (GHCR / Docker Hub) | Hình ảnh được đẩy |
 | 6 | Triển khai lên môi trường staging (Fly.io / Railway) | Dịch vụ phản hồi kiểm tra sức khỏe |
@@ -599,6 +611,8 @@ flowchart TB
 | Mỗi repo có workflow GitHub Actions riêng | CI/CD độc lập cho từng repository | BẮT BUỘC |
 | Thư viện dùng chung xuất bản NuGet lên feed riêng tư | GitHub Packages hoặc Azure Artifacts | BẮT BUỘC |
 | Các dịch vụ tham chiếu thư viện dùng chung qua PackageReference | Không tham chiếu thư mục trực tiếp | BẮT BUỘC |
+| Kiểm thử hợp đồng (Contract Test) với `job-platform-shared` latest trước khi merge vào `main` | Consumer-driven contract test (Pact / Schema verifier); chặn merge nếu có breaking change về Event/DTO | BẮT BUỘC |
+| Event Schema versioning theo SemVer | Breaking change → major version, hỗ trợ dual-read một phiên bản để tương thích lăn | NÊN CÓ |
 | Bật Dependabot cho cập nhật thư viện dùng chung | Tự động tạo PR cho cập nhật phiên bản | NÊN CÓ |
 | Tự động triển khai staging khi push lên main | Continuous delivery lên staging | NÊN CÓ |
 | Triển khai sản phẩm thủ công (dựa trên tag) | Phát hành có kiểm soát | NÊN CÓ |
@@ -609,7 +623,7 @@ flowchart TB
 
 | Thành phần | ID | Tính năng chính | Tuần mục tiêu | Người phụ trách |
 |:-----------|:---|:----------------|:--------------|:----------------|
-| Dịch vụ Xác thực | AUTH-01 | Đăng ký, Đăng nhập, JWT, Làm mới Token, Đăng xuất | 1 | TM1 |
+| Dịch vụ Xác thực | AUTH-01 | Đăng ký, Đăng nhập, JWT, Làm mới Token (7/30 ngày), Đăng xuất, Quên/Đặt lại mật khẩu (TTL 15 phút) | 1 | TM1 |
 | Dịch vụ Tin tuyển dụng | JOB-01 | CRUD Tin, Danh mục, Tin đã lưu | 2 | TM2 |
 | Dịch vụ Tìm kiếm | SEARCH-01 | Tìm kiếm Từ khóa, Lọc Địa điểm, Phân trang | 2 | TM2 |
 | Dịch vụ Ứng tuyển | APP-01 | Ứng tuyển, Tải CV, Theo dõi Trạng thái, Lịch sử | 3 | TM1 |

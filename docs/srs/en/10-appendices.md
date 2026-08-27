@@ -215,6 +215,11 @@ This appendix provides the API specifications for all services. Complete OpenAPI
 | **Auth** | `/api/auth/refresh` | POST | Refresh JWT token | MUST |
 | **Auth** | `/api/auth/logout` | POST | User logout | MUST |
 | **Auth** | `/api/auth/me` | GET | Current user profile | MUST |
+| **Auth** | `/api/auth/forgot-password` | POST | Request password reset (15-min TTL, one-time, 5/IP/hour) | MUST |
+| **Auth** | `/api/auth/reset-password` | POST | Reset password with token | MUST |
+| **Company** | `/api/companies` | POST | Create Company | MUST |
+| **Company** | `/api/companies/{id}` | GET | Company details | MUST |
+| **Company** | `/api/companies` | GET | List / search Companies | MUST |
 | **Job** | `/api/jobs` | POST | Create job | MUST |
 | **Job** | `/api/jobs/recruiter` | GET | Get recruiter's jobs | MUST |
 | **Job** | `/api/jobs/{id}` | PUT | Update job | MUST |
@@ -240,8 +245,13 @@ This appendix provides the API specifications for all services. Complete OpenAPI
 | **Admin** | `/api/admin/categories` | POST | Create category | SHOULD |
 | **Admin** | `/api/admin/statistics` | GET | Platform statistics | SHOULD |
 | **Admin** | `/api/admin/health` | GET | System health | SHOULD |
-| **AI** | `/api/ai/chat` | POST | AI chatbot | NICE |
+| **AI** | `/api/ai/chat` | POST | AI chatbot (context 20 msgs / 8000 tokens, streaming, 512 tokens, 20 req/h) | NICE |
+| **AI** | `/api/ai/session` | POST | Create chat session | NICE |
+| **AI** | `/api/ai/session/{sessionId}` | DELETE | Delete chat session | NICE |
+| **AI** | `/api/ai/session/{sessionId}/history` | GET | Session history | NICE |
 | **AI** | `/api/ai/score-resume` | POST | Resume scoring | NICE |
+| **Crawler** | `/api/crawler/trigger` | POST | Trigger crawl manually (Admin) | MUST |
+| **Crawler** | `/api/crawler/status` | GET | Crawl status + fallback errors | MUST |
 
 ---
 
@@ -253,15 +263,18 @@ This appendix provides the database schema for all services following the databa
 
 | Table | Columns | Description |
 |:------|:--------|:------------|
-| **users** | id (UUID, PK), email (unique), password_hash, full_name, role, is_active, created_at, updated_at | User account information |
-| **refresh_tokens** | id (UUID, PK), user_id (FK), token (unique), expiry_date, is_revoked, created_at | Refresh tokens for JWT rotation |
+| **users** | id (UUID, PK), email (unique), password_hash, full_name, role, company_id (FK → companies.id, nullable, Recruiter only), is_active, created_at, updated_at | User account information; Recruiter belongs to one Company |
+| **refresh_tokens** | id (UUID, PK), user_id (FK), token_hash (SHA-256, unique), expiry_date (absolute TTL 7 days, 30 days if rememberMe, indexed), is_revoked, created_at | Refresh tokens for JWT rotation; daily purge cron |
+| **password_reset_tokens** | id (UUID, PK), user_id (FK), token_hash (SHA-256, unique), expiry_date (TTL 15 min, indexed), is_used, created_at | Password reset tokens (one-time) |
+| **companies** | id (UUID, PK), name (unique), tax_code (unique, nullable), verified (bool, default false), logo_url, website, description, address, industry, size, created_at, updated_at | Company profile; one Company has many Users and many Jobs |
 
 ### E.2 Job Database (job_db)
 
 | Table | Columns | Description |
 |:------|:--------|:------------|
 | **categories** | id (UUID, PK), name (unique), description, created_at | Job categories |
-| **jobs** | id (UUID, PK), title, description, company, company_logo_url, location, salary_min, salary_max, salary_currency, category_id (FK), requirements, benefits, employment_type, experience_level, recruiter_id, status, view_count, created_at, updated_at | Job postings |
+| **companies** | id (UUID, PK), name (unique), tax_code (unique, nullable), verified (bool, default false), logo_url, website, description, address, industry, size, created_at, updated_at | Company profile (normalized, replaces free-text company) |
+| **jobs** | id (UUID, PK), title, description, company_id (FK → companies.id), location, salary_min, salary_max, salary_currency, category_id (FK), requirements, benefits, employment_type, experience_level, recruiter_id, status, view_count, created_at, updated_at | Job postings; `company` free-text deprecated → replaced by `company_id` |
 | **saved_jobs** | id (UUID, PK), user_id, job_id (FK), saved_at | Jobs saved by users |
 
 ### E.3 Application Database (app_db)

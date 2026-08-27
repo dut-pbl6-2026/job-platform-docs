@@ -54,18 +54,19 @@ The AI Job Copilot is a conversational assistant that helps job seekers with car
 |:---|:------------|:-------------------|
 | AI-01-01 | The system shall provide a chat interface for job-related queries | - Chat endpoint: `POST /api/ai/chat`<br>- Users can ask questions about jobs, careers, companies<br>- Responses generated based on job data and general knowledge |
 | AI-01-02 | The system shall support Retrieval-Augmented Generation (RAG) | - Job descriptions embedded and stored in vector database<br>- User queries converted to embeddings<br>- Relevant job contexts retrieved and used in response generation |
-| AI-01-03 | The system shall maintain conversation context | - Session history stored per user<br>- Context maintained across multiple messages<br>- User can start a new conversation |
-| AI-01-04 | The system shall support streaming responses | - Responses streamed token by token (Server-Sent Events)<br>- Users see responses as they are generated<br>- Cancel generation if needed |
+| AI-01-03 | The system shall maintain bounded conversation context | - Session history stored per user (Redis + PostgreSQL)<br>- **Context window: at most 20 most recent messages or 8,000 tokens** (configurable per LLM)<br>- When exceeded, drop oldest messages, log truncation event; notify user: “Conversation is long, I’ll only remember the last 20 messages” and suggest starting a new session<br>- Context maintained across messages in the same `sessionId`; **session TTL 24h idle** (Redis), summary kept 30 days in DB<br>- User can start a new conversation (`DELETE /api/ai/session/{id}`) |
+| AI-01-04 | The system shall support streaming responses | - Responses streamed token by token (Server-Sent Events)<br>- Users see responses as they are generated; first token < 500ms (PERF-01)<br>- Cancel generation if needed |
 | AI-01-05 | The system shall include job-specific responses | - When asked about jobs, responds with relevant job listings<br>- Includes job title, company, link to job<br>- Can explain job requirements in natural language |
 | AI-01-06 | The system shall support career advice | - Answers questions about CV writing, interview tips<br>- Provides salary expectations by role and location<br>- Suggests career paths based on skills and experience |
 | AI-01-07 | The system shall handle queries in Vietnamese and English | - Understands and responds in both languages<br>- Response language matches query language<br>- Handles Vietnamese diacritics and accents |
 | AI-01-08 | The system shall include basic guardrails | - Refuses inappropriate or irrelevant queries<br>- Stays on-topic (career and jobs)<br>- Provides disclaimer about AI-generated content |
+| AI-01-09 | The system shall summarize old context and limit cost | - When exceeding 20 messages / 8,000 tokens, summarize old history via LLM into a system prompt to retain long-term context<br>- Each response capped at **512 tokens**, **20 requests / user / hour** (Redis rate-limit), exceeded → `429 Too Many Requests`<br>- Log token usage for cost monitoring (Gemini free tier / OpenAI credits) |
 
 #### 5.2.3 API Specifications
 
 | Endpoint | Method | Request Body | Response | Validation Rules |
 |:---------|:-------|:-------------|:---------|:-----------------|
-| `/api/ai/chat` | POST | `{ message, sessionId?, stream? }` | `{ response, sessionId }` or Server-Sent Events stream | User authenticated; message not empty |
+| `/api/ai/chat` | POST | `{ message, sessionId?, stream?, maxTokens?, temperature? }` | `{ response, sessionId }` or Server-Sent Events stream | User authenticated; message not empty; `429` when >20 req/hour; `maxTokens` ≤ 512 |
 | `/api/ai/session` | POST | - | `{ sessionId }` | User authenticated |
 | `/api/ai/session/{sessionId}` | DELETE | - | `{ message }` | User owns session |
 | `/api/ai/session/{sessionId}/history` | GET | - | `[ { role, content, timestamp } ]` | User owns session |
