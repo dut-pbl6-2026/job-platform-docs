@@ -147,8 +147,8 @@ This appendix provides a detailed breakdown of team member responsibilities acro
 
 | Team Member | Skills to Learn | Resources |
 |:------------|:----------------|:----------|
-| **TM1 – Nguyen Van Hoai** | .NET 8/9, YARP, Docker, Kafka, Kubernetes | .NET documentation, Docker docs |
-| **TM2 – Nguyen Chi Thanh** | .NET 8/9, Elasticsearch, Scrapy, AI/LangChain | Elasticsearch guide, Scrapy tutorial |
+| **TM1 – Nguyen Van Hoai** | .NET 10 LTS, YARP, Docker, Kafka, Kubernetes | .NET documentation, Docker docs |
+| **TM2 – Nguyen Chi Thanh** | .NET 10 LTS, Elasticsearch, Scrapy, AI/LangChain | Elasticsearch guide, Scrapy tutorial |
 | **TM3 – Nguyen Chi Bao** | React 19, Vite, Tailwind, React Query | React docs, Vite guide |
 | **TM4 – Pham Minh Khoa** | Flutter, Firebase, Push notifications | Flutter docs, Firebase guide |
 

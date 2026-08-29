@@ -147,8 +147,8 @@ Phụ lục này cung cấp phân tích chi tiết về trách nhiệm của t�
 
 | Thành viên | Kỹ năng cần học | Tài nguyên |
 |:-----------|:----------------|:-----------|
-| **TM1 – Nguyễn Văn Hoài** | .NET 8/9, YARP, Docker, Kafka, Kubernetes | Tài liệu .NET, Tài liệu Docker |
-| **TM2 – Nguyễn Chí Thanh** | .NET 8/9, Elasticsearch, Scrapy, AI/LangChain | Hướng dẫn Elasticsearch, Hướng dẫn Scrapy |
+| **TM1 – Nguyễn Văn Hoài** | .NET 10 LTS, YARP, Docker, Kafka, Kubernetes | Tài liệu .NET, Tài liệu Docker |
+| **TM2 – Nguyễn Chí Thanh** | .NET 10 LTS, Elasticsearch, Scrapy, AI/LangChain | Hướng dẫn Elasticsearch, Hướng dẫn Scrapy |
 | **TM3 – Nguyễn Chí Bảo** | React 19, Vite, Tailwind, React Query | Tài liệu React, Hướng dẫn Vite |
 | **TM4 – Phạm Minh Khoa** | Flutter, Firebase, Thông báo đẩy | Tài liệu Flutter, Hướng dẫn Firebase |
 
