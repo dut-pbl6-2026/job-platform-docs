@@ -2,11 +2,12 @@
 
 ---
 
-## 1. Branch Flow
+## 1. Branch Flow (Trunk-Based — Simplified for Team of 4)
 
 ```
-feature/* → develop → release/* → main
-hotfix/* → main → develop
+feature/* → main
+release/* → main (from main at v0.1.0 W4, v0.2.0 W8, v0.3.0 W13, v1.0.0 W16)
+hotfix/* → main
 ```
 
 ---
@@ -20,7 +21,7 @@ hotfix/* → main → develop
 | Release | `release/v1.0.0` | 1-2 days |
 | Hotfix | `hotfix/v1.0.1-description` | 1-6 hours |
 
-**Permanent:** `main` (production) + `develop` (integration)
+**Permanent:** `main` (production only — `develop` removed for simplicity; trunk-based)
 
 ---
 
@@ -67,11 +68,11 @@ Closes #[issue-number]
 
 ---
 
-## 5. Release Steps
+## 5. Release Steps (Trunk-Based)
 
 ```bash
-# 1. Create release branch
-git checkout develop && git pull
+# 1. Create release branch from main
+git checkout main && git pull
 git checkout -b release/v1.0.0
 
 # 2. Update version files (CHANGELOG.md, version files)
@@ -79,7 +80,7 @@ git add .
 git commit -m "chore(release): prepare v1.0.0"
 git push origin release/v1.0.0
 
-# 3. PR to main via GitHub UI
+# 3. PR to main via GitHub UI (1 review + code-owner + ci required)
 
 # 4. After approval, merge to main
 git checkout main && git pull
@@ -90,12 +91,7 @@ git push origin main
 git tag -a v1.0.0 -m "Release v1.0.0"
 git push origin v1.0.0
 
-# 6. Merge back to develop
-git checkout develop && git pull
-git merge --no-ff release/v1.0.0
-git push origin develop
-
-# 7. Delete branch
+# 6. Delete branch
 git branch -d release/v1.0.0
 git push origin --delete release/v1.0.0
 ```
@@ -123,10 +119,6 @@ git checkout main && git pull
 git merge --no-ff hotfix/v1.0.1-security
 git push origin main
 
-# 5. Merge back to develop
-git checkout develop && git pull
-git merge --no-ff hotfix/v1.0.1-security
-git push origin develop
 ```
 
 ---
@@ -137,7 +129,7 @@ git push origin develop
 ```bash
 git checkout feature/your-branch
 git fetch origin
-git rebase develop
+git rebase main
 
 # Resolve conflicts
 git add <resolved-files>
@@ -148,11 +140,11 @@ git push --force-with-lease
 **Merge (alternative):**
 ```bash
 git checkout feature/your-branch
-git merge develop
+git merge main
 
 # Resolve conflicts once
 git add <resolved-files>
-git commit -m "merge: merge develop"
+git commit -m "merge: merge main"
 git push origin feature/your-branch
 ```
 
