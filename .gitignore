@@ -2,3 +2,6 @@
 .env.bak.*
 mise.toml.local
 INFISICAL_TOKEN
+opencode.json
+opencode.jsonc
+.opencode/
