@@ -79,7 +79,7 @@
     - Định tuyến, Giới hạn tốc độ, JWT
            |
            v
-[Lớp Microservices (.NET 8/9)]
+[Lớp Microservices (.NET 10 LTS)]
     Dịch vụ Xác thực (Cổng 5001)
     Dịch vụ Tin tuyển dụng (Cổng 5002)
     Dịch vụ Tìm kiếm (Cổng 5003)

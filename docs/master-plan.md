@@ -79,7 +79,7 @@
     - Routing, Rate Limit, JWT
            |
            v
-[Microservices Layer (.NET 8/9)]
+[Microservices Layer (.NET 10 LTS)]
     Auth Service (Port 5001)
     Job Service (Port 5002)
     Search Service (Port 5003)
