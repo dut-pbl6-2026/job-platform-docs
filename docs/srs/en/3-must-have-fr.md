@@ -76,6 +76,7 @@ The Authentication Service manages user identity, registration, login, and sessi
 | `/api/companies` | POST | `{ name, tax_code?, website?, description?, logo_url?, address?, industry?, size? }` | `{ id, message }` | Requires Recruiter or Admin role; `name` unique; `tax_code` unique if provided |
 | `/api/companies/{id}` | GET | - | CompanyDetailDTO | Public; valid id |
 | `/api/companies` | GET | Query: `q, page, size` | Paginated `[Company]` | Public |
+| `/api/companies/{id}` | PUT | `{ name, tax_code?, website?, description?, logo_url?, address?, industry?, size? }` | `{ message }` | Requires owner Recruiter role (`created_by`); `name` unique; `tax_code` unique if provided; **extension** (NICE) enabling US-07b "create and manage company profile" |
 
 #### 3.2.4 Data Model
 
@@ -84,7 +85,7 @@ The Authentication Service manages user identity, registration, login, and sessi
 | User | id, email (unique), password_hash, full_name, role, is_active, company_id (FK nullable, Recruiter only), created_at, updated_at | One User has many Refresh Tokens; One User (Recruiter) belongs to one Company |
 | Refresh Token | id, token_hash (unique, SHA-256), user_id, expiry_date (absolute TTL 7 days, 30 days if rememberMe), is_revoked, created_at | Many Refresh Tokens belong to one User |
 | Password Reset Token | id, user_id (FK), token_hash (SHA-256, unique), expiry_date (TTL 15 min), is_used, created_at | Many Password Reset Tokens belong to one User |
-| Company | id, name (unique), tax_code (unique, nullable), verified (bool, default false), logo_url, website, description, address, industry, size, created_at, updated_at | One Company has many Users (Recruiters); One Company has many Jobs |
+| Company | id, name (unique), tax_code (unique, nullable), verified (bool, default false), logo_url, website, description, address, industry, size, created_by (FK → User, Recruiter owner), created_at, updated_at | One Company has many Users (Recruiters); One Company has many Jobs |
 
 ---
 
@@ -126,7 +127,7 @@ The Job Service provides CRUD operations for job postings and category managemen
 | Entity | Required Attributes | Relationships |
 |:-------|:--------------------|:--------------|
 | Category | id, name (unique), description, created_at | One Category has many Jobs |
-| Company | id, name (unique), tax_code (unique, nullable), verified (bool), logo_url, website, description, address, industry, size, created_at, updated_at | One Company has many Jobs; One Company has many Users (Recruiters) |
+| Company | id, name (unique), tax_code (unique, nullable), verified (bool), logo_url, website, description, address, industry, size, created_by (FK → User, Recruiter owner), created_at, updated_at | One Company has many Jobs; One Company has many Users (Recruiters) |
 | Job | id, title, description, company_id (FK → Company.id), location, salary_min, salary_max, salary_currency, category_id, requirements, benefits, employment_type, experience_level, recruiter_id, status, view_count, created_at, updated_at | Many Jobs belong to one Company and one Category; One Recruiter has many Jobs; `company` free-text is deprecated, replaced by `company_id` |
 | Saved Job | id, user_id, job_id, saved_at | Many Saved Jobs belong to one User and one Job |
 
