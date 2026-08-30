@@ -570,7 +570,7 @@ Vì dự án sử dụng kiến trúc đa repo (multirepo), các đường ống
 | 3b | Chạy kiểm thử hợp đồng (Contract Test) với phiên bản mới nhất của `job-platform-shared` | Không có breaking change; Event Schema tương thích |
 | 4 | Xây dựng hình ảnh Docker | Hình ảnh được tạo thành công |
 | 5 | Đẩy lên container registry (GHCR / Docker Hub) | Hình ảnh được đẩy |
-| 6 | Triển khai lên môi trường staging (Fly.io / Railway) | Dịch vụ phản hồi kiểm tra sức khỏe |
+| 6 | Triển khai lên môi trường staging (Render / Railway) | Dịch vụ phản hồi kiểm tra sức khỏe |
 
 **Kích hoạt:** Mỗi lần đẩy lên nhánh `main`.
 

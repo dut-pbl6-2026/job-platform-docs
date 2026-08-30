@@ -47,7 +47,7 @@ Layers `Client React/Flutter → YARP Gateway JWT/RateLimit → 6 .NET10 LTS svc
 
 ## Infra cost (SRS 9)
 
-Zero-cost $0 (16w): Fly 3×1vCPU + Supabase 500MB + Upstash 10k/d + Bonsai 1GB + Confluent Basic + R2 10GB + GHCR + Actions 2kmin + Grafana. Thresholds: Supabase 400MB/15conn, Upstash 8k/d, Bonsai 800MB.
+Zero-cost $0 (16w): Render Free 750h + Vercel + Supabase 500MB + Upstash 10k/d + Bonsai 1GB + Confluent Basic + R2 10GB + GHCR + Actions 2kmin + Grafana. Thresholds: Supabase 400MB/15conn, Upstash 8k/d, Bonsai 800MB.
 
 ## Git strategy (git-strategy.md)
 

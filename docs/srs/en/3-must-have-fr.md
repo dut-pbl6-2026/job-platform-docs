@@ -570,7 +570,7 @@ Since the project uses a multirepo architecture, CI/CD pipelines must be impleme
 | 3b | Run contract tests against latest `job-platform-shared` | No breaking changes; Event Schema compatible |
 | 4 | Build Docker image | Image created successfully |
 | 5 | Push to container registry (GHCR / Docker Hub) | Image pushed |
-| 6 | Deploy to staging environment (Fly.io / Railway) | Service responds to health check |
+| 6 | Deploy to staging environment (Render / Railway) | Service responds to health check |
 
 **Trigger:** On every push to `main` branch.
 

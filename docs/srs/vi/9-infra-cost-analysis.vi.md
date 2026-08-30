@@ -22,8 +22,8 @@ Hạ tầng được tổ chức thành các lớp sau:
 flowchart TB
     subgraph Compute["Lớp Tính toán"]
         Dev["Phát triển<br/>(Docker cục bộ)"]
-        Staging["Staging<br/>(Fly.io/Railway)"]
-        Prod["Sản phẩm<br/>(Fly.io/Railway)"]
+        Staging["Staging<br/>(Render/Railway)"]
+        Prod["Sản phẩm<br/>(Render/Railway)"]
     end
 
     subgraph Services["Dịch vụ được quản lý"]
@@ -55,8 +55,8 @@ Bảng sau đây ghi lại tất cả các thành phần hạ tầng cần thi�
 | Danh mục thành phần | Thành phần | Mục đích | Nhà cung cấp | Mức độ ưu tiên |
 |:--------------------|:-----------|:---------|:-------------|:---------------|
 | **Tính toán** | Môi trường Phát triển | Phát triển và kiểm thử cục bộ | Docker Compose (Cục bộ) | BẮT BUỘC |
-| **Tính toán** | Môi trường Staging | Kiểm thử tiền sản phẩm | Fly.io / Railway | NÊN CÓ |
-| **Tính toán** | Môi trường Sản phẩm | Triển khai hệ thống trực tiếp | Fly.io / Railway | NÊN CÓ |
+| **Tính toán** | Môi trường Staging | Kiểm thử tiền sản phẩm | Render / Railway | NÊN CÓ |
+| **Tính toán** | Môi trường Sản phẩm | Triển khai hệ thống trực tiếp | Render / Railway | NÊN CÓ |
 | **Cơ sở dữ liệu** | PostgreSQL | Lưu trữ dữ liệu chính | Supabase | BẮT BUỘC |
 | **Bộ nhớ đệm** | Redis | Đệm và lưu trữ phiên | Upstash | NÊN CÓ |
 | **Công cụ tìm kiếm** | Elasticsearch | Tìm kiếm toàn văn và lập chỉ mục | Bonsai / Elastic Cloud | BẮT BUỘC |
@@ -79,8 +79,8 @@ Bảng sau đây cung cấp phân tích chi phí chi tiết cho tất cả thàn
 | **Tính toán (VM)** | Google Cloud Platform | f1-micro: 0.2 vCPU, 0.6 GB RAM, 30 GB HDD | Always Free (trong giới hạn) | $0 |
 | **Tính toán (VM)** | AWS / Azure | EC2 t2.micro (AWS) hoặc B1S (Azure): 1 vCPU, 1 GB RAM | 12 tháng | $0 |
 | **Tính toán (VM)** | DigitalOcean / Vultr | $200 - $250 tín dụng khuyến mãi | 30-60 ngày | $0 |
-| **Tính toán (Container)** | Fly.io | 3 VM dùng chung (1 vCPU, 2 GB RAM mỗi máy) | Always Free | $0 |
-| **Tính toán (Container)** | Railway | $5 tín dụng miễn phí | Khuyến mãi | $0 |
+| **Tính toán (Container)** | Render | Free 750h/tháng 512 MB 0.1 CPU (tạm dừng 15m) + Vercel web | Free (tạm dừng) | $0 |
+| **Tính toán (Container)** | Railway | $5 thử / $1 Free Hobby $5 | Khuyến mãi | $0 |
 | **Cơ sở dữ liệu được quản lý** | Supabase | PostgreSQL: 500 MB lưu trữ, xác thực, tính năng realtime | Always Free (trong giới hạn) | $0 |
 | **Cơ sở dữ liệu được quản lý** | Neon | PostgreSQL: 1 GB lưu trữ, nhánh | Always Free (trong giới hạn) | $0 |
 | **Bộ nhớ đệm được quản lý** | Upstash | Redis: 10.000 lệnh mỗi ngày | Always Free (trong giới hạn) | $0 |
@@ -126,7 +126,7 @@ Các chiến lược sau được sử dụng để đạt được hạ tầng 
 | **Tín dụng khuyến mãi** | Tận dụng tín dụng dùng thử cho tài nguyên tính toán bổ sung | Tín dụng AWS/Azure, DigitalOcean/Vultr, Railway |
 | **Tránh chi phí Egress** | Sử dụng dịch vụ có chuyển dữ liệu miễn phí | Cloudflare R2 cung cấp egress miễn phí |
 | **Quản lý chi phí API AI** | Sử dụng nhà cung cấp LLM gói miễn phí một cách chiến lược | Gemini cho yêu cầu số lượng lớn, tín dụng OpenAI cho tạo mẫu |
-| **Triển khai Container hóa** | Đóng gói tất cả dịch vụ bằng Docker | Triển khai lên Fly.io hoặc Railway gói miễn phí |
+| **Triển khai Container hóa** | Đóng gói tất cả dịch vụ bằng Docker | Triển khai lên Render hoặc Railway gói miễn phí |
 | **Dịch vụ được quản lý** | Sử dụng dịch vụ được quản lý thay vì tự lưu trữ | Giảm chi phí vận hành và quản lý |
 | **Hạ tầng dưới dạng mã** | Tự động hóa cung cấp hạ tầng | Giảm lỗi thủ công và chi phí quản lý |
 
@@ -143,7 +143,7 @@ flowchart TB
         CDN["CDN/Cloudflare"]
     end
 
-    subgraph Cloud["Hạ tầng đám mây (Fly.io/Railway)"]
+    subgraph Cloud["Hạ tầng đám mây (Render/Railway)"]
         subgraph Compute["Lớp Tính toán"]
             Gateway["API Gateway<br/>(1 vCPU, 2 GB)"]
             Auth["Dịch vụ Xác thực<br/>(1 vCPU, 2 GB)"]
@@ -275,7 +275,7 @@ flowchart LR
 | Dịch vụ | Nhà cung cấp | Giới hạn | Sử dụng |
 |:--------|:-------------|:---------|:--------|
 | **Tính toán** | GCP | f1-micro (0.2 vCPU, 0.6 GB RAM) | Gateway hoặc giám sát nhẹ |
-| **Tính toán** | Fly.io | 3 VM dùng chung (1 vCPU, 2 GB RAM) | Tất cả microservices |
+| **Tính toán** | Render + Vercel | 750h/tháng 512 MB + Vercel web CDN | Tất cả microservices + web |
 | **Cơ sở dữ liệu** | Supabase | 500 MB lưu trữ | Dữ liệu ứng dụng |
 | **Bộ nhớ đệm** | Upstash | 10.000 lệnh/ngày | Đệm, giới hạn tốc độ |
 | **Tìm kiếm** | Bonsai | 1 GB cluster | Lập chỉ mục tìm kiếm việc làm |
@@ -289,7 +289,7 @@ flowchart LR
 
 | Dịch vụ | Nhà cung cấp | Giới hạn | Khi sử dụng |
 |:--------|:-------------|:---------|:------------|
-| **Tính toán** | AWS/Azure | Gói miễn phí 12 tháng | Nếu GCP/Fly.io đạt giới hạn |
+| **Tính toán** | AWS/Azure | Gói miễn phí 12 tháng | Nếu GCP/Render đạt giới hạn |
 | **Tính toán** | DigitalOcean/Vultr | $200-$250 tín dụng | Nếu cần thêm tài nguyên tính toán |
 | **Cơ sở dữ liệu** | Neon | 1 GB lưu trữ | Nếu vượt quá giới hạn Supabase |
 | **Tìm kiếm** | Elastic Cloud | Dùng thử 14 ngày | Nếu vượt quá giới hạn Bonsai |

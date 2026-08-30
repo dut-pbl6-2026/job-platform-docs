@@ -270,7 +270,7 @@ Since direct folder references (`../shared/`) are not possible across repositori
 |:---|:---|:---|:---|
 | Monday | Health checks for all services, Serilog centralized logging | TM1 | Health endpoint works |
 | Tuesday | GitHub Actions CI: Automated build, test, SonarCloud integration (optional) | TM1 | CI passes |
-| Wednesday | Docker Compose production config, Deploy script to Fly.io/Railway | TM1 | Deploy works |
+| Wednesday | Docker Compose production config, Deploy script to Render/Railway | TM1 | Deploy works |
 | Thursday | Grafana + Prometheus: Monitor metrics, basic dashboard | TM2 | Metrics display |
 | Friday | Web: Production build optimization, Environment variables | TM3 | Production build works |
 | Saturday | Mobile: Release build test, bug fixes | TM4 | Release build OK |
@@ -370,7 +370,7 @@ Since direct folder references (`../shared/`) are not possible across repositori
 
 | Day | Tasks | Assignee |
 |:---|:---|:---|
-| Monday-Tuesday | Deploy to staging environment (Fly.io/Railway), Sync data to staging | TM1 + TM2 |
+| Monday-Tuesday | Deploy to staging environment (Render/Railway), Sync data to staging | TM1 + TM2 |
 | Wednesday | Invite 5-10 users to test, Collect feedback | All |
 | Thursday-Friday | Fix bugs from feedback, Polish UI/UX | All |
 | Saturday | Final bug fixing, Code freeze | All |

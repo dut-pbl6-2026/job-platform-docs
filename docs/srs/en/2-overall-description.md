@@ -211,7 +211,7 @@ The system operates in a cloud-native environment using containerization and man
 
 | Component | Specification | Provider |
 |:----------|:--------------|:---------|
-| **Hosting** | 3 shared VMs (1 vCPU, 1-2 GB RAM each) | Fly.io (Free Tier) |
+| **Hosting** | Render Free 750h 512 MB + Vercel web CDN | Render + Vercel |
 | **Database** | Managed PostgreSQL (500 MB) | Supabase |
 | **Cache** | Managed Redis (10k commands/day) | Upstash |
 | **Search** | Managed Elasticsearch (1 GB cluster) | Bonsai |
@@ -223,7 +223,7 @@ The system operates in a cloud-native environment using containerization and man
 
 | Component | Specification | Provider |
 |:----------|:--------------|:---------|
-| **Hosting** | 3 shared VMs (1-2 vCPU, 2-4 GB RAM each) | Fly.io / Railway |
+| **Hosting** | Render Free 750h + Vercel CDN (scale Railway) | Render / Railway / Vercel |
 | **Database** | Managed PostgreSQL (1-5 GB) | Supabase / Neon |
 | **Cache** | Managed Redis (50k commands/day) | Upstash |
 | **Search** | Managed Elasticsearch (1-5 GB cluster) | Bonsai / Elastic Cloud |
