@@ -211,7 +211,7 @@ Hệ thống hoạt động trong môi trường cloud-native sử dụng contai
 
 | Thành phần | Thông số kỹ thuật | Nhà cung cấp |
 |:-----------|:------------------|:-------------|
-| **Hosting** | 3 VM dùng chung (1 vCPU, 1-2 GB RAM mỗi máy) | Fly.io (Gói Miễn phí) |
+| **Hosting** | Render Free 750h 512 MB + Vercel web CDN | Render + Vercel |
 | **Cơ sở dữ liệu** | PostgreSQL được quản lý (500 MB) | Supabase |
 | **Bộ nhớ đệm** | Redis được quản lý (10k lệnh/ngày) | Upstash |
 | **Tìm kiếm** | Elasticsearch được quản lý (1 GB cluster) | Bonsai |
@@ -223,7 +223,7 @@ Hệ thống hoạt động trong môi trường cloud-native sử dụng contai
 
 | Thành phần | Thông số kỹ thuật | Nhà cung cấp |
 |:-----------|:------------------|:-------------|
-| **Hosting** | 3 VM dùng chung (1-2 vCPU, 2-4 GB RAM mỗi máy) | Fly.io / Railway |
+| **Hosting** | Render Free 750h + Vercel CDN (mở rộng Railway) | Render / Railway / Vercel |
 | **Cơ sở dữ liệu** | PostgreSQL được quản lý (1-5 GB) | Supabase / Neon |
 | **Bộ nhớ đệm** | Redis được quản lý (50k lệnh/ngày) | Upstash |
 | **Tìm kiếm** | Elasticsearch được quản lý (1-5 GB cluster) | Bonsai / Elastic Cloud |

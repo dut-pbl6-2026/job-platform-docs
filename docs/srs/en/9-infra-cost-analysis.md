@@ -22,8 +22,8 @@ The infrastructure is organised into the following layers:
 flowchart TB
     subgraph Compute["Compute Layer"]
         Dev["Development<br/>(Local Docker)"]
-        Staging["Staging<br/>(Fly.io/Railway)"]
-        Prod["Production<br/>(Fly.io/Railway)"]
+        Staging["Staging<br/>(Render/Railway)"]
+        Prod["Production<br/>(Render/Railway)"]
     end
 
     subgraph Services["Managed Services"]
@@ -55,8 +55,8 @@ The following table documents all infrastructure components required for the sys
 | Component Category | Component | Purpose | Provider | Priority |
 |:-------------------|:----------|:--------|:---------|:----------|
 | **Compute** | Development Environment | Local development and testing | Docker Compose (Local) | MUST |
-| **Compute** | Staging Environment | Pre-production testing | Fly.io / Railway | SHOULD |
-| **Compute** | Production Environment | Live system deployment | Fly.io / Railway | SHOULD |
+| **Compute** | Staging Environment | Pre-production testing | Render / Railway | SHOULD |
+| **Compute** | Production Environment | Live system deployment | Render / Railway | SHOULD |
 | **Database** | PostgreSQL | Primary data storage | Supabase | MUST |
 | **Cache** | Redis | Caching and session storage | Upstash | SHOULD |
 | **Search Engine** | Elasticsearch | Full-text search and indexing | Bonsai / Elastic Cloud | MUST |
@@ -79,8 +79,8 @@ The following table provides a detailed cost analysis for all infrastructure com
 | **Compute (VM)** | Google Cloud Platform | f1-micro instance: 0.2 vCPU, 0.6 GB RAM, 30 GB HDD | Always Free (within limits) | $0 |
 | **Compute (VM)** | AWS / Azure | EC2 t2.micro (AWS) or B1S (Azure): 1 vCPU, 1 GB RAM | 12 months | $0 |
 | **Compute (VM)** | DigitalOcean / Vultr | $200 - $250 promotional credits | 30-60 days | $0 |
-| **Compute (Container)** | Fly.io | 3 shared VMs (1 vCPU, 2 GB RAM each) | Always Free | $0 |
-| **Compute (Container)** | Railway | $5 free credit | Promotional | $0 |
+| **Compute (Container)** | Render | Free 750h/mo 512 MB 0.1 CPU (spin-down 15m) + Vercel web | Free (spin-down) | $0 |
+| **Compute (Container)** | Railway | $5 trial / $1 Free Hobby $5 | Promotional | $0 |
 | **Managed Database** | Supabase | PostgreSQL: 500 MB storage, authentication, realtime features | Always Free (within limits) | $0 |
 | **Managed Database** | Neon | PostgreSQL: 1 GB storage, branching | Always Free (within limits) | $0 |
 | **Managed Cache** | Upstash | Redis: 10,000 commands per day | Always Free (within limits) | $0 |
@@ -126,7 +126,7 @@ The following strategies are employed to achieve zero-cost infrastructure:
 | **Promotional Credits** | Leverage trial credits for additional compute resources | AWS/Azure credits, DigitalOcean/Vultr, Railway |
 | **Egress Cost Avoidance** | Use services with free data transfer (egress) | Cloudflare R2 provides free egress |
 | **AI API Cost Management** | Use free tier LLM providers strategically | Gemini for high-volume requests, OpenAI credits for prototyping |
-| **Containerized Deployment** | Package all services using Docker | Deploy to Fly.io or Railway free tiers |
+| **Containerized Deployment** | Package all services using Docker | Deploy to Render or Railway free tiers |
 | **Managed Services** | Use managed services instead of self-hosting | Reduces operational overhead and costs |
 | **Infrastructure as Code** | Automate infrastructure provisioning | Reduces manual errors and management costs |
 
@@ -143,7 +143,7 @@ flowchart TB
         CDN["CDN/Cloudflare"]
     end
 
-    subgraph Cloud["Cloud Infrastructure (Fly.io/Railway)"]
+    subgraph Cloud["Cloud Infrastructure (Render/Railway)"]
         subgraph Compute["Compute Layer"]
             Gateway["API Gateway<br/>(1 vCPU, 2 GB)"]
             Auth["Auth Service<br/>(1 vCPU, 2 GB)"]
@@ -275,7 +275,7 @@ flowchart LR
 | Service | Provider | Limit | Usage |
 |:--------|:---------|:------|:------|
 | **Compute** | GCP | f1-micro (0.2 vCPU, 0.6 GB RAM) | Lightweight gateway or monitoring |
-| **Compute** | Fly.io | 3 shared VMs (1 vCPU, 2 GB RAM) | All microservices |
+| **Compute** | Render + Vercel | 750h/mo 512 MB + Vercel web CDN | All microservices + web |
 | **Database** | Supabase | 500 MB storage | Application data |
 | **Cache** | Upstash | 10,000 commands/day | Caching, rate limiting |
 | **Search** | Bonsai | 1 GB cluster | Job search indexing |
@@ -289,7 +289,7 @@ flowchart LR
 
 | Service | Provider | Limit | When to Use |
 |:--------|:---------|:------|:------------|
-| **Compute** | AWS/Azure | 12-month free tier | If GCP/Fly.io limits reached |
+| **Compute** | AWS/Azure | 12-month free tier | If GCP/Render limits reached |
 | **Compute** | DigitalOcean/Vultr | $200-$250 credits | If additional compute needed |
 | **Database** | Neon | 1 GB storage | If Supabase limits exceeded |
 | **Search** | Elastic Cloud | 14-day trial | If Bonsai limits exceeded |

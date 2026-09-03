@@ -369,7 +369,7 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    subgraph Staging["Môi trường Staging (Fly.io/Railway)"]
+    subgraph Staging["Môi trường Staging (Render/Railway)"]
         Web["Ứng dụng Web"]
         Mobile["Ứng dụng Di động (TestFlight)"]
         Gateway["API Gateway"]
@@ -379,7 +379,7 @@ flowchart TB
 ```
 
 **Đặc điểm:**
-- Triển khai lên đám mây (Fly.io / Railway)
+- Triển khai lên đám mây (Render / Railway)
 - Dịch vụ cơ sở dữ liệu và cache được quản lý
 - Dữ liệu thực (bản sao đã làm sạch của dữ liệu sản phẩm)
 - Được sử dụng cho kiểm thử và xác nhận người dùng
@@ -389,7 +389,7 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    subgraph Production["Môi trường sản phẩm (Fly.io/Railway)"]
+    subgraph Production["Môi trường sản phẩm (Render/Railway)"]
         CDN["CDN/Lưu trữ tĩnh"]
         Gateway["API Gateway (Mở rộng)"]
         Services["Tất cả dịch vụ (Mở rộng)"]
@@ -399,7 +399,7 @@ flowchart TB
 ```
 
 **Đặc điểm:**
-- Triển khai lên đám mây (Fly.io / Railway)
+- Triển khai lên đám mây (Render / Railway)
 - Dịch vụ cơ sở dữ liệu và cache được quản lý
 - Tự động mở rộng nếu được hỗ trợ
 - Giám sát và cảnh báo được cấu hình

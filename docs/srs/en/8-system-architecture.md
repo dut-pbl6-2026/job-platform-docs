@@ -369,7 +369,7 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    subgraph Staging["Staging Environment (Fly.io/Railway)"]
+    subgraph Staging["Staging Environment (Render/Railway)"]
         Web["Web App"]
         Mobile["Mobile App (TestFlight)"]
         Gateway["API Gateway"]
@@ -379,7 +379,7 @@ flowchart TB
 ```
 
 **Characteristics:**
-- Deployed to cloud (Fly.io / Railway)
+- Deployed to cloud (Render / Railway)
 - Managed database and cache services
 - Real data (sanitised copy of production data)
 - Used for user testing and validation
@@ -389,7 +389,7 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    subgraph Production["Production Environment (Fly.io/Railway)"]
+    subgraph Production["Production Environment (Render/Railway)"]
         CDN["CDN/Static Hosting"]
         Gateway["API Gateway (Scaled)"]
         Services["All Services (Scaled)"]
@@ -399,7 +399,7 @@ flowchart TB
 ```
 
 **Characteristics:**
-- Deployed to cloud (Fly.io / Railway)
+- Deployed to cloud (Render / Railway)
 - Managed database and cache services
 - Auto-scaling where supported
 - Monitoring and alerting configured
