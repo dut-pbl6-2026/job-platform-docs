@@ -76,6 +76,7 @@ Dịch vụ Xác thực quản lý danh tính người dùng, đăng ký, đăng
 | `/api/companies` | POST | `{ name, tax_code?, website?, description?, logo_url?, address?, industry?, size? }` | `{ id, message }` | Yêu cầu vai trò Nhà tuyển dụng hoặc Quản trị viên; `name` duy nhất; `tax_code` duy nhất nếu có |
 | `/api/companies/{id}` | GET | - | CompanyDetailDTO | Public; id hợp lệ |
 | `/api/companies` | GET | Query: `q, page, size` | Paginated `[Company]` | Public |
+| `/api/companies/{id}` | PUT | `{ name, tax_code?, website?, description?, logo_url?, address?, industry?, size? }` | `{ message }` | Yêu cầu vai trò Nhà tuyển dụng là chủ sở hữu (`created_by`); `name` duy nhất; `tax_code` duy nhất nếu có; **phần mở rộng** (NICE) hỗ trợ US-07b "tạo và quản lý hồ sơ công ty" |
 
 #### 3.2.4 Mô hình dữ liệu
 
@@ -84,7 +85,7 @@ Dịch vụ Xác thực quản lý danh tính người dùng, đăng ký, đăng
 | User | id, email (duy nhất), password_hash, full_name, role, is_active, company_id (FK nullable, chỉ Recruiter), created_at, updated_at | Một User có nhiều Refresh Tokens; Một User (Recruiter) thuộc về một Company |
 | Refresh Token | id, token_hash (duy nhất, SHA-256), user_id, expiry_date (TTL tuyệt đối 7 ngày, 30 ngày nếu rememberMe), is_revoked, created_at | Nhiều Refresh Tokens thuộc về một User |
 | Password Reset Token | id, user_id (FK), token_hash (SHA-256, duy nhất), expiry_date (TTL 15 phút), is_used, created_at | Nhiều Password Reset Tokens thuộc về một User |
-| Company | id, name (duy nhất), tax_code (duy nhất, nullable), verified (bool, mặc định false), logo_url, website, description, address, industry, size, created_at, updated_at | Một Company có nhiều Users (Recruiters); Một Company có nhiều Jobs |
+| Company | id, name (duy nhất), tax_code (duy nhất, nullable), verified (bool, mặc định false), logo_url, website, description, address, industry, size, created_by (FK → User, chủ sở hữu Recruiter), created_at, updated_at | Một Company có nhiều Users (Recruiters); Một Company có nhiều Jobs |
 
 ---
 
@@ -126,7 +127,7 @@ Dịch vụ Tin tuyển dụng cung cấp các thao tác CRUD cho tin tuyển d�
 | Thực thể | Thuộc tính bắt buộc | Quan hệ |
 |:---------|:--------------------|:--------|
 | Category | id, name (duy nhất), description, created_at | Một Category có nhiều Jobs |
-| Company | id, name (duy nhất), tax_code (duy nhất, nullable), verified (bool), logo_url, website, description, address, industry, size, created_at, updated_at | Một Company có nhiều Jobs; Một Company có nhiều Users (Recruiters) |
+| Company | id, name (duy nhất), tax_code (duy nhất, nullable), verified (bool), logo_url, website, description, address, industry, size, created_by (FK → User, chủ sở hữu Recruiter), created_at, updated_at | Một Company có nhiều Jobs; Một Company có nhiều Users (Recruiters) |
 | Job | id, title, description, company_id (FK → Company.id), location, salary_min, salary_max, salary_currency, category_id, requirements, benefits, employment_type, experience_level, recruiter_id, status, view_count, created_at, updated_at | Nhiều Jobs thuộc về một Company và một Category; Một Recruiter có nhiều Jobs; `company` free-text đã deprecated, thay bằng `company_id` |
 | Saved Job | id, user_id, job_id, saved_at | Nhiều Saved Jobs thuộc về một User và một Job |
 
