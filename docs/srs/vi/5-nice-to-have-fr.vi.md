@@ -16,13 +16,14 @@
 
 Phần này ghi lại tất cả các yêu cầu chức năng **TỐT NÊN CÓ**. Đây là các tính năng "WOW" sáng tạo mang lại lợi thế cạnh tranh và điểm thưởng, nhưng không bắt buộc để đạt yêu cầu. Chúng chỉ nên được triển khai sau khi tất cả các tính năng BẮT BUỘC PHẢI CÓ và NÊN CÓ đã ổn định và hoàn chỉnh.
 
-Nhóm nên chọn **ít nhất 2** tính năng TỐT NÊN CÓ để triển khai, với Trợ lý AI việc làm được khuyến nghị cao nhất. Các tính năng TỐT NÊN CÓ được tổ chức thành 10 thành phần:
+Nhóm nên chọn **ít nhất 2** tính năng TỐT NÊN CÓ để triển khai, với Trợ lý AI việc làm được khuyến nghị cao nhất. Các tính năng TỐT NÊN CÓ được tổ chức thành 11 thành phần:
 
 ```mermaid
 flowchart LR
     subgraph NiceToHave["Thành phần TỐT NÊN CÓ"]
         AI["Trợ lý AI việc làm"]
         SCORE["Chấm điểm CV thông minh"]
+        SCREEN["Sàng lọc CV bằng AI"]
         TELE["Bot Telegram"]
         ANALYTICS["Bảng điều khiển phân tích"]
         RECOMMEND["Gợi ý việc làm"]
@@ -568,12 +569,68 @@ Chế độ tối cung cấp tùy chọn giao diện người dùng với nền 
 
 ---
 
-### 5.12 Tóm tắt yêu cầu TỐT NÊN CÓ
+### 5.12 Sàng lọc CV bằng AI & Ghép việc làm
+
+**ID thành phần:** SCREEN-01  
+**Mức độ ưu tiên:** TỐT NÊN CÓ  
+**Người phụ trách:** TM2  
+**Tuần mục tiêu:** Tuần 11 (dùng chung đường ống CV Tuần 11 với SCORE-01)  
+**Độ khó:** 7/10  
+
+#### 5.12.1 Mô tả
+
+Sàng lọc CV bằng AI cho phép ứng viên tải CV lên và để dịch vụ AI **nhận diện** nội dung — trích xuất văn bản (bao gồm OCR cho tài liệu quét) và rút trích hồ sơ có cấu trúc (thông tin cá nhân, kỹ năng, kinh nghiệm làm việc, học vấn) — rồi **lọc** kết quả từ đó: hồ sơ được rút trích có thể tự động điền vào hồ sơ người dùng và tạo danh sách việc làm phù hợp đã lọc, xếp hạng. Nhà tuyển dụng cũng có thể dùng chính dữ liệu rút trích đó để sàng lọc (lọc) ứng viên cho công việc của họ theo kỹ năng và kinh nghiệm yêu cầu. Thành phần này tái sử dụng bộ máy chấm điểm SCORE-01 để điểm số và sàng lọc luôn nhất quán.
+
+#### 5.12.2 Yêu cầu chức năng
+
+| ID | Yêu cầu | Tiêu chí chấp nhận |
+|:---|:--------|:-------------------|
+| SCREEN-01-01 | Hệ thống cho phép tải CV lên để AI nhận diện | - Điểm cuối tải lên: `POST /api/ai/parse-cv` (multipart `cv_file`)<br>- Định dạng: PDF, DOCX, PNG, JPG; tối đa 5MB (thống nhất với APP-01-01)<br>- PDF quét/chỉ có ảnh được xử lý qua OCR; lỗi trích xuất không thể khôi phục trả về `422` kèm hướng dẫn |
+| SCREEN-01-02 | Hệ thống rút trích hồ sơ có cấu trúc từ CV bằng mô hình AI | - Rút trích bằng LLM trả về JSON nghiêm ngặt: `full_name, email, phone, skills[] (name, proficiency), experience[] (company, title, start_date, end_date, description), education[] (institution, degree, field), certifications[]`<br>- Hỗ trợ CV tiếng Việt và tiếng Anh<br>- Kết quả được lưu với `cvId`; tải lại file trùng (SHA-256) trả về bản rút trích đã đệm thay vì xử lý lại |
+| SCREEN-01-03 | Ứng viên xem lại và xác nhận dữ liệu rút trích trước khi lưu | - Các trường rút trích hiển thị trong giao diện xem xét có thể chỉnh sửa (web + di động)<br>- Không ghi gì vào hồ sơ người dùng khi chưa có xác nhận rõ ràng (human-in-the-loop)<br>- Nút "Áp dụng vào hồ sơ" tạo/cập nhật kỹ năng, kinh nghiệm, học vấn của PROFILE-01 |
+| SCREEN-01-04 | Hệ thống lọc các việc làm phù hợp từ CV đã rút trích | - Điểm cuối ghép: `GET /api/ai/cv/{cvId}/matched-jobs`<br>- Tái sử dụng bộ máy chấm điểm SCORE-01 (ghép kỹ năng / kinh nghiệm / học vấn) trên các công việc đang hoạt động; trả về top N (mặc định 10) xếp hạng kèm điểm phù hợp và lý do<br>- Kết quả được đệm trong Redis (khóa `cv_hash + filters`, TTL 24h) thống nhất với SCORE-01-05 |
+| SCREEN-01-05 | Hệ thống cho phép nhà tuyển dụng sàng lọc ứng viên bằng dữ liệu AI rút trích | - Với ứng tuyển có CV đã phân tích: `GET /api/ai/applications/job/{jobId}/candidates` lọc theo `skill`, `minYears`<br>- Chỉ nhà tuyển dụng sở hữu công việc được truy cập; PII ứng viên được che theo SEC-08<br>- Ứng viên được xếp hạng theo điểm ghép SCORE-01 |
+| SCREEN-01-06 | Hệ thống tôn trọng quyền riêng tư với CV tải lên | - File CV lưu với ACL riêng tư (R2, thống nhất SEC-08); PII rút trích được mã hóa khi lưu<br>- `DELETE /api/ai/cv/{cvId}` xóa file, bản rút trích và kết quả đệm (quyền được xóa bỏ dữ liệu)<br>- Bản rút trích không được dùng cho mục đích khác khi chưa có sự đồng ý của người dùng |
+| SCREEN-01-07 | Hệ thống xử lý lỗi AI/OCR một cách hợp lý | - LLM hoặc OCR không khả dụng → `503` kèm hướng dẫn thử lại; lỗi phân tích → `422` kèm lý do<br>- Giới hạn: 5 lần phân tích / người dùng / giờ (Redis); vượt → `429 Too Many Requests`<br>- Ghi log mức sử dụng token để giám sát chi phí (Gemini free tier) |
+
+#### 5.12.3 Đặc tả API
+
+| Điểm cuối | Phương thức | Nội dung yêu cầu | Phản hồi | Quy tắc kiểm tra |
+|:----------|:------------|:-----------------|:---------|:-----------------|
+| `/api/ai/parse-cv` | POST | FormData: `cv_file` | `{ cvId, status, extracted }` | Người dùng đã xác thực; PDF/DOCX/PNG/JPG; <= 5MB; `429` khi > 5 lần/giờ |
+| `/api/ai/cv/{cvId}` | GET | - | `{ cvId, extracted, created_at }` | Người dùng sở hữu CV |
+| `/api/ai/cv/{cvId}` | DELETE | - | `{ message }` | Người dùng sở hữu CV |
+| `/api/ai/cv/{cvId}/matched-jobs` | GET | Truy vấn: `limit` | `{ items: [ { job_id, score, reasons } ] }` | Người dùng sở hữu CV; limit 1-50 (mặc định 10) |
+| `/api/ai/applications/job/{jobId}/candidates` | GET | Truy vấn: `skill?, minYears?, page, size` | Phân trang `[ { application_id, candidate_summary, score } ]` | Nhà tuyển dụng sở hữu công việc |
+
+#### 5.12.4 Luồng đường ống sàng lọc
+
+```mermaid
+flowchart TB
+    Upload["Ứng viên tải CV lên (PDF/DOCX/Ảnh)"] --> Extract["Trích xuất văn bản (+ OCR nếu là bản quét)"]
+    Extract --> LLM["Rút trích có cấu trúc bằng LLM (JSON)"]
+    LLM --> Review["Ứng viên xem lại / chỉnh sửa hồ sơ rút trích"]
+    Review --> Save["Hồ sơ đã xác nhận (tự điền PROFILE-01)"]
+    Review --> Match["Bộ máy SCORE-01 ghép với công việc đang hoạt động"]
+    Match --> Jobs["Danh sách việc làm đã lọc, xếp hạng"]
+    LLM --> Screen["Sàng lọc ứng viên phía nhà tuyển dụng (lọc kỹ năng / số năm)"]
+```
+
+#### 5.12.5 Mô hình dữ liệu (ai_db)
+
+| Thực thể | Các thuộc tính bắt buộc | Quan hệ |
+|:---------|:------------------------|:--------|
+| CvExtraction | id, user_id (FK), file_url (R2, ACL riêng tư), file_hash (SHA-256, duy nhất theo người dùng), status (processing/confirmed/failed), extracted (JSONB, PII mã hóa theo SEC-08), created_at, updated_at | Một Người dùng có nhiều CvExtraction |
+
+---
+
+### 5.13 Tóm tắt yêu cầu TỐT NÊN CÓ
 
 | Thành phần | ID | Tính năng chính | Tuần mục tiêu | Người phụ trách | Độ khó |
 |:-----------|:---|:----------------|:--------------|:----------------|:-------|
 | Trợ lý AI việc làm | AI-01 | Chatbot RAG, phản hồi luồng, đa ngôn ngữ | 9-10 | TM2 + TM1 | 8/10 |
 | Chấm điểm CV thông minh | SCORE-01 | Phân tích CV, chấm điểm phù hợp, gợi ý cải thiện | 11 | TM2 | 7/10 |
+| Sàng lọc CV bằng AI | SCREEN-01 | Nhận diện CV (OCR + rút trích LLM), tự điền hồ sơ, lọc việc phù hợp, sàng lọc ứng viên | 11 | TM2 | 7/10 |
 | Bot Telegram | TELE-01 | Lệnh đăng ký, cảnh báo việc làm, đa ngôn ngữ | 12 | TM1 | 4/10 |
 | Bảng điều khiển phân tích | ANALYTICS-01 | Phân tích người dùng/công việc/ứng tuyển, biểu đồ trực quan | 11 | TM3 | 5/10 |
 | Gợi ý việc làm | RECOMMEND-01 | Lọc dựa trên nội dung, UI giải thích | 13 | TM2 | 6/10 |
@@ -585,12 +642,13 @@ Chế độ tối cung cấp tùy chọn giao diện người dùng với nền 
 
 ---
 
-### 5.13 Khuyến nghị cho nhóm
+### 5.14 Khuyến nghị cho nhóm
 
 | Lựa chọn được khuyến nghị | Lý do |
 |:--------------------------|:------|
 | **Trợ lý AI việc làm** | Yếu tố WOW cao nhất, thể hiện tích hợp AI hiện đại, mang lại giá trị thực cho người dùng |
 | **Chấm điểm CV thông minh** | Bổ sung cho Trợ lý AI, giá trị thực tiễn cho người tìm việc, thể hiện khả năng NLP |
+| **Sàng lọc CV bằng AI** | Tiếp nối tự nhiên của Chấm điểm CV thông minh (dùng chung đường ống phân tích + chấm điểm): luồng demo ấn tượng "tải CV lên → AI nhận diện hồ sơ → lọc việc làm phù hợp" |
 
 **Các lựa chọn thay thế:**
 

@@ -371,6 +371,7 @@ Các user stories sau đây đại diện cho chức năng chính của hệ th�
 | US-19 | Với vai trò **Người tìm việc**, tôi muốn **gợi ý việc làm cá nhân hóa** | - Nguồn gợi ý<br>- Dựa trên lịch sử và kỹ năng<br>- Có thể làm mới |
 | US-20 | Với vai trò **Người dùng**, tôi muốn **sử dụng nền tảng bằng tiếng Việt hoặc tiếng Anh** | - Bộ chọn ngôn ngữ<br>- Tất cả giao diện được dịch<br>- Tùy chọn được lưu lại |
 | US-21 | Với vai trò **Người dùng**, tôi muốn **đăng nhập bằng Google hoặc Facebook** | - Nút đăng nhập mạng xã hội<br>- Luồng OAuth<br>- Liên kết tài khoản |
+| US-22 | Với vai trò **Người tìm việc**, tôi muốn **tải CV lên để AI nhận diện hồ sơ và lọc việc làm phù hợp** | - Tải CV (PDF/DOCX/ảnh, OCR cho bản quét)<br>- Hồ sơ rút trích có thể chỉnh sửa (human-in-the-loop)<br>- Tự điền hồ sơ + danh sách việc phù hợp xếp hạng<br>- Sàng lọc ứng viên phía nhà tuyển dụng (SCREEN-01) |
 
 ---
 

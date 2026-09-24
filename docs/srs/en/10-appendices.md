@@ -251,6 +251,10 @@ This appendix provides the API specifications for all services. Complete OpenAPI
 | **AI** | `/api/ai/session/{sessionId}` | DELETE | Delete chat session | NICE |
 | **AI** | `/api/ai/session/{sessionId}/history` | GET | Session history | NICE |
 | **AI** | `/api/ai/score-resume` | POST | Resume scoring | NICE |
+| **AI** | `/api/ai/parse-cv` | POST | Parse CV, AI structured extraction (OCR + LLM, 5/h) | NICE |
+| **AI** | `/api/ai/cv/{cvId}` | GET / DELETE | Get / delete stored CV extraction (erasure) | NICE |
+| **AI** | `/api/ai/cv/{cvId}/matched-jobs` | GET | Filtered, ranked matching jobs for a parsed CV | NICE |
+| **AI** | `/api/ai/applications/job/{jobId}/candidates` | GET | Recruiter candidate screening (skill / years filters) | NICE |
 | **Crawler** | `/api/crawler/trigger` | POST | Trigger crawl manually (Admin) | MUST |
 | **Crawler** | `/api/crawler/status` | GET | Crawl status + fallback errors | MUST |
 

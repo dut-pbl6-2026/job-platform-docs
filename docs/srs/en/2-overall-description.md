@@ -371,6 +371,7 @@ The following user stories represent the primary functionality of the system, or
 | US-19 | As a **Job Seeker**, I want **personalised job recommendations** | - Recommendation feed<br>- Based on history and skills<br>- Refreshable |
 | US-20 | As a **User**, I want to **use the platform in Vietnamese or English** | - Language selector<br>- All UI translated<br>- Persisted preference |
 | US-21 | As a **User**, I want to **login using Google or Facebook** | - Social login buttons<br>- OAuth flow<br>- Account linking |
+| US-22 | As a **Job Seeker**, I want to **upload my CV and have AI recognise my profile and filter matching jobs** | - CV upload (PDF/DOCX/image, OCR for scans)<br>- Editable extracted profile (human-in-the-loop)<br>- Auto-fill profile + ranked matching job list<br>- Recruiter-side candidate screening (SCREEN-01) |
 
 ---
 

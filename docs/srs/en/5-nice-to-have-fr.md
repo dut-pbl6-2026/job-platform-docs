@@ -16,13 +16,14 @@
 
 This section documents all **NICE TO HAVE** functional requirements. These are innovative "WOW" features that provide competitive advantage and bonus points, but are not required for a passing grade. They should only be implemented after all MUST HAVE and SHOULD HAVE features are stable and complete.
 
-The team should select **at least 2** NICE TO HAVE features to implement, with AI Job Copilot being the highest recommended. The NICE TO HAVE features are organised into 10 components:
+The team should select **at least 2** NICE TO HAVE features to implement, with AI Job Copilot being the highest recommended. The NICE TO HAVE features are organised into 11 components:
 
 ```mermaid
 flowchart LR
     subgraph NiceToHave["NICE TO HAVE Components"]
         AI["AI Job Copilot"]
         SCORE["Smart Resume Scoring"]
+        SCREEN["AI CV Screening"]
         TELE["Telegram Bot"]
         ANALYTICS["Analytics Dashboard"]
         RECOMMEND["Job Recommendation"]
@@ -568,12 +569,68 @@ Dark Mode provides a dark-themed user interface option, reducing eye strain in l
 
 ---
 
-### 5.12 NICE TO HAVE Requirements Summary
+### 5.12 AI CV Screening & Job Matching
+
+**Component ID:** SCREEN-01  
+**Priority:** NICE TO HAVE  
+**Owner:** TM2  
+**Target Week:** Week 11 (shares the Week 11 CV pipeline with SCORE-01)  
+**Difficulty:** 7/10  
+
+#### 5.12.1 Description
+
+AI CV Screening allows a candidate to upload a CV and have the AI service **recognise** its content — parse text (including OCR for scanned documents) and extract a structured profile (personal info, skills, work experience, education) — and **filter** results from it: the extracted profile can auto-fill the user's profile and produces a ranked, filtered list of matching jobs. Recruiters can use the same extraction to screen (filter) candidates for their jobs by required skills and experience. The component reuses the SCORE-01 matching engine so that scoring and screening stay consistent.
+
+#### 5.12.2 Functional Requirements
+
+| ID | Requirement | Acceptance Criteria |
+|:---|:------------|:-------------------|
+| SCREEN-01-01 | The system shall accept CV uploads for AI recognition | - Upload endpoint: `POST /api/ai/parse-cv` (multipart `cv_file`)<br>- Formats: PDF, DOCX, PNG, JPG; max size 5MB (consistent with APP-01-01)<br>- Scanned/image-only PDFs handled via OCR; unrecoverable extraction failure returns `422` with guidance |
+| SCREEN-01-02 | The system shall extract a structured profile from the CV using an AI model | - LLM extraction returns strict JSON: `full_name, email, phone, skills[] (name, proficiency), experience[] (company, title, start_date, end_date, description), education[] (institution, degree, field), certifications[]`<br>- Vietnamese and English CVs supported<br>- Result persisted with a `cvId`; re-upload of an identical file (SHA-256) returns the cached extraction instead of reprocessing |
+| SCREEN-01-03 | The candidate shall review and confirm extracted data before it is saved | - Extracted fields shown in an editable review UI (web + mobile)<br>- Nothing is written to the user profile without explicit confirmation (human-in-the-loop)<br>- One-click "Apply to profile" creates/updates PROFILE-01 skills, experience, education |
+| SCREEN-01-04 | The system shall filter matching jobs from a parsed CV | - Match endpoint: `GET /api/ai/cv/{cvId}/matched-jobs`<br>- Reuses the SCORE-01 scoring engine (skills / experience / education match) across active jobs; returns ranked top N (default 10) with match score and reasons<br>- Results cached in Redis (key `cv_hash + filters`, TTL 24h) consistent with SCORE-01-05 |
+| SCREEN-01-05 | The system shall allow recruiters to screen candidates using AI-extracted data | - For applications that include a parsed CV: `GET /api/ai/applications/job/{jobId}/candidates` filterable by `skill`, `minYears`<br>- Accessible only to the recruiter who owns the job; candidate PII masked per SEC-08<br>- Candidates ranked by SCORE-01 match score |
+| SCREEN-01-06 | The system shall respect privacy for uploaded CVs | - CV files stored with private ACL (R2, consistent with SEC-08); extracted PII encrypted at rest<br>- `DELETE /api/ai/cv/{cvId}` removes the file, the extraction and cached results (right to erasure)<br>- Extractions are not used for any other purpose without user consent |
+| SCREEN-01-07 | The system shall handle AI/OCR failures gracefully | - LLM or OCR unavailable → `503` with retry guidance; parsing failure → `422` with reason<br>- Rate limit: 5 parses / user / hour (Redis); exceeded → `429 Too Many Requests`<br>- Token usage logged for cost monitoring (Gemini free tier) |
+
+#### 5.12.3 API Specifications
+
+| Endpoint | Method | Request Body | Response | Validation Rules |
+|:---------|:-------|:-------------|:---------|:-----------------|
+| `/api/ai/parse-cv` | POST | FormData: `cv_file` | `{ cvId, status, extracted }` | User authenticated; PDF/DOCX/PNG/JPG; <= 5MB; `429` when > 5/hour |
+| `/api/ai/cv/{cvId}` | GET | - | `{ cvId, extracted, created_at }` | User owns the CV |
+| `/api/ai/cv/{cvId}` | DELETE | - | `{ message }` | User owns the CV |
+| `/api/ai/cv/{cvId}/matched-jobs` | GET | Query: `limit` | `{ items: [ { job_id, score, reasons } ] }` | User owns the CV; limit 1-50 (default 10) |
+| `/api/ai/applications/job/{jobId}/candidates` | GET | Query: `skill?, minYears?, page, size` | Paginated `[ { application_id, candidate_summary, score } ]` | Recruiter owns the job |
+
+#### 5.12.4 Screening Pipeline Flow
+
+```mermaid
+flowchart TB
+    Upload["Candidate uploads CV (PDF/DOCX/Image)"] --> Extract["Text extraction (+ OCR if scanned)"]
+    Extract --> LLM["LLM structured extraction (JSON)"]
+    LLM --> Review["Candidate reviews / edits extracted profile"]
+    Review --> Save["Confirmed profile (auto-fill PROFILE-01)"]
+    Review --> Match["SCORE-01 engine matches against active jobs"]
+    Match --> Jobs["Filtered, ranked job list"]
+    LLM --> Screen["Recruiter-side candidate screening (skill / years filters)"]
+```
+
+#### 5.12.5 Data Model (ai_db)
+
+| Entity | Required Attributes | Relationships |
+|:-------|:--------------------|:--------------|
+| CvExtraction | id, user_id (FK), file_url (R2, private ACL), file_hash (SHA-256, unique per user), status (processing/confirmed/failed), extracted (JSONB, PII encrypted per SEC-08), created_at, updated_at | One User has many CvExtractions |
+
+---
+
+### 5.13 NICE TO HAVE Requirements Summary
 
 | Component | ID | Key Features | Target Week | Owner | Difficulty |
 |:----------|:---|:-------------|:------------|:------|:-----------|
 | AI Job Copilot | AI-01 | RAG chatbot, streaming responses, multi-language | 9-10 | TM2 + TM1 | 8/10 |
 | Smart Resume Scoring | SCORE-01 | CV parsing, match scoring, improvement suggestions | 11 | TM2 | 7/10 |
+| AI CV Screening | SCREEN-01 | CV recognition (OCR + LLM extraction), profile auto-fill, matched-job filtering, recruiter screening | 11 | TM2 | 7/10 |
 | Telegram Bot | TELE-01 | Subscription commands, job alerts, multi-language | 12 | TM1 | 4/10 |
 | Analytics Dashboard | ANALYTICS-01 | User/job/application analytics, visual charts | 11 | TM3 | 5/10 |
 | Job Recommendation | RECOMMEND-01 | Content-based filtering, explanation UI | 13 | TM2 | 6/10 |
@@ -585,12 +642,13 @@ Dark Mode provides a dark-themed user interface option, reducing eye strain in l
 
 ---
 
-### 5.13 Team Recommendations
+### 5.14 Team Recommendations
 
 | Recommended Selection | Justification |
 |:----------------------|:--------------|
 | **AI Job Copilot** | Highest WOW factor, demonstrates modern AI integration, provides real user value |
 | **Smart Resume Scoring** | Complements AI Copilot, practical value for job seekers, showcases NLP capabilities |
+| **AI CV Screening** | Natural continuation of Smart Resume Scoring (shared parsing + scoring pipeline): "upload CV → AI recognises profile → filtered matching jobs" is a strong demo flow |
 
 **Alternative Selections:**
 

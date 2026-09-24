@@ -251,6 +251,10 @@ Phụ lục này cung cấp đặc tả API cho tất cả dịch vụ. Tài li�
 | **AI** | `/api/ai/session/{sessionId}` | DELETE | Xóa phiên chat | TỐT NÊN CÓ |
 | **AI** | `/api/ai/session/{sessionId}/history` | GET | Lịch sử phiên | TỐT NÊN CÓ |
 | **AI** | `/api/ai/score-resume` | POST | Chấm điểm CV | TỐT NÊN CÓ |
+| **AI** | `/api/ai/parse-cv` | POST | Phân tích CV, rút trích có cấu trúc bằng AI (OCR + LLM, 5/giờ) | TỐT NÊN CÓ |
+| **AI** | `/api/ai/cv/{cvId}` | GET / DELETE | Lấy / xóa bản rút trích CV đã lưu (quyền xóa dữ liệu) | TỐT NÊN CÓ |
+| **AI** | `/api/ai/cv/{cvId}/matched-jobs` | GET | Lọc, xếp hạng việc làm phù hợp với CV đã phân tích | TỐT NÊN CÓ |
+| **AI** | `/api/ai/applications/job/{jobId}/candidates` | GET | Sàng lọc ứng viên cho nhà tuyển dụng (lọc kỹ năng / số năm) | TỐT NÊN CÓ |
 | **Trình thu thập** | `/api/crawler/trigger` | POST | Kích hoạt crawl thủ công (Admin) | BẮT BUỘC |
 | **Trình thu thập** | `/api/crawler/status` | GET | Trạng thái crawl + lỗi fallback | BẮT BUỘC |
 

@@ -53,6 +53,7 @@
 |:---|:---|:---|
 | AI Job Copilot (Chatbot) | RAG-based chatbot for job advice, CV suggestions | Highest |
 | Smart Resume Scoring | Score CV match with job requirements | Highest |
+| AI CV Screening | Upload CV → AI recognises profile (OCR + LLM) → filter matching jobs; recruiter candidate screening | Highest |
 | Telegram Job Alert Bot | Subscribe to job notifications via Telegram | High |
 | Analytics Dashboard | Statistics on applications, top industries | Medium |
 | Job Recommendation | Suggest jobs based on application history | Medium |
@@ -89,7 +90,7 @@
            |
            v
 [AI Service - Python FastAPI] (NICE TO HAVE)
-    AI Copilot + Resume Scoring (Port 6000)
+    AI Copilot + Resume Scoring + CV Screening (Port 6000)
            |
            v
 [Data Layer]
@@ -124,7 +125,7 @@ The project must be implemented across **multiple repositories**, potentially di
 | `job-platform-web` | React Single Page Application | React + Vite |
 | `job-platform-mobile` | Flutter Cross-Platform Mobile App | Flutter |
 | `job-platform-crawler` | Python Scrapy Data Crawler | Python (Scrapy) |
-| `job-platform-ai-svc` | AI Copilot & Resume Scoring (Optional) | Python FastAPI |
+| `job-platform-ai-svc` | AI Copilot, Resume Scoring & CV Screening (Optional) | Python FastAPI |
 | `job-platform-infra` | Docker Compose, Kubernetes Manifests, Deployment Scripts | YAML / Shell |
 | `job-platform-docs` | Master plan, SRS (EN/VI), Git strategy, project governance, and templates | Markdown |
 
@@ -308,12 +309,13 @@ Since direct folder references (`../shared/`) are not possible across repositori
 | Monday | PDF parsing (PyPDF2/PDFPlumber), CV text extraction | TM2 | 5/10 |
 | Tuesday | Compare CV with Job Description (cosine similarity), Return score + improvement suggestions | TM2 | 7/10 |
 | Wednesday | AI scoring API: POST /api/ai/score-resume, Cache result in Redis (24h) | TM2 | 6/10 |
-| Thursday | Web: Upload CV -> view score, Suggestions UI | TM3 | 6/10 |
-| Friday | Mobile: Upload CV -> view score, Improvement suggestions | TM4 | 6/10 |
+| Wednesday | AI CV Screening: POST /api/ai/parse-cv (OCR + LLM structured extraction), GET /api/ai/cv/{cvId}/matched-jobs (SCREEN-01, reuse SCORE-01 engine) | TM2 | 7/10 |
+| Thursday | Web: Upload CV -> view score, Suggestions UI; CV screening review UI (confirm extracted profile) + matched jobs list | TM3 | 6/10 |
+| Friday | Mobile: Upload CV -> view score, Improvement suggestions; matched jobs screen | TM4 | 6/10 |
 | Saturday | Integration test, prompt optimization, bug fixes | All | 5/10 |
 | Sunday | Rest | - | - |
 
-**Week 11 Deliverable:** Users upload CV and see match score with each job
+**Week 11 Deliverable:** Users upload CV and see match score with each job; AI extracts a structured profile from the CV and filters a ranked list of matching jobs (SCREEN-01)
 
 ---
 

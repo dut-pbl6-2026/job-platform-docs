@@ -53,6 +53,7 @@
 |:---|:---|:---|
 | Trợ lý AI việc làm (Chatbot) | Chatbot dựa trên RAG tư vấn việc làm, gợi ý CV | Cao nhất |
 | Chấm điểm CV thông minh | Đánh giá mức độ phù hợp của CV với yêu cầu công việc | Cao nhất |
+| Sàng lọc CV bằng AI | Tải CV lên → AI nhận diện hồ sơ (OCR + LLM) → lọc việc làm phù hợp; sàng lọc ứng viên cho nhà tuyển dụng | Cao nhất |
 | Bot cảnh báo việc làm qua Telegram | Đăng ký nhận thông báo việc làm qua Telegram | Cao |
 | Bảng điều khiển phân tích | Thống kê về ứng tuyển, ngành hàng đầu | Trung bình |
 | Gợi ý việc làm | Đề xuất công việc dựa trên lịch sử ứng tuyển | Trung bình |
@@ -89,7 +90,7 @@
            |
            v
 [Dịch vụ AI - Python FastAPI] (TỐT NÊN CÓ)
-    Trợ lý AI + Chấm điểm CV (Cổng 6000)
+    Trợ lý AI + Chấm điểm CV + Sàng lọc CV (Cổng 6000)
            |
            v
 [Lớp Dữ liệu]
@@ -122,7 +123,7 @@ Các repository sau đây phải được tạo:
 | `job-platform-web` | Ứng dụng React Single Page | React + Vite |
 | `job-platform-mobile` | Ứng dụng Di động đa nền tảng Flutter | Flutter |
 | `job-platform-crawler` | Trình thu thập dữ liệu Python Scrapy | Python (Scrapy) |
-| `job-platform-ai-svc` | Trợ lý AI và Chấm điểm CV (Tùy chọn) | Python FastAPI |
+| `job-platform-ai-svc` | Trợ lý AI, Chấm điểm CV & Sàng lọc CV (Tùy chọn) | Python FastAPI |
 | `job-platform-infra` | Docker Compose, Kubernetes Manifests, Scripts triển khai | YAML / Shell |
 | `job-platform-docs` | Kế hoạch tổng thể, SRS (EN/VI), chiến lược Git, quản trị dự án và mẫu tài liệu | Markdown |
 
@@ -305,12 +306,13 @@ Vì không thể tham chiếu thư mục trực tiếp (`../shared/`) giữa cá
 | Thứ Hai | Phân tích PDF (PyPDF2/PDFPlumber), Trích xuất văn bản CV | TM2 | 5/10 |
 | Thứ Ba | So sánh CV với Mô tả công việc (độ tương tự cosine), Trả về điểm số + gợi ý cải thiện | TM2 | 7/10 |
 | Thứ Tư | API chấm điểm AI: POST /api/ai/score-resume, Lưu đệm kết quả trong Redis (24h) | TM2 | 6/10 |
-| Thứ Năm | Web: Tải CV lên -> xem điểm, Giao diện gợi ý | TM3 | 6/10 |
-| Thứ Sáu | Di động: Tải CV lên -> xem điểm, Gợi ý cải thiện | TM4 | 6/10 |
+| Thứ Tư | Sàng lọc CV bằng AI: POST /api/ai/parse-cv (OCR + rút trích cấu trúc bằng LLM), GET /api/ai/cv/{cvId}/matched-jobs (SCREEN-01, tái sử dụng bộ máy SCORE-01) | TM2 | 7/10 |
+| Thứ Năm | Web: Tải CV lên -> xem điểm, Giao diện gợi ý; Giao diện xem xét sàng lọc CV (xác nhận hồ sơ rút trích) + danh sách việc phù hợp | TM3 | 6/10 |
+| Thứ Sáu | Di động: Tải CV lên -> xem điểm, Gợi ý cải thiện; màn hình việc làm phù hợp | TM4 | 6/10 |
 | Thứ Bảy | Kiểm thử tích hợp, tối ưu prompt, sửa lỗi | Tất cả | 5/10 |
 | Chủ Nhật | Nghỉ | - | - |
 
-**Kết quả Tuần 11:** Người dùng tải CV và xem điểm phù hợp với từng công việc
+**Kết quả Tuần 11:** Người dùng tải CV và xem điểm phù hợp với từng công việc; AI rút trích hồ sơ có cấu trúc từ CV và lọc danh sách việc làm phù hợp xếp hạng (SCREEN-01)
 
 ---
 
