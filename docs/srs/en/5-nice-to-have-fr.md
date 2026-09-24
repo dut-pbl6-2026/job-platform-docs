@@ -592,6 +592,7 @@ AI CV Screening allows a candidate to upload a CV and have the AI service **reco
 | SCREEN-01-05 | The system shall allow recruiters to screen candidates using AI-extracted data | - For applications that include a parsed CV: `GET /api/ai/applications/job/{jobId}/candidates` filterable by `skill`, `minYears`<br>- Accessible only to the recruiter who owns the job; candidate PII masked per SEC-08<br>- Candidates ranked by SCORE-01 match score |
 | SCREEN-01-06 | The system shall respect privacy for uploaded CVs | - CV files stored with private ACL (R2, consistent with SEC-08); extracted PII encrypted at rest<br>- `DELETE /api/ai/cv/{cvId}` removes the file, the extraction and cached results (right to erasure)<br>- Extractions are not used for any other purpose without user consent |
 | SCREEN-01-07 | The system shall handle AI/OCR failures gracefully | - LLM or OCR unavailable → `503` with retry guidance; parsing failure → `422` with reason<br>- Rate limit: 5 parses / user / hour (Redis); exceeded → `429 Too Many Requests`<br>- Token usage logged for cost monitoring (Gemini free tier) |
+| SCREEN-01-08 | The system shall rank job applicants by hybrid AI matching in a recruiter panel | - Panel endpoint: `GET /api/ai/applications/job/{jobId}/top-candidates`<br>- Hybrid scoring per applicant: keyword match (BM25 on extracted skills) + vector similarity (KNN between job embedding and CV/profile embedding)<br>- **Scope: only candidates who applied to that job are ranked and shown** — no applicant of that job → nothing appears<br>- Applicants without a parsed CV fall back to profile-text scoring, listed after ranked ones<br>- Returns top 10 with score + reasons; accessible only to the recruiter who owns the job; candidate PII masked per SEC-08<br>- Job embedding cached (Redis, TTL 24h); hard filters (minYears, location) applied in filter context without affecting the score |
 
 #### 5.12.3 API Specifications
 
@@ -602,6 +603,7 @@ AI CV Screening allows a candidate to upload a CV and have the AI service **reco
 | `/api/ai/cv/{cvId}` | DELETE | - | `{ message }` | User owns the CV |
 | `/api/ai/cv/{cvId}/matched-jobs` | GET | Query: `limit` | `{ items: [ { job_id, score, reasons } ] }` | User owns the CV; limit 1-50 (default 10) |
 | `/api/ai/applications/job/{jobId}/candidates` | GET | Query: `skill?, minYears?, page, size` | Paginated `[ { application_id, candidate_summary, score } ]` | Recruiter owns the job |
+| `/api/ai/applications/job/{jobId}/top-candidates` | GET | Query: `limit?, minYears?, location?` | `{ items: [ { application_id, candidate_summary, score, reasons } ] }` (top 10) | Recruiter owns the job; only applicants of the job are ranked |
 
 #### 5.12.4 Screening Pipeline Flow
 
@@ -614,6 +616,9 @@ flowchart TB
     Review --> Match["SCORE-01 engine matches against active jobs"]
     Match --> Jobs["Filtered, ranked job list"]
     LLM --> Screen["Recruiter-side candidate screening (skill / years filters)"]
+    Screen --> Embed["Embed job description + applicant CV/profile (AI vector)"]
+    Embed --> Hybrid["Hybrid score: BM25 keyword match + KNN vector similarity"]
+    Hybrid --> Top10["Top 10 applicants panel on the job (only candidates who applied to that job)"]
 ```
 
 #### 5.12.5 Data Model (ai_db)

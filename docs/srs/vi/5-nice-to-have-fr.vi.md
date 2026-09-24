@@ -592,6 +592,7 @@ Sàng lọc CV bằng AI cho phép ứng viên tải CV lên và để dịch v�
 | SCREEN-01-05 | Hệ thống cho phép nhà tuyển dụng sàng lọc ứng viên bằng dữ liệu AI rút trích | - Với ứng tuyển có CV đã phân tích: `GET /api/ai/applications/job/{jobId}/candidates` lọc theo `skill`, `minYears`<br>- Chỉ nhà tuyển dụng sở hữu công việc được truy cập; PII ứng viên được che theo SEC-08<br>- Ứng viên được xếp hạng theo điểm ghép SCORE-01 |
 | SCREEN-01-06 | Hệ thống tôn trọng quyền riêng tư với CV tải lên | - File CV lưu với ACL riêng tư (R2, thống nhất SEC-08); PII rút trích được mã hóa khi lưu<br>- `DELETE /api/ai/cv/{cvId}` xóa file, bản rút trích và kết quả đệm (quyền được xóa bỏ dữ liệu)<br>- Bản rút trích không được dùng cho mục đích khác khi chưa có sự đồng ý của người dùng |
 | SCREEN-01-07 | Hệ thống xử lý lỗi AI/OCR một cách hợp lý | - LLM hoặc OCR không khả dụng → `503` kèm hướng dẫn thử lại; lỗi phân tích → `422` kèm lý do<br>- Giới hạn: 5 lần phân tích / người dùng / giờ (Redis); vượt → `429 Too Many Requests`<br>- Ghi log mức sử dụng token để giám sát chi phí (Gemini free tier) |
+| SCREEN-01-08 | Hệ thống xếp hạng ứng viên của công việc bằng ghép AI kết hợp trong panel nhà tuyển dụng | - Điểm cuối panel: `GET /api/ai/applications/job/{jobId}/top-candidates`<br>- Chấm điểm kết hợp theo từng ứng viên: khớp từ khóa (BM25 trên kỹ năng rút trích) + độ tương tự vector (KNN giữa embedding công việc và embedding CV/hồ sơ)<br>- **Phạm vi: chỉ những ứng viên đã ứng tuyển vào công việc đó mới được xếp hạng và hiển thị** — không ai ứng tuyển thì không hiển thị gì<br>- Ứng viên chưa có CV phân tích rơi về chấm điểm theo văn bản hồ sơ, hiển thị sau các ứng viên đã xếp hạng<br>- Trả về top 10 kèm điểm + lý do; chỉ nhà tuyển dụng sở hữu công việc được truy cập; PII ứng viên được che theo SEC-08<br>- Embedding công việc được đệm (Redis, TTL 24h); bộ lọc cứng (minYears, địa điểm) áp trong filter context, không ảnh hưởng điểm |
 
 #### 5.12.3 Đặc tả API
 
@@ -602,6 +603,7 @@ Sàng lọc CV bằng AI cho phép ứng viên tải CV lên và để dịch v�
 | `/api/ai/cv/{cvId}` | DELETE | - | `{ message }` | Người dùng sở hữu CV |
 | `/api/ai/cv/{cvId}/matched-jobs` | GET | Truy vấn: `limit` | `{ items: [ { job_id, score, reasons } ] }` | Người dùng sở hữu CV; limit 1-50 (mặc định 10) |
 | `/api/ai/applications/job/{jobId}/candidates` | GET | Truy vấn: `skill?, minYears?, page, size` | Phân trang `[ { application_id, candidate_summary, score } ]` | Nhà tuyển dụng sở hữu công việc |
+| `/api/ai/applications/job/{jobId}/top-candidates` | GET | Truy vấn: `limit?, minYears?, location?` | `{ items: [ { application_id, candidate_summary, score, reasons } ] }` (top 10) | Nhà tuyển dụng sở hữu công việc; chỉ xếp hạng ứng viên của công việc đó |
 
 #### 5.12.4 Luồng đường ống sàng lọc
 
@@ -614,6 +616,9 @@ flowchart TB
     Review --> Match["Bộ máy SCORE-01 ghép với công việc đang hoạt động"]
     Match --> Jobs["Danh sách việc làm đã lọc, xếp hạng"]
     LLM --> Screen["Sàng lọc ứng viên phía nhà tuyển dụng (lọc kỹ năng / số năm)"]
+    Screen --> Embed["Nhúng mô tả công việc + CV/hồ sơ ứng viên (vector AI)"]
+    Embed --> Hybrid["Điểm kết hợp: khớp từ khóa BM25 + độ tương tự vector KNN"]
+    Hybrid --> Top10["Panel Top 10 ứng viên trên trang công việc (chỉ ứng viên đã ứng tuyển vào công việc đó)"]
 ```
 
 #### 5.12.5 Mô hình dữ liệu (ai_db)

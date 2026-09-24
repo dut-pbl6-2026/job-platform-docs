@@ -255,6 +255,7 @@ Phụ lục này cung cấp đặc tả API cho tất cả dịch vụ. Tài li�
 | **AI** | `/api/ai/cv/{cvId}` | GET / DELETE | Lấy / xóa bản rút trích CV đã lưu (quyền xóa dữ liệu) | TỐT NÊN CÓ |
 | **AI** | `/api/ai/cv/{cvId}/matched-jobs` | GET | Lọc, xếp hạng việc làm phù hợp với CV đã phân tích | TỐT NÊN CÓ |
 | **AI** | `/api/ai/applications/job/{jobId}/candidates` | GET | Sàng lọc ứng viên cho nhà tuyển dụng (lọc kỹ năng / số năm) | TỐT NÊN CÓ |
+| **AI** | `/api/ai/applications/job/{jobId}/top-candidates` | GET | Top 10 ứng viên xếp hạng bằng ghép AI kết hợp (BM25 + KNN, chỉ ứng viên đã apply) | TỐT NÊN CÓ |
 | **Trình thu thập** | `/api/crawler/trigger` | POST | Kích hoạt crawl thủ công (Admin) | BẮT BUỘC |
 | **Trình thu thập** | `/api/crawler/status` | GET | Trạng thái crawl + lỗi fallback | BẮT BUỘC |
 

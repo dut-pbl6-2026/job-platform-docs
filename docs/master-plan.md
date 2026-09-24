@@ -309,7 +309,7 @@ Since direct folder references (`../shared/`) are not possible across repositori
 | Monday | PDF parsing (PyPDF2/PDFPlumber), CV text extraction | TM2 | 5/10 |
 | Tuesday | Compare CV with Job Description (cosine similarity), Return score + improvement suggestions | TM2 | 7/10 |
 | Wednesday | AI scoring API: POST /api/ai/score-resume, Cache result in Redis (24h) | TM2 | 6/10 |
-| Wednesday | AI CV Screening: POST /api/ai/parse-cv (OCR + LLM structured extraction), GET /api/ai/cv/{cvId}/matched-jobs (SCREEN-01, reuse SCORE-01 engine) | TM2 | 7/10 |
+| Wednesday | AI CV Screening: POST /api/ai/parse-cv (OCR + LLM structured extraction), GET /api/ai/cv/{cvId}/matched-jobs (SCREEN-01, reuse SCORE-01 engine), GET /api/ai/applications/job/{jobId}/top-candidates (recruiter panel, hybrid BM25 + KNN, applied-only) | TM2 | 7/10 |
 | Thursday | Web: Upload CV -> view score, Suggestions UI; CV screening review UI (confirm extracted profile) + matched jobs list | TM3 | 6/10 |
 | Friday | Mobile: Upload CV -> view score, Improvement suggestions; matched jobs screen | TM4 | 6/10 |
 | Saturday | Integration test, prompt optimization, bug fixes | All | 5/10 |

@@ -306,7 +306,7 @@ Vì không thể tham chiếu thư mục trực tiếp (`../shared/`) giữa cá
 | Thứ Hai | Phân tích PDF (PyPDF2/PDFPlumber), Trích xuất văn bản CV | TM2 | 5/10 |
 | Thứ Ba | So sánh CV với Mô tả công việc (độ tương tự cosine), Trả về điểm số + gợi ý cải thiện | TM2 | 7/10 |
 | Thứ Tư | API chấm điểm AI: POST /api/ai/score-resume, Lưu đệm kết quả trong Redis (24h) | TM2 | 6/10 |
-| Thứ Tư | Sàng lọc CV bằng AI: POST /api/ai/parse-cv (OCR + rút trích cấu trúc bằng LLM), GET /api/ai/cv/{cvId}/matched-jobs (SCREEN-01, tái sử dụng bộ máy SCORE-01) | TM2 | 7/10 |
+| Thứ Tư | Sàng lọc CV bằng AI: POST /api/ai/parse-cv (OCR + rút trích cấu trúc bằng LLM), GET /api/ai/cv/{cvId}/matched-jobs (SCREEN-01, tái sử dụng bộ máy SCORE-01), GET /api/ai/applications/job/{jobId}/top-candidates (panel nhà tuyển dụng, ghép kết hợp BM25 + KNN, chỉ ứng viên đã apply) | TM2 | 7/10 |
 | Thứ Năm | Web: Tải CV lên -> xem điểm, Giao diện gợi ý; Giao diện xem xét sàng lọc CV (xác nhận hồ sơ rút trích) + danh sách việc phù hợp | TM3 | 6/10 |
 | Thứ Sáu | Di động: Tải CV lên -> xem điểm, Gợi ý cải thiện; màn hình việc làm phù hợp | TM4 | 6/10 |
 | Thứ Bảy | Kiểm thử tích hợp, tối ưu prompt, sửa lỗi | Tất cả | 5/10 |
