@@ -645,7 +645,7 @@ Gateway áp dụng một chính sách phân quyền cho từng route YARP. Các 
 | `User` | `POST /api/applications`, `GET /api/applications/me` |
 | `Authenticated` | các `/api/applications/*` khác (theo job, cập nhật trạng thái, tải CV), các `/api/profiles/*` khác, `/api/notifications/*` |
 
-Gọi route được bảo vệ khi chưa đăng nhập trả 401; token hợp lệ nhưng sai vai trò trả 403. Trạng thái: các route chính sách `Admin` đã merge (gateway #21); chính sách `Recruiter`/`User` nằm trong gateway #22 (đang mở tại thời điểm viết). Quản lý người dùng admin, duyệt tin và thống kê do auth-svc #30/#31/#32 và job-svc #26 cung cấp (đã merge).
+Gọi route được bảo vệ khi chưa đăng nhập trả 401; token hợp lệ nhưng sai vai trò trả 403. Trạng thái: các route chính sách `Admin` đã merge (gateway #21); chính sách `Recruiter`/`User` nằm trong gateway #23 (đang mở tại thời điểm viết; PR này gộp RBAC với health/logging và SonarCloud tùy chọn). Quản lý người dùng admin, duyệt tin và thống kê do auth-svc #30/#31/#32 và job-svc #26 cung cấp (đã merge).
 
 ---
 

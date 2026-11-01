@@ -277,7 +277,7 @@ flowchart LR
     Test -->|Sự cố| Rollback["azure rollback --tag"]
 ```
 
-> **Tình trạng xuất bản image (PBL6-84):** cả 8 repo triển khai được (`auth-svc`, `gateway`, `job-svc`, `search-svc`, `app-svc`, `profile-svc`, `notif-svc`, `web`) sẽ đẩy `ghcr.io/dut-pbl6-2026/job-platform-<repo>` (tag: SHA commit đầy đủ và `latest`) khi các PR đang chờ được merge: `search-svc` #15, `app-svc` #9, `profile-svc` #8, `notif-svc` #8 và `web` #23 mỗi repo thêm `publish-image.yml` (`auth-svc`, `gateway`, `job-svc` đã đẩy image). Package GHCR mặc định là private: hãy đặt public, hoặc cấu hình `GHCR_USER` / `GHCR_TOKEN` (PAT có `read:packages`) cho VM khi pull. Image `web` nhúng `VITE_API_BASE_URL` lúc build từ biến repository, nên cần đặt biến này thành URL gateway công khai trước lần publish đầu tiên.
+> **Tình trạng xuất bản image (PBL6-84):** cả 8 repo triển khai được (`auth-svc`, `gateway`, `job-svc`, `search-svc`, `app-svc`, `profile-svc`, `notif-svc`, `web`) sẽ đẩy `ghcr.io/dut-pbl6-2026/job-platform-<repo>` (tag: SHA commit đầy đủ và `latest`) khi các PR đang chờ được merge: `search-svc` #14, `app-svc` #8, `profile-svc` #7 và `notif-svc` #7 (mỗi PR nay gộp health/logging, SonarCloud tùy chọn và `publish-image.yml`) và `web` #23 thêm `publish-image.yml` (`auth-svc`, `gateway`, `job-svc` đã đẩy image). `mobile` #16 gỡ URL hosting cũ khỏi ứng dụng di động. Package GHCR mặc định là private: hãy đặt public, hoặc cấu hình `GHCR_USER` / `GHCR_TOKEN` (PAT có `read:packages`) cho VM khi pull. Image `web` nhúng `VITE_API_BASE_URL` lúc build từ biến repository, nên cần đặt biến này thành URL gateway công khai trước lần publish đầu tiên.
 
 #### 9.7.4 Hạ tầng dưới dạng mã và CD thủ công (PBL6-83)
 

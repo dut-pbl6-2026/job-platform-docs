@@ -277,7 +277,7 @@ flowchart LR
     Test -->|Issue| Rollback["azure rollback --tag"]
 ```
 
-> **Image publishing status (PBL6-84):** all 8 deployable repositories (`auth-svc`, `gateway`, `job-svc`, `search-svc`, `app-svc`, `profile-svc`, `notif-svc`, `web`) publish `ghcr.io/dut-pbl6-2026/job-platform-<repo>` (tags: long commit SHA and `latest`) once the pending PRs merge: `search-svc` #15, `app-svc` #9, `profile-svc` #8, `notif-svc` #8 and `web` #23 each add `publish-image.yml` (`auth-svc`, `gateway` and `job-svc` already publish). GHCR packages are private by default: make them public, or set `GHCR_USER` / `GHCR_TOKEN` (PAT with `read:packages`) for the VM pull. The `web` image bakes `VITE_API_BASE_URL` in at build time from a repository variable, so set it to the public gateway URL before the first publish.
+> **Image publishing status (PBL6-84):** all 8 deployable repositories (`auth-svc`, `gateway`, `job-svc`, `search-svc`, `app-svc`, `profile-svc`, `notif-svc`, `web`) publish `ghcr.io/dut-pbl6-2026/job-platform-<repo>` (tags: long commit SHA and `latest`) once the pending PRs merge: `search-svc` #14, `app-svc` #8, `profile-svc` #7 and `notif-svc` #7 (each PR now bundles health/logging, optional SonarCloud and `publish-image.yml`) and `web` #23 add `publish-image.yml` (`auth-svc`, `gateway` and `job-svc` already publish). `mobile` #16 removes the old hosting URL from the mobile app. GHCR packages are private by default: make them public, or set `GHCR_USER` / `GHCR_TOKEN` (PAT with `read:packages`) for the VM pull. The `web` image bakes `VITE_API_BASE_URL` in at build time from a repository variable, so set it to the public gateway URL before the first publish.
 
 #### 9.7.4 Infrastructure as Code and Manual CD (PBL6-83)
 

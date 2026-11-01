@@ -645,7 +645,7 @@ The gateway applies an authorisation policy per YARP route. Policies `Admin`, `R
 | `User` | `POST /api/applications`, `GET /api/applications/me` |
 | `Authenticated` | other `/api/applications/*` (by job, status update, CV download), other `/api/profiles/*`, `/api/notifications/*` |
 
-An anonymous call to a protected route returns 401; a valid token with the wrong role returns 403. Status: the `Admin` policy routes are merged (gateway #21); the `Recruiter`/`User` policies are in gateway #22 (open at the time of writing). Admin user management, job approval and stats are served by auth-svc #30/#31/#32 and job-svc #26 (merged).
+An anonymous call to a protected route returns 401; a valid token with the wrong role returns 403. Status: the `Admin` policy routes are merged (gateway #21); the `Recruiter`/`User` policies are in gateway #23 (open at the time of writing; it bundles RBAC with health/logging and optional SonarCloud). Admin user management, job approval and stats are served by auth-svc #30/#31/#32 and job-svc #26 (merged).
 
 ---
 
