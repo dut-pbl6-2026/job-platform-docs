@@ -571,9 +571,11 @@ Since the project uses a multirepo architecture, CI/CD pipelines must be impleme
 | 3b | Run contract tests against latest `job-platform-shared` | No breaking changes; Event Schema compatible |
 | 4 | Build Docker image | Image created successfully |
 | 5 | Push to container registry (GHCR / Docker Hub) | Image pushed |
-| 6 | Deploy to staging environment (Render / Railway) | Service responds to health check |
+| 6 | Deploy to the test environment (single Azure VM via `job-platform-infra` `scripts/deploy.sh azure up`; see Part 9) | Service responds to health check |
 
 **Trigger:** On every push to `main` branch.
+
+**Optional SonarCloud analysis (PBL6-50):** each .NET repository's `ci.yml` builds and tests; an additional SonarCloud job (`dotnet-sonarscanner` begin/end around build and test, with opencover coverage) runs **only when the `SONAR_TOKEN` secret exists** and is skipped otherwise (including fork PRs). Project key `dut-pbl6-2026_<repo>`, organisation `dut-pbl6-2026`, overridable via repository variables `SONAR_PROJECT_KEY` / `SONAR_ORGANIZATION`. The `job-platform-infra` CI lints `docker-compose.prod.yml` and dry-runs the deploy and provisioning scripts.
 
 #### 3.13.3. Dependency Management Between Repos
 

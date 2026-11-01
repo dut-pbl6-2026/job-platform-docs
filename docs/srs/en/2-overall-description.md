@@ -211,26 +211,23 @@ The system operates in a cloud-native environment using containerization and man
 
 | Component | Specification | Provider |
 |:----------|:--------------|:---------|
-| **Hosting** | Render Free 750h 512 MB + Vercel web CDN | Render + Vercel |
-| **Database** | Managed PostgreSQL (500 MB) | Supabase |
-| **Cache** | Managed Redis (10k commands/day) | Upstash |
-| **Search** | Managed Elasticsearch (1 GB cluster) | Bonsai |
-| **Message Broker** | Managed Kafka (Basic Tier) | Confluent Cloud |
-| **Storage** | Object Storage (10 GB) | Cloudflare R2 |
+| **Hosting** | ONE Linux VM (e.g. Standard_B2ms, 8 GB) running `docker-compose.prod.yml`; started on demand, deallocated after testing | Microsoft Azure (Azure for Students credit) |
+| **Database** | PostgreSQL (self-hosted in compose) | Azure VM |
+| **Cache** | Redis (self-hosted in compose) | Azure VM |
+| **Search** | Elasticsearch (self-hosted in compose) | Azure VM |
+| **Message Broker** | Kafka (self-hosted in compose) | Azure VM |
+| **Storage** | Object Storage (10 GB, optional) | Cloudflare R2 |
 | **CI/CD** | Automated Build/Test | GitHub Actions |
 
 #### 2.3.3 Production Environment
 
 | Component | Specification | Provider |
 |:----------|:--------------|:---------|
-| **Hosting** | Render Free 750h + Vercel CDN (scale Railway) | Render / Railway / Vercel |
-| **Database** | Managed PostgreSQL (1-5 GB) | Supabase / Neon |
-| **Cache** | Managed Redis (50k commands/day) | Upstash |
-| **Search** | Managed Elasticsearch (1-5 GB cluster) | Bonsai / Elastic Cloud |
-| **Message Broker** | Managed Kafka (Standard Tier) | Confluent Cloud |
-| **Storage** | Object Storage (10-50 GB) | Cloudflare R2 |
+| **Hosting** | Same single Azure VM and compose stack as staging (demo); no auto-scaling | Microsoft Azure (Azure for Students credit) |
+| **Database / Cache / Search / Broker** | Self-hosted in compose; managed free tiers (Supabase, Upstash, Bonsai, Confluent) are alternatives | Azure VM / alternatives |
+| **Storage** | Object Storage (10-50 GB, optional) | Cloudflare R2 |
 | **CI/CD** | Automated Build/Test/Deploy | GitHub Actions |
-| **Monitoring** | Metrics, Logs, Alerts | Grafana Cloud |
+| **Monitoring** | Health checks, JSON logs, metrics, alerts | Grafana Cloud / external uptime ping |
 
 ---
 
@@ -279,12 +276,12 @@ Since direct folder references (`../shared/`) are not possible across repositori
 
 #### 2.4.3 Zero-Cost Infrastructure Constraint
 
-All production and staging infrastructure must leverage free tiers or promotional credits to achieve **$0 operational cost** for the 16-week project duration. This is detailed in Part 9: Infrastructure and Cost Analysis.
+Infrastructure must stay within free tiers or promotional credits so that there is **no out-of-pocket operational cost** for the 16-week project duration. The deploy target is Microsoft Azure using Azure for Students credit (3 accounts x $100, not pooled): the single test VM is credit-funded and therefore not literally $0 (approximately $30-40 over 16 weeks, see Part 9, 9.4). This is detailed in Part 9: Infrastructure and Cost Analysis.
 
 This requires the use of:
 
-- Always Free tiers (GCP f1-micro, Supabase, Upstash, Cloudflare R2, Bonsai)
-- Free trial credits (AWS/Azure/DigitalOcean, Railway)
+- Azure for Students credit for ONE on-demand Linux VM (deallocated when not testing)
+- Always Free tiers for the services outside the compose stack (Cloudflare R2, GHCR; Supabase, Upstash, Bonsai as alternatives)
 - Free services (GitHub Actions, Grafana Cloud, Cloudflare Tunnel)
 - Prudent AI API usage (Gemini free tier, OpenAI promotional credits)
 

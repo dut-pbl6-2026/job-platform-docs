@@ -571,9 +571,11 @@ Vì dự án sử dụng kiến trúc đa repo (multirepo), các đường ống
 | 3b | Chạy kiểm thử hợp đồng (Contract Test) với phiên bản mới nhất của `job-platform-shared` | Không có breaking change; Event Schema tương thích |
 | 4 | Xây dựng hình ảnh Docker | Hình ảnh được tạo thành công |
 | 5 | Đẩy lên container registry (GHCR / Docker Hub) | Hình ảnh được đẩy |
-| 6 | Triển khai lên môi trường staging (Render / Railway) | Dịch vụ phản hồi kiểm tra sức khỏe |
+| 6 | Triển khai lên môi trường kiểm thử (một VM Azure qua `scripts/deploy.sh azure up` của `job-platform-infra`; xem Phần 9) | Dịch vụ phản hồi kiểm tra sức khỏe |
 
 **Kích hoạt:** Mỗi lần đẩy lên nhánh `main`.
+
+**Phân tích SonarCloud tùy chọn (PBL6-50):** `ci.yml` của mỗi repo .NET build và test; một job SonarCloud bổ sung (`dotnet-sonarscanner` begin/end quanh build và test, kèm coverage opencover) **chỉ chạy khi tồn tại secret `SONAR_TOKEN`** và bị bỏ qua nếu không (kể cả PR từ fork). Project key `dut-pbl6-2026_<repo>`, tổ chức `dut-pbl6-2026`, có thể ghi đè bằng biến repo `SONAR_PROJECT_KEY` / `SONAR_ORGANIZATION`. CI của `job-platform-infra` lint `docker-compose.prod.yml` và chạy thử (dry-run) các script triển khai và provision.
 
 #### 3.13.3. Quản lý phụ thuộc giữa các Repo
 

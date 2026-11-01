@@ -417,6 +417,7 @@ This appendix tracks all revisions made to the SRS document.
 | CHG-004 | 2026-08-17 | Removed technology names from architecture diagrams | 2.1.2 |
 | CHG-005 | 2026-08-17 | Added reference to Part 9 for zero-cost infrastructure | 2.4.3 |
 | CHG-006 | 2026-08-17 | Added Social Login as Nice to Have user story | 2.6.3 |
+| CHG-007 | 2026-11-01 | Deploy target changed from Render/Railway to a single Azure VM (Azure for Students credit); health/readiness and logging (PBL6-49), gateway route policies (PBL6-44), optional SonarCloud CI (PBL6-50) | 2.3, 2.4.3, 3.13, 4.11, 6 (REL-06), 8.6, 8.8.2, 9 |
 
 ---
 

@@ -365,54 +365,51 @@ flowchart TB
 - Mount volume cục bộ cho thay đổi mã
 - Biến môi trường cho cấu hình
 
-#### 8.6.2 Môi trường Staging (Đám mây)
+#### 8.6.2 Môi trường Staging / Kiểm thử (VM Azure)
 
 ```mermaid
 flowchart TB
-    subgraph Staging["Môi trường Staging (Render/Railway)"]
+    subgraph Staging["Môi trường Kiểm thử (1 VM Linux Azure, docker-compose.prod.yml)"]
         Web["Ứng dụng Web"]
-        Mobile["Ứng dụng Di động (TestFlight)"]
         Gateway["API Gateway"]
         Services["Tất cả dịch vụ"]
-        Data["Dịch vụ dữ liệu được quản lý"]
+        Data["PostgreSQL / Redis / Elasticsearch / Kafka tự lưu trữ"]
     end
 ```
 
 **Đặc điểm:**
-- Triển khai lên đám mây (Render / Railway)
-- Dịch vụ cơ sở dữ liệu và cache được quản lý
-- Dữ liệu thực (bản sao đã làm sạch của dữ liệu sản phẩm)
+- Triển khai lên Microsoft Azure (tín dụng Azure for Students): MỘT VM Linux (ví dụ `Standard_B2ms`, 8 GB) chạy toàn bộ `docker-compose.prod.yml` từ image GHCR (xem Phần 9, 9.6.1)
+- PostgreSQL, Redis, Elasticsearch và Kafka do stack compose tự lưu trữ trên VM; chỉ gateway và web được publish
+- Chỉ bật khi kiểm thử (`scripts/deploy.sh azure up`) và deallocate sau đó (`azure down`)
 - Được sử dụng cho kiểm thử và xác nhận người dùng
-- Tách biệt với môi trường sản phẩm
 
-#### 8.6.3 Môi trường sản phẩm (Đám mây)
+#### 8.6.3 Môi trường Sản phẩm / Demo (VM Azure)
 
 ```mermaid
 flowchart TB
-    subgraph Production["Môi trường sản phẩm (Render/Railway)"]
-        CDN["CDN/Lưu trữ tĩnh"]
-        Gateway["API Gateway (Mở rộng)"]
-        Services["Tất cả dịch vụ (Mở rộng)"]
-        Data["Dịch vụ dữ liệu được quản lý"]
-        Monitor["Giám sát & Ghi nhật ký"]
+    subgraph Production["Môi trường Demo (cùng stack VM Azure)"]
+        Web["Ứng dụng Web"]
+        Gateway["API Gateway"]
+        Services["Tất cả dịch vụ"]
+        Data["Dịch vụ dữ liệu tự lưu trữ"]
+        Monitor["Health check & log JSON"]
     end
 ```
 
 **Đặc điểm:**
-- Triển khai lên đám mây (Render / Railway)
-- Dịch vụ cơ sở dữ liệu và cache được quản lý
-- Tự động mở rộng nếu được hỗ trợ
-- Giám sát và cảnh báo được cấu hình
-- Quy trình sao lưu và phục hồi
+- Cùng stack compose một VM như 8.6.2; không tự động mở rộng (chỉ đổi kích thước VM)
+- Health check (`/health`, `/health/ready`) và log JSON có cấu trúc (xem 8.6.5)
+- Rollback bằng cách triển khai lại tag image trước (`scripts/deploy.sh --tag <sha> azure rollback`)
+- Sao lưu và phục hồi giới hạn ở đĩa VM; volume còn nguyên sau khi deallocate
 
 #### 8.6.4 Chiến lược triển khai
 
 ```mermaid
 flowchart LR
     Build["Xây dựng"] --> Test["Kiểm thử"]
-    Test --> DeployStaging["Triển khai lên Staging"]
-    DeployStaging --> TestStaging["Kiểm thử trên Staging"]
-    TestStaging -->|Đạt| DeployProd["Triển khai lên Sản phẩm"]
+    Test --> DeployStaging["Triển khai lên VM Azure (azure up)"]
+    DeployStaging --> TestStaging["Kiểm thử trên VM"]
+    TestStaging -->|Đạt| DeployProd["Demo / Deallocate (azure down)"]
     DeployProd --> Monitor["Giám sát"]
     TestStaging -->|Thất bại| Fix["Sửa"]
     Fix --> Build
@@ -424,9 +421,24 @@ flowchart LR
 |:-----|:------|:---------|
 | Xây dựng | Xây dựng tất cả dịch vụ và ứng dụng | Mỗi lần đẩy mã |
 | Kiểm thử | Chạy kiểm thử đơn vị và tích hợp | Mỗi lần đẩy mã |
-| Triển khai Staging | Triển khai lên môi trường staging | Mỗi lần đẩy nhánh chính |
-| Kiểm thử Staging | Chạy kiểm thử khói và xác minh thủ công | Mỗi lần triển khai staging |
-| Triển khai Sản phẩm | Triển khai lên môi trường sản phẩm | Theo lịch (kích hoạt thủ công) |
+| Triển khai lên VM Azure | `scripts/deploy.sh azure up` (kéo image GHCR, `compose up -d --wait`) | Mỗi phiên kiểm thử (thủ công) |
+| Kiểm thử trên VM | Chạy kiểm thử khói và xác minh thủ công | Mỗi lần triển khai |
+| Deallocate | `scripts/deploy.sh azure down` sau khi kiểm thử (chỉ tốn chi phí đĩa) | Cuối mỗi phiên |
+
+#### 8.6.5 Health check và ghi nhật ký (PBL6-49)
+
+Mỗi dịch vụ .NET (gateway, auth, job, search, app, profile, notif) cung cấp hai probe:
+
+| Điểm cuối | Mục đích | Hành vi |
+|:----------|:---------|:--------|
+| `GET /health` | Liveness nhẹ (dùng cho healthcheck của compose) | JSON tĩnh `{"status":"ok","service":"<name>"}`, không gọi phụ thuộc |
+| `GET /health/ready` | Readiness (kiểm tra phụ thuộc) | HTTP 503 khi một phụ thuộc bắt buộc không khỏe; không bao giờ trả về nội dung exception |
+
+Các kiểm tra readiness theo dịch vụ: **auth** - PostgreSQL, Redis (chỉ khi đặt `REDIS_URL`); **job** - PostgreSQL, trạng thái circuit breaker của Kafka publisher (circuit mở = degraded vì có HTTP fallback); **search** - Elasticsearch (không khỏe = 503), Redis (degraded, cache rơi về miss); **gateway** - cấu hình proxy đã nạp (route và cluster), cùng probe upstream tùy chọn qua `HEALTH_READY_CHECK_UPSTREAMS=true` chỉ báo degraded; **app** - PostgreSQL, kiểm tra TCP Kafka (degraded); **profile** - PostgreSQL; **notif** - PostgreSQL, kiểm tra TCP Kafka và SMTP (degraded).
+
+Ghi nhật ký dùng Serilog với console JSON gọn (ngoài môi trường Development), enricher tên dịch vụ và lan truyền `X-Correlation-Id`: id đến chỉ được chấp nhận nếu dài tối đa 64 ký tự gồm chữ, số, `-`, `_` hoặc `.`; nếu không sẽ tạo id mới. Id được trả lại trong response (và gateway chuyển tiếp tới các upstream) và gắn vào mọi sự kiện log. Request `/health` được ghi ở mức Verbose; header, body và token của request không được ghi log.
+
+> **Tình trạng triển khai:** gateway #23, auth-svc #33, job-svc #30, search-svc #14, app-svc #8, profile-svc #7 và notif-svc #7 (tất cả vẫn là pull request đang mở tại thời điểm viết).
 | Giám sát | Giám sát sau triển khai để phát hiện sự cố | Liên tục |
 
 ---
@@ -619,6 +631,20 @@ flowchart TB
     RecruiterCheck -->|Thất bại| Forbidden
     UserCheck -->|Thất bại| Forbidden
 ```
+
+#### 8.8.2.1 Chính sách route của Gateway (PBL6-44)
+
+Gateway áp dụng một chính sách phân quyền cho từng route YARP. Các chính sách `Admin`, `Recruiter` và `User` (ứng viên) kiểm tra claim `role`; `Authenticated` chỉ yêu cầu JWT hợp lệ. Route không có chính sách là ẩn danh (anonymous). Các route mà dịch vụ phía sau cho phép nhiều vai trò (hoặc chủ sở hữu tài nguyên) giữ ở `Authenticated` và do chính dịch vụ kiểm soát.
+
+| Chính sách | Route |
+|:-----------|:------|
+| Anonymous | `/api/auth/*`, các thao tác đọc công khai dưới `/api/jobs/*`, `/api/categories/*`, `/api/companies/*`, `/api/search/*`, `/api/applications/status-flow`, `GET /api/profiles/{userId}` (hồ sơ công khai), route health |
+| `Admin` | `/api/admin/users/*`, `/api/admin/stats`, `/api/admin/jobs/*` |
+| `Recruiter` | `POST /api/jobs`, `GET /api/jobs/recruiter`, `PUT`/`DELETE /api/jobs/{id}`, `POST /api/companies`, `PUT /api/companies/{id}` |
+| `User` | `POST /api/applications`, `GET /api/applications/me` |
+| `Authenticated` | các `/api/applications/*` khác (theo job, cập nhật trạng thái, tải CV), các `/api/profiles/*` khác, `/api/notifications/*` |
+
+Gọi route được bảo vệ khi chưa đăng nhập trả 401; token hợp lệ nhưng sai vai trò trả 403. Trạng thái: các route chính sách `Admin` đã merge (gateway #21); chính sách `Recruiter`/`User` nằm trong gateway #22 (đang mở tại thời điểm viết). Quản lý người dùng admin, duyệt tin và thống kê do auth-svc #30/#31/#32 và job-svc #26 cung cấp (đã merge).
 
 ---
 

@@ -19,7 +19,7 @@
 
 ## 4) Missing HSTS + security headers (MitM: SSL-strip)
 - File: `job-platform-gateway/src/Gateway.Api/Program.cs` `job-platform-auth-svc/src/Auth.Api/Program.cs` (neither has `UseHsts`/headers)
-- Log: TLS currently relies on Render/Vercel edge only; no `Strict-Transport-Security` so first-visit over HTTP is SSL-strippable. SRS `7-eir.md:400` requires headers at SHOULD.
+- Log: TLS was previously provided by the Render/Vercel edge; with the Azure VM target (PBL6-51, infra PR #17) the compose stack ships no TLS terminator (gateway/web are published directly; a reverse proxy on the VM is optional per the infra README); no `Strict-Transport-Security` so first-visit over HTTP is SSL-strippable. SRS `7-eir.md:400` requires headers at SHOULD.
 - Fix: centralized headers middleware at gateway (covers all downstream): `Strict-Transport-Security: max-age=2592000` (30 days, no preload), `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`; enable HSTS only when non-Development.
 
 ## 5) SMTP STARTTLS opportunistic → STRIPTLS-able

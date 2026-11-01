@@ -211,26 +211,23 @@ Hệ thống hoạt động trong môi trường cloud-native sử dụng contai
 
 | Thành phần | Thông số kỹ thuật | Nhà cung cấp |
 |:-----------|:------------------|:-------------|
-| **Hosting** | Render Free 750h 512 MB + Vercel web CDN | Render + Vercel |
-| **Cơ sở dữ liệu** | PostgreSQL được quản lý (500 MB) | Supabase |
-| **Bộ nhớ đệm** | Redis được quản lý (10k lệnh/ngày) | Upstash |
-| **Tìm kiếm** | Elasticsearch được quản lý (1 GB cluster) | Bonsai |
-| **Message Broker** | Kafka được quản lý (Gói Cơ bản) | Confluent Cloud |
-| **Lưu trữ** | Lưu trữ đối tượng (10 GB) | Cloudflare R2 |
-| **CI/CD** | Xây dựng/Kiểm thử Tự động | GitHub Actions |
+| **Hosting** | MỘT VM Linux (ví dụ Standard_B2ms, 8 GB) chạy `docker-compose.prod.yml`; bật khi cần, deallocate sau khi kiểm thử | Microsoft Azure (tín dụng Azure for Students) |
+| **Cơ sở dữ liệu** | PostgreSQL (tự lưu trữ trong compose) | VM Azure |
+| **Cache** | Redis (tự lưu trữ trong compose) | VM Azure |
+| **Tìm kiếm** | Elasticsearch (tự lưu trữ trong compose) | VM Azure |
+| **Message Broker** | Kafka (tự lưu trữ trong compose) | VM Azure |
+| **Lưu trữ** | Lưu trữ đối tượng (10 GB, tùy chọn) | Cloudflare R2 |
+| **CI/CD** | Build/Test tự động | GitHub Actions |
 
 #### 2.3.3 Môi trường sản phẩm
 
 | Thành phần | Thông số kỹ thuật | Nhà cung cấp |
 |:-----------|:------------------|:-------------|
-| **Hosting** | Render Free 750h + Vercel CDN (mở rộng Railway) | Render / Railway / Vercel |
-| **Cơ sở dữ liệu** | PostgreSQL được quản lý (1-5 GB) | Supabase / Neon |
-| **Bộ nhớ đệm** | Redis được quản lý (50k lệnh/ngày) | Upstash |
-| **Tìm kiếm** | Elasticsearch được quản lý (1-5 GB cluster) | Bonsai / Elastic Cloud |
-| **Message Broker** | Kafka được quản lý (Gói Tiêu chuẩn) | Confluent Cloud |
-| **Lưu trữ** | Lưu trữ đối tượng (10-50 GB) | Cloudflare R2 |
-| **CI/CD** | Xây dựng/Kiểm thử/Triển khai Tự động | GitHub Actions |
-| **Giám sát** | Chỉ số, Nhật ký, Cảnh báo | Grafana Cloud |
+| **Hosting** | Cùng một VM Azure và stack compose như staging (demo); không tự động mở rộng | Microsoft Azure (tín dụng Azure for Students) |
+| **Cơ sở dữ liệu / Cache / Tìm kiếm / Broker** | Tự lưu trữ trong compose; các gói miễn phí được quản lý (Supabase, Upstash, Bonsai, Confluent) là phương án thay thế | VM Azure / phương án thay thế |
+| **Lưu trữ** | Lưu trữ đối tượng (10-50 GB, tùy chọn) | Cloudflare R2 |
+| **CI/CD** | Build/Test/Deploy tự động | GitHub Actions |
+| **Giám sát** | Health check, log JSON, chỉ số, cảnh báo | Grafana Cloud / ping uptime bên ngoài |
 
 ---
 
@@ -279,12 +276,12 @@ Vì không thể tham chiếu thư mục trực tiếp (`../shared/`) giữa cá
 
 #### 2.4.3 Ràng buộc hạ tầng không chi phí
 
-Tất cả hạ tầng sản phẩm và staging phải tận dụng các gói miễn phí hoặc tín dụng khuyến mãi để đạt **chi phí vận hành $0** trong suốt thời gian dự án 16 tuần. Điều này được trình bày chi tiết trong Phần 9: Hạ tầng và Phân tích chi phí.
+Hạ tầng phải nằm trong các gói miễn phí hoặc tín dụng khuyến mãi để **không phát sinh chi phí vận hành tự bỏ ra** trong suốt thời gian dự án 16 tuần. Đích triển khai là Microsoft Azure dùng tín dụng Azure for Students (3 tài khoản x $100, không gộp chung): VM kiểm thử duy nhất được chi trả bằng tín dụng nên không phải đúng $0 (khoảng $30-40 trong 16 tuần, xem Phần 9, 9.4). Điều này được trình bày chi tiết trong Phần 9: Hạ tầng và Phân tích chi phí.
 
 Điều này yêu cầu sử dụng:
 
-- Các gói Always Free (GCP f1-micro, Supabase, Upstash, Cloudflare R2, Bonsai)
-- Tín dụng dùng thử miễn phí (AWS/Azure/DigitalOcean, Railway)
+- Tín dụng Azure for Students cho MỘT VM Linux theo nhu cầu (deallocate khi không kiểm thử)
+- Các gói Always Free cho các dịch vụ ngoài stack compose (Cloudflare R2, GHCR; Supabase, Upstash, Bonsai làm phương án thay thế)
 - Các dịch vụ miễn phí (GitHub Actions, Grafana Cloud, Cloudflare Tunnel)
 - Sử dụng API AI hợp lý (Gemini free tier, tín dụng khuyến mãi OpenAI)
 
