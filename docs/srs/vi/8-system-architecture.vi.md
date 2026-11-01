@@ -399,6 +399,7 @@ flowchart TB
 **Đặc điểm:**
 - Cùng stack compose một VM như 8.6.2; không tự động mở rộng (chỉ đổi kích thước VM)
 - Health check (`/health`, `/health/ready`) và log JSON có cấu trúc (xem 8.6.5)
+- VM được provision bằng Terraform (mỗi subscription sinh viên một workspace); triển khai qua workflow thủ công `deploy-azure.yml` hoặc `scripts/deploy.sh` (xem Phần 9, 9.7.4)
 - Rollback bằng cách triển khai lại tag image trước (`scripts/deploy.sh --tag <sha> azure rollback`)
 - Sao lưu và phục hồi giới hạn ở đĩa VM; volume còn nguyên sau khi deallocate
 
@@ -423,7 +424,7 @@ flowchart LR
 | Kiểm thử | Chạy kiểm thử đơn vị và tích hợp | Mỗi lần đẩy mã |
 | Triển khai lên VM Azure | `scripts/deploy.sh azure up` (kéo image GHCR, `compose up -d --wait`) | Mỗi phiên kiểm thử (thủ công) |
 | Kiểm thử trên VM | Chạy kiểm thử khói và xác minh thủ công | Mỗi lần triển khai |
-| Deallocate | `scripts/deploy.sh azure down` sau khi kiểm thử (chỉ tốn chi phí đĩa) | Cuối mỗi phiên |
+| Deallocate | `scripts/deploy.sh azure down` sau khi kiểm thử (chỉ tốn chi phí đĩa + IP tĩnh) | Cuối mỗi phiên |
 
 #### 8.6.5 Health check và ghi nhật ký (PBL6-49)
 

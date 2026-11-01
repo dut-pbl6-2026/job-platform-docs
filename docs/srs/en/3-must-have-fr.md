@@ -575,7 +575,7 @@ Since the project uses a multirepo architecture, CI/CD pipelines must be impleme
 
 **Trigger:** On every push to `main` branch.
 
-**Optional SonarCloud analysis (PBL6-50):** each .NET repository's `ci.yml` builds and tests; an additional SonarCloud job (`dotnet-sonarscanner` begin/end around build and test, with opencover coverage) runs **only when the `SONAR_TOKEN` secret exists** and is skipped otherwise (including fork PRs). Project key `dut-pbl6-2026_<repo>`, organisation `dut-pbl6-2026`, overridable via repository variables `SONAR_PROJECT_KEY` / `SONAR_ORGANIZATION`. The `job-platform-infra` CI lints `docker-compose.prod.yml` and dry-runs the deploy and provisioning scripts.
+**Optional SonarCloud analysis (PBL6-50):** each .NET repository's `ci.yml` builds and tests; an additional SonarCloud job (`dotnet-sonarscanner` begin/end around build and test, with opencover coverage) runs **only when the `SONAR_TOKEN` secret exists** and is skipped otherwise (including fork PRs). Project key `dut-pbl6-2026_<repo>`, organisation `dut-pbl6-2026`, overridable via repository variables `SONAR_PROJECT_KEY` / `SONAR_ORGANIZATION`. The `job-platform-infra` CI lints `docker-compose.prod.yml` and dry-runs the deploy and provisioning scripts, and (PBL6-83) also runs `terraform fmt`/`validate` and `actionlint`. Deployment is a manual CD: `terraform.yml` (plan/apply, apply gated by the `production` environment) and `deploy-azure.yml` (`workflow_dispatch` up/down/status/rollback with an image tag; see 9.7.4). Each service repo publishes its GHCR image through `publish-image.yml` (PBL6-84; tags long SHA + `latest`).
 
 #### 3.13.3. Dependency Management Between Repos
 

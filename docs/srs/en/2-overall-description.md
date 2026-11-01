@@ -276,7 +276,7 @@ Since direct folder references (`../shared/`) are not possible across repositori
 
 #### 2.4.3 Zero-Cost Infrastructure Constraint
 
-Infrastructure must stay within free tiers or promotional credits so that there is **no out-of-pocket operational cost** for the 16-week project duration. The deploy target is Microsoft Azure using Azure for Students credit (3 accounts x $100, not pooled): the single test VM is credit-funded and therefore not literally $0 (approximately $30-40 over 16 weeks, see Part 9, 9.4). This is detailed in Part 9: Infrastructure and Cost Analysis.
+Infrastructure must stay within free tiers or promotional credits so that there is **no out-of-pocket operational cost** for the 16-week project duration. The deploy target is Microsoft Azure using Azure for Students credit (3 accounts x $100, not pooled): the single test VM is credit-funded and therefore not literally $0 (approximately $40-50 over 16 weeks, see Part 9, 9.4). This is detailed in Part 9: Infrastructure and Cost Analysis.
 
 This requires the use of:
 

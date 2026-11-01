@@ -29,7 +29,7 @@ docs/srs/vi/{1..10}.vi.md    # VI SRS
 .github/git-strategy.md      # branch/commit/PR/release
 ```
 
-Parts: `1-introduction`, `2-overall-description` (personas, 14-repo table, US-01..21), `3-must-have-fr` (12 MUST), `4-should-have-fr` (10 SHOULD), `5-nice-have-fr` (10 NICE), `6-nfr` (52 NFR), `7-eir` (37 interfaces), `8-system-architecture` (microservices + DB-per-service + events), `9-infra-cost-analysis` (Azure student-credit VM, ~$30-40 est., $0 out-of-pocket), `10-appendices` (glossary, team, Gantt, API 55 rows, DB schema).
+Parts: `1-introduction`, `2-overall-description` (personas, 14-repo table, US-01..21), `3-must-have-fr` (12 MUST), `4-should-have-fr` (10 SHOULD), `5-nice-have-fr` (10 NICE), `6-nfr` (52 NFR), `7-eir` (37 interfaces), `8-system-architecture` (microservices + DB-per-service + events), `9-infra-cost-analysis` (Azure student-credit VM, ~$40-50 est., $0 out-of-pocket), `10-appendices` (glossary, team, Gantt, API 55 rows, DB schema).
 
 ## Priority discipline (master-plan.md:1, SRS 3-5)
 
@@ -47,7 +47,7 @@ Layers `Client React/Flutter → YARP Gateway JWT/RateLimit → 6 .NET10 LTS svc
 
 ## Infra cost (SRS 9)
 
-Deploy target = Microsoft Azure (Azure for Students, 3 accounts x $100 not pooled; PBL6-51, infra PR #17): ONE Linux VM (e.g. Standard_B2ms 8GB, ~$0.09/h, disk ~$5-8/mo; approximate) runs full `docker-compose.prod.yml` from GHCR images (self-hosted PG/Redis/ES/Kafka), `scripts/deploy.sh azure up|down` — start only when testing, deallocate after (nightly auto-shutdown safety net). Credit-funded, not literally $0 (~$30-40 est. / 16w, $0 out-of-pocket). Render/Railway/Fly no longer used. Free tiers kept for GHCR, Actions, R2, Grafana; Supabase/Upstash/Bonsai/Confluent = alternatives (thresholds Supabase 400MB/15conn, Upstash 8k/d, Bonsai 800MB).
+Deploy target = Microsoft Azure (Azure for Students, 3 accounts x $100 not pooled; PBL6-51, infra PR #17): ONE Linux VM (e.g. Standard_B2ms 8GB, ~$0.09/h, disk ~$5-8/mo, static IP ~$3.6/mo; approximate) runs full `docker-compose.prod.yml` from GHCR images (self-hosted PG/Redis/ES/Kafka), `scripts/deploy.sh azure up|down` — start only when testing, deallocate after (nightly auto-shutdown safety net). Credit-funded, not literally $0 (~$40-50 est. / 16w, $0 out-of-pocket). Render/Railway/Fly no longer used. Free tiers kept for GHCR, Actions, R2, Grafana; Supabase/Upstash/Bonsai/Confluent = alternatives (thresholds Supabase 400MB/15conn, Upstash 8k/d, Bonsai 800MB).
 
 ## Health, RBAC, CI (SRS 6 REL-06, 8.6.5, 8.8.2.1, 3.13)
 

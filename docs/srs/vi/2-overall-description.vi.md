@@ -276,7 +276,7 @@ Vì không thể tham chiếu thư mục trực tiếp (`../shared/`) giữa cá
 
 #### 2.4.3 Ràng buộc hạ tầng không chi phí
 
-Hạ tầng phải nằm trong các gói miễn phí hoặc tín dụng khuyến mãi để **không phát sinh chi phí vận hành tự bỏ ra** trong suốt thời gian dự án 16 tuần. Đích triển khai là Microsoft Azure dùng tín dụng Azure for Students (3 tài khoản x $100, không gộp chung): VM kiểm thử duy nhất được chi trả bằng tín dụng nên không phải đúng $0 (khoảng $30-40 trong 16 tuần, xem Phần 9, 9.4). Điều này được trình bày chi tiết trong Phần 9: Hạ tầng và Phân tích chi phí.
+Hạ tầng phải nằm trong các gói miễn phí hoặc tín dụng khuyến mãi để **không phát sinh chi phí vận hành tự bỏ ra** trong suốt thời gian dự án 16 tuần. Đích triển khai là Microsoft Azure dùng tín dụng Azure for Students (3 tài khoản x $100, không gộp chung): VM kiểm thử duy nhất được chi trả bằng tín dụng nên không phải đúng $0 (khoảng $40-50 trong 16 tuần, xem Phần 9, 9.4). Điều này được trình bày chi tiết trong Phần 9: Hạ tầng và Phân tích chi phí.
 
 Điều này yêu cầu sử dụng:
 

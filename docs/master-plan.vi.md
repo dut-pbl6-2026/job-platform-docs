@@ -267,7 +267,7 @@ Vì không thể tham chiếu thư mục trực tiếp (`../shared/`) giữa cá
 |:---|:---|:---|:---|
 | Thứ Hai | Kiểm tra sức khỏe cho tất cả dịch vụ, Ghi nhật ký tập trung Serilog | TM1 | Điểm cuối sức khỏe hoạt động |
 | Thứ Ba | GitHub Actions CI: Tự động xây dựng, kiểm thử, Tích hợp SonarCloud (tùy chọn) | TM1 | CI thành công |
-| Thứ Tư | Cấu hình Docker Compose cho sản phẩm, Script triển khai lên VM Azure (`scripts/deploy.sh azure`, SRS 9) | TM1 | Triển khai hoạt động |
+| Thứ Tư | Cấu hình Docker Compose cho sản phẩm, Script triển khai lên VM Azure (`scripts/deploy.sh azure`), Terraform cho VM và workflow CD thủ công `terraform.yml` / `deploy-azure.yml`, xuất bản image GHCR (SRS 9.7.4) | TM1 | Triển khai hoạt động |
 | Thứ Năm | Grafana + Prometheus: Giám sát chỉ số, bảng điều khiển cơ bản | TM2 | Hiển thị chỉ số |
 | Thứ Sáu | Web: Tối ưu bản dựng sản phẩm, Biến môi trường | TM3 | Bản dựng sản phẩm hoạt động |
 | Thứ Bảy | Di động: Kiểm thử bản dựng phát hành, sửa lỗi | TM4 | Bản dựng phát hành OK |

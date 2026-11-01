@@ -399,6 +399,7 @@ flowchart TB
 **Characteristics:**
 - Same single-VM compose stack as 8.6.2; no auto-scaling (vertical resize of the VM only)
 - Health checks (`/health`, `/health/ready`) and structured JSON logs (see 8.6.5)
+- VM provisioned with Terraform (one workspace per student subscription); deployment through the manual `deploy-azure.yml` workflow or `scripts/deploy.sh` (see Part 9, 9.7.4)
 - Rollback by redeploying a previous image tag (`scripts/deploy.sh --tag <sha> azure rollback`)
 - Backup and recovery are limited to the VM disk; volumes persist across deallocation
 
@@ -423,7 +424,7 @@ flowchart LR
 | Test | Run unit and integration tests | Every code push |
 | Deploy to Azure VM | `scripts/deploy.sh azure up` (pull GHCR images, `compose up -d --wait`) | Per test session (manual) |
 | Test on the VM | Run smoke tests and manual verification | Every deployment |
-| Deallocate | `scripts/deploy.sh azure down` after testing (disk cost only) | End of every session |
+| Deallocate | `scripts/deploy.sh azure down` after testing (disk + static IP cost only) | End of every session |
 
 #### 8.6.5 Health Checks and Logging (PBL6-49)
 

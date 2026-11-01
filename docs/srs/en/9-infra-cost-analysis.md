@@ -82,7 +82,8 @@ The following table provides a cost analysis for the infrastructure components o
 | Component Category | Service Provider | Offer / Estimated Price | Validity Period | 16-Week Cost |
 |:-------------------|:-----------------|:------------------------|:----------------|:-------------|
 | **Compute (VM)** | Microsoft Azure (Azure for Students) | `Standard_B2ms` (2 vCPU, 8 GB), ~$0.09/h while running; runs the full compose stack | 3 accounts x $100 credit (not pooled); credit-funded | ~$9 per 100 running hours (credit) |
-| **VM disk** | Microsoft Azure (Azure for Students) | 64 GB StandardSSD, ~$5-8/month; the only compute-side cost while the VM is deallocated | Same credit | ~$20-30 (credit) |
+| **VM disk** | Microsoft Azure (Azure for Students) | 64 GB StandardSSD, ~$5-8/month; billed while the VM is deallocated | Same credit | ~$20-30 (credit) |
+| **Public IP** | Microsoft Azure (Azure for Students) | Standard-SKU public IP is static, ~$3.6/month; billed even while the VM is deallocated | Same credit | ~$13 (credit) |
 | **Auto-shutdown** | Azure `az vm auto-shutdown` | Nightly safety net (default 22:00 Vietnam time) | Free | $0 |
 | **Compute (VM)** | Google Cloud Platform | f1-micro instance: 0.2 vCPU, 0.6 GB RAM, 30 GB HDD (alternative) | Always Free (within limits) | $0 |
 | **Managed Database** | Supabase | PostgreSQL: 500 MB storage (alternative to the self-hosted Postgres) | Always Free (within limits) | $0 |
@@ -110,8 +111,9 @@ The Azure VM is **not free**; it is paid from the Azure for Students credit. Ill
 |:-----|:-----------|:-------------------|
 | VM compute | ~100 h x ~$0.09/h | ~$9 |
 | VM disk | ~$5-8/month x ~3.7 months | ~$20-30 |
+| Static public IP | ~$3.6/month x ~3.7 months (billed while deallocated) | ~$13 |
 | Everything else | Free tiers / open-source / GitHub | $0 |
-| **Total** | Within a single $100 student credit | **~$30-40, funded by credit** |
+| **Total** | Within a single $100 student credit | **~$40-50, funded by credit** |
 
 **Out-of-pocket cost: $0 expected**, provided the VM is deallocated after every session (a running VM burns credit 24/7; stopping the OS from inside the VM does *not* stop billing). If one account's credit runs low, the next student subscription is used (re-run the provisioning script; data on the VM disk does not migrate and must be re-seeded).
 
@@ -119,6 +121,7 @@ The Azure VM is **not free**; it is paid from the Azure for Students credit. Ill
 pie title Approximate Credit Spend (16 Weeks, illustrative, USD)
     "VM compute (~100 h)" : 9
     "VM disk" : 25
+    "Static public IP" : 13
     "Other services (free tiers)" : 0
 ```
 
@@ -130,7 +133,7 @@ The following strategies keep the infrastructure within the Azure for Students c
 
 | Strategy | Description | Implementation |
 |:---------|:------------|:---------------|
-| **Single On-Demand VM** | One Azure VM runs the full compose stack; start only when testing, deallocate afterwards (deallocated = disk cost only) | `scripts/deploy.sh azure up` / `azure down`; nightly `az vm auto-shutdown` as a safety net |
+| **Single On-Demand VM** | One Azure VM runs the full compose stack; start only when testing, deallocate afterwards (deallocated = disk + static IP cost only) | `scripts/deploy.sh azure up` / `azure down`; nightly `az vm auto-shutdown` as a safety net |
 | **Student Credit Rotation** | Use Azure for Students credit (3 accounts x $100, not pooled); rotate to the next subscription when credit runs low | `AZURE_SUBSCRIPTION_ID` + re-run `scripts/azure-provision.sh` |
 | **Free Tier Utilization** | Use Always Free tiers for services outside the compose stack | Cloudflare R2, GHCR, GitHub Actions, Grafana Cloud (Supabase, Upstash, Bonsai kept as alternatives) |
 | **Egress Cost Avoidance** | Use services with free data transfer (egress) | Cloudflare R2 provides free egress |
@@ -244,9 +247,9 @@ flowchart TB
 | 5 | Run smoke tests (`/health` through the gateway, `/health/ready` per service) | All | Key endpoints respond |
 | 6 | Invite users for testing | All | Users can access the environment |
 | 7 | Collect and address feedback | All | Issues resolved |
-| 8 | Deallocate: `scripts/deploy.sh azure down` | TM1 | VM deallocated (disk cost only) |
+| 8 | Deallocate: `scripts/deploy.sh azure down` | TM1 | VM deallocated (disk + static IP cost only) |
 
-The VM is created once with `scripts/azure-provision.sh` (resource group, network security group with SSH restricted to the admin CIDR, VM, cloud-init Docker, nightly auto-shutdown). Both scripts support `--dry-run`.
+The VM is created once with Terraform (`terraform/`, see 9.7.4; `scripts/azure-provision.sh` remains as a fallback). The steps above can also be run from the manual `deploy-azure.yml` workflow. Both scripts support `--dry-run`.
 
 #### 9.7.2 Rollback and Credit Management
 
@@ -272,7 +275,22 @@ flowchart LR
     Test -->|Issue| Rollback["azure rollback --tag"]
 ```
 
-> **Image publishing status:** at the time of writing only `auth-svc`, `gateway` and `job-svc` publish GHCR images; `search-svc`, `app-svc`, `profile-svc`, `notif-svc` and `web` still need a publish job before `compose pull` works for them (stated in `job-platform-infra` PR #17).
+> **Image publishing status (PBL6-84):** all 8 deployable repositories (`auth-svc`, `gateway`, `job-svc`, `search-svc`, `app-svc`, `profile-svc`, `notif-svc`, `web`) publish `ghcr.io/dut-pbl6-2026/job-platform-<repo>` (tags: long commit SHA and `latest`) once the pending PRs merge: `search-svc` #15, `app-svc` #9, `profile-svc` #8, `notif-svc` #8 and `web` #23 each add `publish-image.yml` (`auth-svc`, `gateway` and `job-svc` already publish). GHCR packages are private by default: make them public, or set `GHCR_USER` / `GHCR_TOKEN` (PAT with `read:packages`) for the VM pull. The `web` image bakes `VITE_API_BASE_URL` in at build time from a repository variable, so set it to the public gateway URL before the first publish.
+
+#### 9.7.4 Infrastructure as Code and Manual CD (PBL6-83)
+
+`job-platform-infra` PR #18 (stacked on #17, open at the time of writing) replaces the manual provisioning script with Terraform and adds manually triggered GitHub Actions workflows:
+
+| Item | Description |
+|:-----|:------------|
+| `terraform/` (`azurerm ~> 4`, pinned) | Resource group, VNet/subnet, NSG (SSH restricted to `admin_cidr`; 80, 443 and optional gateway port), Standard static public IP with DNS label, NIC, Ubuntu 24.04 VM (`Standard_B2ms`, 64 GB StandardSSD, cloud-init installs Docker + compose plugin), and a VM shutdown schedule (default 15:00 UTC = 22:00 Vietnam time) |
+| One workspace per subscription | `envs/sub1\|sub2\|sub3.tfvars` with one Terraform workspace/state each; optional `azurerm` remote backend; tfstate and tfvars are git-ignored. Rotating to the next student subscription = new workspace + `apply` |
+| `terraform.yml` | PRs touching `terraform/**` run `fmt` + `validate`; `plan` only when OIDC and remote state are configured (otherwise skipped); manual `workflow_dispatch` `plan` or `apply`, where **apply runs in the `production` environment** (required reviewers) |
+| `deploy-azure.yml` | Manual `workflow_dispatch` with action `up`, `down`, `status` or `rollback`, an `image_tag` and `auto_deallocate_after_hours` (0-23); runs `scripts/deploy.sh`; smoke test on `/health` and `/health/ready` (readiness enforced only when `REQUIRE_HEALTH_READY=true`); concurrency-guarded |
+| Authentication | Azure OIDC (`azure/login`) when the `AZURE_CLIENT_ID` / `AZURE_TENANT_ID` / `AZURE_SUBSCRIPTION_ID` secrets exist; otherwise an SSH-only fallback (`AZURE_VM_HOST`, `AZURE_SSH_PRIVATE_KEY`, `PROD_ENV_FILE`) that supports only `up` and `rollback` (no VM power control) |
+| Auto-deallocate | No sleep jobs: `auto_deallocate_after_hours=N` (OIDC mode) re-sets the VM's native Azure auto-shutdown to now + N hours; the nightly 22:00 Vietnam-time schedule from Terraform remains the safety net |
+
+`scripts/azure-provision.sh` is kept only as a no-Terraform fallback. The infra CI additionally runs `terraform fmt`/`validate` and `actionlint`. Not yet tested by the PR author: real `terraform plan/apply`, OIDC login, workflow runs, and SSH from GitHub runners (the NSG blocks them unless `admin_cidr` is widened).
 
 ---
 

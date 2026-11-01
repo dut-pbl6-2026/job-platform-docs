@@ -575,7 +575,7 @@ Vì dự án sử dụng kiến trúc đa repo (multirepo), các đường ống
 
 **Kích hoạt:** Mỗi lần đẩy lên nhánh `main`.
 
-**Phân tích SonarCloud tùy chọn (PBL6-50):** `ci.yml` của mỗi repo .NET build và test; một job SonarCloud bổ sung (`dotnet-sonarscanner` begin/end quanh build và test, kèm coverage opencover) **chỉ chạy khi tồn tại secret `SONAR_TOKEN`** và bị bỏ qua nếu không (kể cả PR từ fork). Project key `dut-pbl6-2026_<repo>`, tổ chức `dut-pbl6-2026`, có thể ghi đè bằng biến repo `SONAR_PROJECT_KEY` / `SONAR_ORGANIZATION`. CI của `job-platform-infra` lint `docker-compose.prod.yml` và chạy thử (dry-run) các script triển khai và provision.
+**Phân tích SonarCloud tùy chọn (PBL6-50):** `ci.yml` của mỗi repo .NET build và test; một job SonarCloud bổ sung (`dotnet-sonarscanner` begin/end quanh build và test, kèm coverage opencover) **chỉ chạy khi tồn tại secret `SONAR_TOKEN`** và bị bỏ qua nếu không (kể cả PR từ fork). Project key `dut-pbl6-2026_<repo>`, tổ chức `dut-pbl6-2026`, có thể ghi đè bằng biến repo `SONAR_PROJECT_KEY` / `SONAR_ORGANIZATION`. CI của `job-platform-infra` lint `docker-compose.prod.yml` và chạy thử (dry-run) các script triển khai và provision, và (PBL6-83) chạy thêm `terraform fmt`/`validate` và `actionlint`. Triển khai là CD thủ công: `terraform.yml` (plan/apply, apply được chặn bởi environment `production`) và `deploy-azure.yml` (`workflow_dispatch` up/down/status/rollback với image tag; xem 9.7.4). Mỗi repo dịch vụ đẩy image GHCR qua `publish-image.yml` (PBL6-84; tag SHA đầy đủ + `latest`).
 
 #### 3.13.3. Quản lý phụ thuộc giữa các Repo
 

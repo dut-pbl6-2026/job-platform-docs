@@ -82,7 +82,8 @@ Bảng sau đây cung cấp phân tích chi phí cho các thành phần hạ t�
 | Danh mục thành phần | Nhà cung cấp dịch vụ | Gói / Giá ước tính | Thời hạn hiệu lực | Chi phí 16 tuần |
 |:--------------------|:---------------------|:-------------------|:------------------|:----------------|
 | **Tính toán (VM)** | Microsoft Azure (Azure for Students) | `Standard_B2ms` (2 vCPU, 8 GB), ~$0,09/giờ khi chạy; chạy toàn bộ stack compose | 3 tài khoản x $100 tín dụng (không gộp chung); chi trả bằng tín dụng | ~$9 cho mỗi 100 giờ chạy (tín dụng) |
-| **Đĩa VM** | Microsoft Azure (Azure for Students) | StandardSSD 64 GB, ~$5-8/tháng; chi phí tính toán duy nhất khi VM đã deallocate | Cùng tín dụng | ~$20-30 (tín dụng) |
+| **Đĩa VM** | Microsoft Azure (Azure for Students) | StandardSSD 64 GB, ~$5-8/tháng; vẫn tính phí khi VM đã deallocate | Cùng tín dụng | ~$20-30 (tín dụng) |
+| **IP công khai** | Microsoft Azure (Azure for Students) | IP công khai SKU Standard là tĩnh, ~$3,6/tháng; vẫn tính phí kể cả khi VM đã deallocate | Cùng tín dụng | ~$13 (tín dụng) |
 | **Tự động tắt** | Azure `az vm auto-shutdown` | Lưới an toàn hằng đêm (mặc định 22:00 giờ Việt Nam) | Miễn phí | $0 |
 | **Tính toán (VM)** | Google Cloud Platform | f1-micro: 0.2 vCPU, 0.6 GB RAM, 30 GB HDD (thay thế) | Always Free (trong giới hạn) | $0 |
 | **Cơ sở dữ liệu được quản lý** | Supabase | PostgreSQL: 500 MB lưu trữ (thay thế cho Postgres tự lưu trữ) | Always Free (trong giới hạn) | $0 |
@@ -110,8 +111,9 @@ VM Azure **không miễn phí**; nó được chi trả từ tín dụng Azure f
 |:---------|:---------|:---------------------|
 | Tính toán VM | ~100 giờ x ~$0,09/giờ | ~$9 |
 | Đĩa VM | ~$5-8/tháng x ~3,7 tháng | ~$20-30 |
+| IP công khai tĩnh | ~$3,6/tháng x ~3,7 tháng (vẫn tính phí khi deallocate) | ~$13 |
 | Tất cả còn lại | Gói miễn phí / mã nguồn mở / GitHub | $0 |
-| **Tổng** | Nằm trong một khoản tín dụng $100 | **~$30-40, chi trả bằng tín dụng** |
+| **Tổng** | Nằm trong một khoản tín dụng $100 | **~$40-50, chi trả bằng tín dụng** |
 
 **Chi phí tự bỏ ra: dự kiến $0**, với điều kiện VM được deallocate sau mỗi phiên (VM đang chạy tiêu tốn tín dụng 24/7; tắt hệ điều hành từ bên trong VM *không* dừng tính phí). Nếu tín dụng của một tài khoản sắp hết, dùng subscription sinh viên tiếp theo (chạy lại script provision; dữ liệu trên đĩa VM không được di chuyển và phải seed lại).
 
@@ -119,6 +121,7 @@ VM Azure **không miễn phí**; nó được chi trả từ tín dụng Azure f
 pie title Chi tiêu tín dụng xấp xỉ (16 tuần, minh họa, USD)
     "Tính toán VM (~100 giờ)" : 9
     "Đĩa VM" : 25
+    "IP công khai tĩnh" : 13
     "Dịch vụ khác (gói miễn phí)" : 0
 ```
 
@@ -130,7 +133,7 @@ Các chiến lược sau giữ hạ tầng nằm trong tín dụng Azure for Stu
 
 | Chiến lược | Mô tả | Triển khai |
 |:-----------|:------|:-----------|
-| **Một VM theo nhu cầu** | Một VM Azure chạy toàn bộ stack compose; chỉ bật khi kiểm thử, deallocate sau đó (deallocate = chỉ tốn chi phí đĩa) | `scripts/deploy.sh azure up` / `azure down`; `az vm auto-shutdown` hằng đêm làm lưới an toàn |
+| **Một VM theo nhu cầu** | Một VM Azure chạy toàn bộ stack compose; chỉ bật khi kiểm thử, deallocate sau đó (deallocate = chỉ tốn chi phí đĩa + IP tĩnh) | `scripts/deploy.sh azure up` / `azure down`; `az vm auto-shutdown` hằng đêm làm lưới an toàn |
 | **Luân phiên tín dụng sinh viên** | Dùng tín dụng Azure for Students (3 tài khoản x $100, không gộp chung); chuyển sang subscription tiếp theo khi sắp hết | `AZURE_SUBSCRIPTION_ID` + chạy lại `scripts/azure-provision.sh` |
 | **Tận dụng Gói miễn phí** | Dùng gói Always Free cho các dịch vụ ngoài stack compose | Cloudflare R2, GHCR, GitHub Actions, Grafana Cloud (Supabase, Upstash, Bonsai giữ làm phương án thay thế) |
 | **Tránh chi phí Egress** | Sử dụng dịch vụ có chuyển dữ liệu miễn phí | Cloudflare R2 cung cấp egress miễn phí |
@@ -244,9 +247,9 @@ flowchart TB
 | 5 | Chạy kiểm thử khói (`/health` qua gateway, `/health/ready` từng dịch vụ) | Tất cả | Các điểm cuối chính phản hồi |
 | 6 | Mời người dùng kiểm thử | Tất cả | Người dùng truy cập được môi trường |
 | 7 | Thu thập và xử lý phản hồi | Tất cả | Các vấn đề được giải quyết |
-| 8 | Deallocate: `scripts/deploy.sh azure down` | TM1 | VM đã deallocate (chỉ tốn chi phí đĩa) |
+| 8 | Deallocate: `scripts/deploy.sh azure down` | TM1 | VM đã deallocate (chỉ tốn chi phí đĩa + IP tĩnh) |
 
-VM được tạo một lần bằng `scripts/azure-provision.sh` (resource group, network security group với SSH giới hạn theo CIDR của quản trị viên, VM, cloud-init Docker, tự động tắt hằng đêm). Cả hai script đều hỗ trợ `--dry-run`.
+VM được tạo một lần bằng Terraform (`terraform/`, xem 9.7.4; `scripts/azure-provision.sh` vẫn còn làm phương án dự phòng). Các bước trên cũng có thể chạy từ workflow thủ công `deploy-azure.yml`. Cả hai script đều hỗ trợ `--dry-run`.
 
 #### 9.7.2 Rollback và quản lý tín dụng
 
@@ -272,7 +275,22 @@ flowchart LR
     Test -->|Sự cố| Rollback["azure rollback --tag"]
 ```
 
-> **Tình trạng xuất bản image:** tại thời điểm viết, chỉ `auth-svc`, `gateway` và `job-svc` đẩy image lên GHCR; `search-svc`, `app-svc`, `profile-svc`, `notif-svc` và `web` vẫn cần job xuất bản trước khi `compose pull` hoạt động cho các dịch vụ này (nêu trong PR #17 của `job-platform-infra`).
+> **Tình trạng xuất bản image (PBL6-84):** cả 8 repo triển khai được (`auth-svc`, `gateway`, `job-svc`, `search-svc`, `app-svc`, `profile-svc`, `notif-svc`, `web`) sẽ đẩy `ghcr.io/dut-pbl6-2026/job-platform-<repo>` (tag: SHA commit đầy đủ và `latest`) khi các PR đang chờ được merge: `search-svc` #15, `app-svc` #9, `profile-svc` #8, `notif-svc` #8 và `web` #23 mỗi repo thêm `publish-image.yml` (`auth-svc`, `gateway`, `job-svc` đã đẩy image). Package GHCR mặc định là private: hãy đặt public, hoặc cấu hình `GHCR_USER` / `GHCR_TOKEN` (PAT có `read:packages`) cho VM khi pull. Image `web` nhúng `VITE_API_BASE_URL` lúc build từ biến repository, nên cần đặt biến này thành URL gateway công khai trước lần publish đầu tiên.
+
+#### 9.7.4 Hạ tầng dưới dạng mã và CD thủ công (PBL6-83)
+
+PR #18 của `job-platform-infra` (xếp chồng trên #17, đang mở tại thời điểm viết) thay script provision thủ công bằng Terraform và thêm các workflow GitHub Actions kích hoạt thủ công:
+
+| Hạng mục | Mô tả |
+|:---------|:------|
+| `terraform/` (`azurerm ~> 4`, ghim phiên bản) | Resource group, VNet/subnet, NSG (SSH giới hạn theo `admin_cidr`; 80, 443 và cổng gateway tùy chọn), IP công khai tĩnh SKU Standard kèm DNS label, NIC, VM Ubuntu 24.04 (`Standard_B2ms`, StandardSSD 64 GB, cloud-init cài Docker + compose plugin) và lịch tắt VM (mặc định 15:00 UTC = 22:00 giờ Việt Nam) |
+| Một workspace cho mỗi subscription | `envs/sub1\|sub2\|sub3.tfvars`, mỗi subscription một workspace/state Terraform; backend `azurerm` từ xa tùy chọn; tfstate và tfvars không được commit. Chuyển sang subscription sinh viên tiếp theo = workspace mới + `apply` |
+| `terraform.yml` | PR chạm `terraform/**` chạy `fmt` + `validate`; `plan` chỉ chạy khi đã cấu hình OIDC và remote state (nếu không thì bỏ qua); `workflow_dispatch` thủ công `plan` hoặc `apply`, trong đó **apply chạy trong environment `production`** (cần reviewer duyệt) |
+| `deploy-azure.yml` | `workflow_dispatch` thủ công với action `up`, `down`, `status` hoặc `rollback`, `image_tag` và `auto_deallocate_after_hours` (0-23); chạy `scripts/deploy.sh`; smoke test `/health` và `/health/ready` (chỉ bắt buộc readiness khi `REQUIRE_HEALTH_READY=true`); có khóa concurrency |
+| Xác thực | Azure OIDC (`azure/login`) khi có các secret `AZURE_CLIENT_ID` / `AZURE_TENANT_ID` / `AZURE_SUBSCRIPTION_ID`; nếu không thì dùng phương án chỉ SSH (`AZURE_VM_HOST`, `AZURE_SSH_PRIVATE_KEY`, `PROD_ENV_FILE`) chỉ hỗ trợ `up` và `rollback` (không điều khiển nguồn VM) |
+| Tự động deallocate | Không dùng job sleep: `auto_deallocate_after_hours=N` (chế độ OIDC) đặt lại auto-shutdown gốc của Azure thành bây giờ + N giờ; lịch tắt 22:00 giờ Việt Nam hằng đêm từ Terraform vẫn là lưới an toàn |
+
+`scripts/azure-provision.sh` chỉ được giữ làm phương án dự phòng không dùng Terraform. CI của infra chạy thêm `terraform fmt`/`validate` và `actionlint`. Tác giả PR chưa kiểm thử: `terraform plan/apply` thật, đăng nhập OIDC, chạy workflow, và SSH từ runner GitHub (NSG chặn trừ khi mở rộng `admin_cidr`).
 
 ---
 

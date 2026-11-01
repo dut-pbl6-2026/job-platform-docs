@@ -270,7 +270,7 @@ Since direct folder references (`../shared/`) are not possible across repositori
 |:---|:---|:---|:---|
 | Monday | Health checks for all services, Serilog centralized logging | TM1 | Health endpoint works |
 | Tuesday | GitHub Actions CI: Automated build, test, SonarCloud integration (optional) | TM1 | CI passes |
-| Wednesday | Docker Compose production config, Deploy script for the Azure VM (`scripts/deploy.sh azure`, SRS 9) | TM1 | Deploy works |
+| Wednesday | Docker Compose production config, Deploy script for the Azure VM (`scripts/deploy.sh azure`), Terraform for the VM and manual CD workflows `terraform.yml` / `deploy-azure.yml`, GHCR image publishing (SRS 9.7.4) | TM1 | Deploy works |
 | Thursday | Grafana + Prometheus: Monitor metrics, basic dashboard | TM2 | Metrics display |
 | Friday | Web: Production build optimization, Environment variables | TM3 | Production build works |
 | Saturday | Mobile: Release build test, bug fixes | TM4 | Release build OK |
