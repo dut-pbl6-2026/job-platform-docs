@@ -570,10 +570,9 @@ Vì dự án sử dụng kiến trúc đa repo (multirepo), các đường ống
 | 3 | Chạy kiểm thử đơn vị | Tất cả kiểm thử đạt |
 | 3b | Chạy kiểm thử hợp đồng (Contract Test) với phiên bản mới nhất của `job-platform-shared` | Không có breaking change; Event Schema tương thích |
 | 4 | Xây dựng hình ảnh Docker | Hình ảnh được tạo thành công |
-| 5 | Đẩy lên container registry (GHCR / Docker Hub) | Hình ảnh được đẩy |
-| 6 | Triển khai lên môi trường kiểm thử (một VM Azure qua `scripts/deploy.sh azure up` của `job-platform-infra`; xem Phần 9) | Dịch vụ phản hồi kiểm tra sức khỏe |
+| 5 | Đẩy lên container registry (GHCR) qua `publish-image.yml` | Hình ảnh được đẩy |
 
-**Kích hoạt:** Mỗi lần đẩy lên nhánh `main`.
+**Kích hoạt:** Mỗi lần đẩy lên nhánh `main`. **Không có triển khai tự động**: CI của từng repo chỉ build, test và đẩy image lên GHCR. Việc triển khai lên VM kiểm thử Azure (và `terraform apply`) chỉ thực hiện thủ công qua các workflow `workflow_dispatch` trong `job-platform-infra`, được chặn bởi environment `production` (xem Phần 9, 9.7.4).
 
 **Phân tích SonarCloud tùy chọn (PBL6-50):** `ci.yml` của mỗi repo .NET build và test; một job SonarCloud bổ sung (`dotnet-sonarscanner` begin/end quanh build và test, kèm coverage opencover) **chỉ chạy khi tồn tại secret `SONAR_TOKEN`** và bị bỏ qua nếu không (kể cả PR từ fork). Project key `dut-pbl6-2026_<repo>`, tổ chức `dut-pbl6-2026`, có thể ghi đè bằng biến repo `SONAR_PROJECT_KEY` / `SONAR_ORGANIZATION`. CI của `job-platform-infra` lint `docker-compose.prod.yml` và chạy thử (dry-run) các script triển khai và provision, và (PBL6-83) chạy thêm `terraform fmt`/`validate` và `actionlint`. Triển khai là CD thủ công: `terraform.yml` (plan/apply, apply được chặn bởi environment `production`) và `deploy-azure.yml` (`workflow_dispatch` up/down/status/rollback với image tag; xem 9.7.4). Mỗi repo dịch vụ đẩy image GHCR qua `publish-image.yml` (PBL6-84; tag SHA đầy đủ + `latest`).
 
@@ -601,7 +600,7 @@ flowchart TB
         ServicePush["Push lên main"] --> ServiceRestore["Khôi phục gói"]
         ServiceRestore --> ServiceBuild["Xây dựng & Kiểm thử"]
         ServiceBuild --> ServiceDocker["Xây dựng Docker Image"]
-        ServiceDocker --> ServiceDeploy["Triển khai lên Staging"]
+        ServiceDocker --> ServiceDeploy["Triển khai thủ công lên VM Azure (workflow_dispatch)"]
     end
 
     SharedPublish -.->|Dependabot PR| ServicePush

@@ -14,7 +14,7 @@
 
 ### 9.1 Tổng quan
 
-Phần này ghi lại chiến lược hạ tầng và phân tích chi phí cho Nền tảng Việc làm Việt Nam. **Đích triển khai là Microsoft Azure** (không còn dùng Render, Railway, Fly.io; PBL6-51, PR #17 của `job-platform-infra`): MỘT máy ảo Linux (ví dụ `Standard_B2ms`, 2 vCPU / 8 GB) chạy toàn bộ `docker-compose.prod.yml` từ image GHCR. VM chỉ được bật khi kiểm thử và giải phóng (deallocate) sau đó, nên được chi trả bằng **tín dụng Azure for Students** (3 tài khoản x $100, không gộp chung) thay vì gói miễn phí vĩnh viễn. Do đó chi phí *không phải đúng $0*: đây là một khoản nhỏ được chi trả bằng tín dụng (xem 9.3 và 9.4) và **không phát sinh chi phí tự bỏ ra** trong 16 tuần của dự án. Mọi con số đô la dưới đây chỉ là ước tính gần đúng và cần được kiểm tra lại bằng Azure pricing calculator.
+Phần này ghi lại chiến lược hạ tầng và phân tích chi phí cho Nền tảng Việc làm Việt Nam. **Đích triển khai là Microsoft Azure** (một nhà cung cấp hosting trước đó đã bị loại bỏ để chuyển sang Azure, và sản phẩm chưa từng chạy production; PBL6-51 và PBL6-83, PR #18 của `job-platform-infra`): MỘT máy ảo Linux (ví dụ `Standard_B2ms`, 2 vCPU / 8 GB) chạy toàn bộ `docker-compose.prod.yml` từ image GHCR. VM chỉ được bật khi kiểm thử và giải phóng (deallocate) sau đó, nên được chi trả bằng **tín dụng Azure for Students** (3 tài khoản x $100, không gộp chung) thay vì gói miễn phí vĩnh viễn. Do đó chi phí *không phải đúng $0*: đây là một khoản nhỏ được chi trả bằng tín dụng (xem 9.3 và 9.4) và **không phát sinh chi phí tự bỏ ra** trong 16 tuần của dự án. Mọi con số đô la dưới đây chỉ là ước tính gần đúng và cần được kiểm tra lại bằng Azure pricing calculator.
 
 Stack compose tự lưu trữ PostgreSQL, Redis, Elasticsearch và Kafka trên VM cho môi trường kiểm thử. Các gói miễn phí được quản lý (Supabase, Upstash, Bonsai, Confluent, Cloudflare R2, Grafana Cloud, ...) vẫn được ghi ở 9.3 và 9.8 như phương án thay thế và cho các dịch vụ nằm ngoài stack compose.
 
@@ -263,6 +263,8 @@ VM được tạo một lần bằng Terraform (`terraform/`, xem 9.7.4; `script
 
 #### 9.7.3 Đường ống triển khai
 
+Không có triển khai tự động: CI chỉ build, test và đẩy image lên GHCR; mọi lần deploy (`deploy-azure.yml`) và mọi `terraform apply` đều là `workflow_dispatch` thủ công trong environment `production`. Sơ đồ thể hiện luồng thủ công.
+
 ```mermaid
 flowchart LR
     Push["Đẩy mã"] --> Build["Xây dựng & Kiểm thử"]
@@ -279,7 +281,7 @@ flowchart LR
 
 #### 9.7.4 Hạ tầng dưới dạng mã và CD thủ công (PBL6-83)
 
-PR #18 của `job-platform-infra` (xếp chồng trên #17, đang mở tại thời điểm viết) thay script provision thủ công bằng Terraform và thêm các workflow GitHub Actions kích hoạt thủ công:
+PR #18 của `job-platform-infra` (đang mở tại thời điểm viết; đã gộp cả compose production và script triển khai của PBL6-51) thay script provision thủ công bằng Terraform và thêm các workflow GitHub Actions kích hoạt thủ công:
 
 | Hạng mục | Mô tả |
 |:---------|:------|

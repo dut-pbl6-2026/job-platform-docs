@@ -14,7 +14,7 @@
 
 ### 9.1 Overview
 
-This section documents the infrastructure strategy and cost analysis for the Vietnam Job Platform. **The deploy target is Microsoft Azure** (Render, Railway and Fly.io are no longer used; PBL6-51, `job-platform-infra` PR #17): ONE Linux VM (e.g. `Standard_B2ms`, 2 vCPU / 8 GB) runs the full `docker-compose.prod.yml` from GHCR images. The VM is started only when testing and deallocated afterwards, so it is funded by **Azure for Students credit** (3 accounts x $100, not pooled) rather than by an always-free tier. The cost is therefore *not literally $0*: it is a small, credit-funded amount (see 9.3 and 9.4) with **no out-of-pocket spend** expected within the 16-week project. All dollar figures below are approximate and must be re-checked with the Azure pricing calculator.
+This section documents the infrastructure strategy and cost analysis for the Vietnam Job Platform. **The deploy target is Microsoft Azure** (an earlier hosting provider was dropped in favour of Azure, and the product has never run in production; PBL6-51 and PBL6-83, `job-platform-infra` PR #18): ONE Linux VM (e.g. `Standard_B2ms`, 2 vCPU / 8 GB) runs the full `docker-compose.prod.yml` from GHCR images. The VM is started only when testing and deallocated afterwards, so it is funded by **Azure for Students credit** (3 accounts x $100, not pooled) rather than by an always-free tier. The cost is therefore *not literally $0*: it is a small, credit-funded amount (see 9.3 and 9.4) with **no out-of-pocket spend** expected within the 16-week project. All dollar figures below are approximate and must be re-checked with the Azure pricing calculator.
 
 The compose stack self-hosts PostgreSQL, Redis, Elasticsearch and Kafka on the VM for the test environment. Managed free tiers (Supabase, Upstash, Bonsai, Confluent, Cloudflare R2, Grafana Cloud, ...) remain documented in 9.3 and 9.8 as alternatives and for services outside the compose stack.
 
@@ -263,6 +263,8 @@ The VM is created once with Terraform (`terraform/`, see 9.7.4; `scripts/azure-p
 
 #### 9.7.3 Deployment Pipeline
 
+There is no automatic deploy: CI builds, tests and publishes images to GHCR only; every deploy (`deploy-azure.yml`) and every `terraform apply` is a manual `workflow_dispatch` in the `production` environment. The diagram shows the manual flow.
+
 ```mermaid
 flowchart LR
     Push["Code Push"] --> Build["Build & Test"]
@@ -279,7 +281,7 @@ flowchart LR
 
 #### 9.7.4 Infrastructure as Code and Manual CD (PBL6-83)
 
-`job-platform-infra` PR #18 (stacked on #17, open at the time of writing) replaces the manual provisioning script with Terraform and adds manually triggered GitHub Actions workflows:
+`job-platform-infra` PR #18 (open at the time of writing; it also contains the PBL6-51 production compose and deploy scripts) replaces the manual provisioning script with Terraform and adds manually triggered GitHub Actions workflows:
 
 | Item | Description |
 |:-----|:------------|

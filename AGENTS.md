@@ -47,7 +47,7 @@ Layers `Client React/Flutter → YARP Gateway JWT/RateLimit → 6 .NET10 LTS svc
 
 ## Infra cost (SRS 9)
 
-Deploy target = Microsoft Azure (Azure for Students, 3 accounts x $100 not pooled; PBL6-51, infra PR #17): ONE Linux VM (e.g. Standard_B2ms 8GB, ~$0.09/h, disk ~$5-8/mo, static IP ~$3.6/mo; approximate) runs full `docker-compose.prod.yml` from GHCR images (self-hosted PG/Redis/ES/Kafka), `scripts/deploy.sh azure up|down` — start only when testing, deallocate after (nightly auto-shutdown safety net). Credit-funded, not literally $0 (~$40-50 est. / 16w, $0 out-of-pocket). Render/Railway/Fly no longer used. Free tiers kept for GHCR, Actions, R2, Grafana; Supabase/Upstash/Bonsai/Confluent = alternatives (thresholds Supabase 400MB/15conn, Upstash 8k/d, Bonsai 800MB).
+Deploy target = Microsoft Azure (Azure for Students, 3 accounts x $100 not pooled; PBL6-51 + PBL6-83, infra PR #18): ONE Linux VM (e.g. Standard_B2ms 8GB, ~$0.09/h, disk ~$5-8/mo, static IP ~$3.6/mo; approximate) runs full `docker-compose.prod.yml` from GHCR images (self-hosted PG/Redis/ES/Kafka), `scripts/deploy.sh azure up|down` — start only when testing, deallocate after (nightly auto-shutdown safety net). Credit-funded, not literally $0 (~$40-50 est. / 16w, $0 out-of-pocket). Product never ran in production; no automatic deploy (all deploys and `terraform apply` are manual `workflow_dispatch` in the `production` environment). Free tiers kept for GHCR, Actions, R2, Grafana; Supabase/Upstash/Bonsai/Confluent = alternatives (thresholds Supabase 400MB/15conn, Upstash 8k/d, Bonsai 800MB).
 
 ## Health, RBAC, CI (SRS 6 REL-06, 8.6.5, 8.8.2.1, 3.13)
 

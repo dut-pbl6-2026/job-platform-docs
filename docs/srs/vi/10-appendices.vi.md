@@ -417,7 +417,7 @@ Phụ lục này theo dõi tất cả các bản sửa đổi đã thực hiện
 | CHG-004 | 2026-08-17 | Loại bỏ tên công nghệ khỏi sơ đồ kiến trúc | 2.1.2 |
 | CHG-005 | 2026-08-17 | Thêm tham chiếu đến Phần 9 cho hạ tầng không chi phí | 2.4.3 |
 | CHG-006 | 2026-08-17 | Thêm Đăng nhập mạng xã hội như user story Tốt nên có | 2.6.3 |
-| CHG-007 | 2026-11-01 | Đổi đích triển khai từ Render/Railway sang một VM Azure (tín dụng Azure for Students); health/readiness và ghi log (PBL6-49), chính sách route gateway (PBL6-44), CI SonarCloud tùy chọn (PBL6-50) | 2.3, 2.4.3, 3.13, 4.11, 6 (REL-06), 8.6, 8.8.2, 9; cập nhật 2026-11-01: Terraform + CD thủ công (PBL6-83), xuất bản GHCR (PBL6-84), chi phí IP tĩnh (9.3-9.4, 9.7.4) |
+| CHG-007 | 2026-11-01 | Đặt đích triển khai là một VM Azure (tín dụng Azure for Students); health/readiness và ghi log (PBL6-49), chính sách route gateway (PBL6-44), CI SonarCloud tùy chọn (PBL6-50) | 2.3, 2.4.3, 3.13, 4.11, 6 (REL-06), 8.6, 8.8.2, 9; cập nhật 2026-11-01: Terraform + CD thủ công (PBL6-83), xuất bản GHCR (PBL6-84), chi phí IP tĩnh (9.3-9.4, 9.7.4) |
 
 ---
 
