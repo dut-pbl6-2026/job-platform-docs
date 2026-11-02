@@ -570,10 +570,11 @@ Since the project uses a multirepo architecture, CI/CD pipelines must be impleme
 | 3 | Run unit tests | All tests pass |
 | 3b | Run contract tests against latest `job-platform-shared` | No breaking changes; Event Schema compatible |
 | 4 | Build Docker image | Image created successfully |
-| 5 | Push to container registry (GHCR / Docker Hub) | Image pushed |
-| 6 | Deploy to staging environment (Render / Railway) | Service responds to health check |
+| 5 | Push to container registry (GHCR) via `publish-image.yml` | Image pushed |
 
-**Trigger:** On every push to `main` branch.
+**Trigger:** On every push to `main` branch. There is **no automatic deploy**: per-repo CI only builds, tests and publishes images to GHCR. Deployment to the Azure test VM (and `terraform apply`) is manual only, through `workflow_dispatch` workflows in `job-platform-infra` gated by the `production` environment (see Part 9, 9.7.4).
+
+**Optional SonarCloud analysis (PBL6-50):** each .NET repository's `ci.yml` builds and tests; an additional SonarCloud job (`dotnet-sonarscanner` begin/end around build and test, with opencover coverage) runs **only when the `SONAR_TOKEN` secret exists** and is skipped otherwise (including fork PRs). Project key `dut-pbl6-2026_<repo>`, organisation `dut-pbl6-2026`, overridable via repository variables `SONAR_PROJECT_KEY` / `SONAR_ORGANIZATION`. The `job-platform-infra` CI lints `docker-compose.prod.yml` and dry-runs the deploy and provisioning scripts, and (PBL6-83) also runs `terraform fmt`/`validate` and `actionlint`. Deployment is a manual CD: `terraform.yml` (plan/apply, apply gated by the `production` environment) and `deploy-azure.yml` (`workflow_dispatch` up/down/status/rollback with an image tag; see 9.7.4). Each service repo publishes its GHCR image through `publish-image.yml` (PBL6-84; tags long SHA + `latest`).
 
 #### 3.13.3. Dependency Management Between Repos
 
@@ -599,7 +600,7 @@ flowchart TB
         ServicePush["Push to main"] -- ServiceRestore["Restore Packages"]
         ServiceRestore -- ServiceBuild["Build & Test"]
         ServiceBuild -- ServiceDocker["Build Docker Image"]
-        ServiceDocker -- ServiceDeploy["Deploy to Staging"]
+        ServiceDocker -- ServiceDeploy["Manual deploy to Azure VM (workflow_dispatch)"]
     end
 
     SharedPublish -.-|Dependabot PR| ServicePush

@@ -100,7 +100,7 @@ Vào cuối dự án 16 tuần, nhóm sẽ bàn giao:
 
 - Mã nguồn hoàn chỉnh được phân bố trên nhiều repository (multirepo), với sự phân chia rõ ràng giữa phụ trợ, giao diện người dùng, di động và các dịch vụ hỗ trợ.
 - Hạ tầng dưới dạng mã (Docker Compose) cho phát triển cục bộ và sản phẩm.
-- Các kịch bản triển khai cho môi trường staging và sản phẩm không chi phí (như được trình bày chi tiết trong Phần 9).
+- Các kịch bản triển khai cho môi trường kiểm thử trên VM Azure chi trả bằng tín dụng (như được trình bày chi tiết trong Phần 9).
 - Tài liệu API (Swagger/OpenAPI) cho tất cả dịch vụ.
 - Hướng dẫn sử dụng cho cả ứng dụng web và di động.
 - Báo cáo kỹ thuật và slide thuyết trình tóm tắt dự án.

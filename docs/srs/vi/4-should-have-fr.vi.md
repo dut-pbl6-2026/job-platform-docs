@@ -495,6 +495,8 @@ Giám sát cơ bản cung cấp khả năng quan sát tình trạng và hiệu n
 }
 ```
 
+> **Cập nhật (PBL6-49, xem 8.6.5):** mỗi dịch vụ .NET giữ `GET /health` nhẹ (`{"status":"ok","service":"<name>"}`) và bổ sung `GET /health/ready` kiểm tra phụ thuộc (HTTP 503 khi không khỏe, không lộ nội dung exception). Log là Serilog JSON gọn với lan truyền `X-Correlation-Id`; request `/health` ghi ở mức Verbose. Ví dụ ở trên là định dạng tổng hợp mục tiêu của gateway.
+
 #### 4.11.4 Các cấp độ ghi nhật ký
 
 | Cấp độ | Mô tả | Ví dụ |

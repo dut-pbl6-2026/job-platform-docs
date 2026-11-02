@@ -29,7 +29,7 @@ docs/srs/vi/{1..10}.vi.md    # VI SRS
 .github/git-strategy.md      # branch/commit/PR/release
 ```
 
-Parts: `1-introduction`, `2-overall-description` (personas, 14-repo table, US-01..21), `3-must-have-fr` (12 MUST), `4-should-have-fr` (10 SHOULD), `5-nice-have-fr` (10 NICE), `6-nfr` (52 NFR), `7-eir` (37 interfaces), `8-system-architecture` (microservices + DB-per-service + events), `9-infra-cost-analysis` (zero-cost $0), `10-appendices` (glossary, team, Gantt, API 55 rows, DB schema).
+Parts: `1-introduction`, `2-overall-description` (personas, 14-repo table, US-01..21), `3-must-have-fr` (12 MUST), `4-should-have-fr` (10 SHOULD), `5-nice-have-fr` (10 NICE), `6-nfr` (52 NFR), `7-eir` (37 interfaces), `8-system-architecture` (microservices + DB-per-service + events), `9-infra-cost-analysis` (Azure student-credit VM, ~$40-50 est., $0 out-of-pocket), `10-appendices` (glossary, team, Gantt, API 55 rows, DB schema).
 
 ## Priority discipline (master-plan.md:1, SRS 3-5)
 
@@ -47,7 +47,11 @@ Layers `Client React/Flutter → YARP Gateway JWT/RateLimit → 6 .NET10 LTS svc
 
 ## Infra cost (SRS 9)
 
-Zero-cost $0 (16w): Render Free 750h + Vercel + Supabase 500MB + Upstash 10k/d + Bonsai 1GB + Confluent Basic + R2 10GB + GHCR + Actions 2kmin + Grafana. Thresholds: Supabase 400MB/15conn, Upstash 8k/d, Bonsai 800MB.
+Deploy target = Microsoft Azure (Azure for Students, 3 accounts x $100 not pooled; PBL6-51 + PBL6-83, infra PR #18): ONE Linux VM (e.g. Standard_B2ms 8GB, ~$0.09/h, disk ~$5-8/mo, static IP ~$3.6/mo; approximate) runs full `docker-compose.prod.yml` from GHCR images (self-hosted PG/Redis/ES/Kafka), `scripts/deploy.sh azure up|down` — start only when testing, deallocate after (nightly auto-shutdown safety net). Credit-funded, not literally $0 (~$40-50 est. / 16w, $0 out-of-pocket). Product never ran in production; no automatic deploy (all deploys and `terraform apply` are manual `workflow_dispatch` in the `production` environment). Free tiers kept for GHCR, Actions, R2, Grafana; Supabase/Upstash/Bonsai/Confluent = alternatives (thresholds Supabase 400MB/15conn, Upstash 8k/d, Bonsai 800MB).
+
+## Health, RBAC, CI (SRS 6 REL-06, 8.6.5, 8.8.2.1, 3.13)
+
+Every .NET svc: `/health` liveness `{"status":"ok","service":..}` + `/health/ready` (deps, 503 unhealthy, no exception text); Serilog compact JSON + `X-Correlation-Id` (<=64 chars `[A-Za-z0-9-_.]`, else generated), `/health` at Verbose (PBL6-49). Gateway policies Authenticated/Admin/Recruiter/User per route, public job GETs anonymous, ambiguous multi-role routes Authenticated (PBL6-44). CI: per-repo `ci.yml` build/test + optional SonarCloud only when `SONAR_TOKEN` exists (key `dut-pbl6-2026_<repo>`, opencover); infra CI lints prod compose + dry-runs deploy (PBL6-50).
 
 ## Git strategy (git-strategy.md)
 

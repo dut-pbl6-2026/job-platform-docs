@@ -495,6 +495,8 @@ Basic Monitoring provides visibility into system health and performance. It incl
 }
 ```
 
+> **Update (PBL6-49, see 8.6.5):** each .NET service keeps a cheap `GET /health` (`{"status":"ok","service":"<name>"}`) and adds `GET /health/ready` with dependency checks (HTTP 503 when unhealthy, no exception text). Logs are Serilog compact JSON with `X-Correlation-Id` propagation; `/health` requests are logged at Verbose. The example above is the target aggregated format of the gateway.
+
 #### 4.11.4 Logging Levels
 
 | Level | Description | Example |

@@ -365,54 +365,52 @@ flowchart TB
 - Local volume mounts for code changes
 - Environment variables for configuration
 
-#### 8.6.2 Staging Environment (Cloud)
+#### 8.6.2 Staging / Test Environment (Azure VM)
 
 ```mermaid
 flowchart TB
-    subgraph Staging["Staging Environment (Render/Railway)"]
+    subgraph Staging["Test Environment (1 Azure Linux VM, docker-compose.prod.yml)"]
         Web["Web App"]
-        Mobile["Mobile App (TestFlight)"]
         Gateway["API Gateway"]
         Services["All Services"]
-        Data["Managed Data Services"]
+        Data["Self-hosted PostgreSQL / Redis / Elasticsearch / Kafka"]
     end
 ```
 
 **Characteristics:**
-- Deployed to cloud (Render / Railway)
-- Managed database and cache services
-- Real data (sanitised copy of production data)
+- Deployed to Microsoft Azure (Azure for Students credit): ONE Linux VM (e.g. `Standard_B2ms`, 8 GB) runs the full `docker-compose.prod.yml` from GHCR images (see Part 9, 9.6.1)
+- PostgreSQL, Redis, Elasticsearch and Kafka are self-hosted by the compose stack on the VM; only the gateway and web are published
+- Started only when testing (`scripts/deploy.sh azure up`) and deallocated afterwards (`azure down`)
 - Used for user testing and validation
-- Separate from production environment
 
-#### 8.6.3 Production Environment (Cloud)
+#### 8.6.3 Production / Demo Environment (Azure VM)
 
 ```mermaid
 flowchart TB
-    subgraph Production["Production Environment (Render/Railway)"]
-        CDN["CDN/Static Hosting"]
-        Gateway["API Gateway (Scaled)"]
-        Services["All Services (Scaled)"]
-        Data["Managed Data Services"]
-        Monitor["Monitoring & Logging"]
+    subgraph Production["Demo Environment (same Azure VM stack)"]
+        Web["Web App"]
+        Gateway["API Gateway"]
+        Services["All Services"]
+        Data["Self-hosted data services"]
+        Monitor["Health checks & JSON logs"]
     end
 ```
 
 **Characteristics:**
-- Deployed to cloud (Render / Railway)
-- Managed database and cache services
-- Auto-scaling where supported
-- Monitoring and alerting configured
-- Backup and recovery procedures
+- Same single-VM compose stack as 8.6.2; no auto-scaling (vertical resize of the VM only)
+- Health checks (`/health`, `/health/ready`) and structured JSON logs (see 8.6.5)
+- VM provisioned with Terraform (one workspace per student subscription); deployment through the manual `deploy-azure.yml` workflow or `scripts/deploy.sh` (see Part 9, 9.7.4)
+- Rollback by redeploying a previous image tag (`scripts/deploy.sh --tag <sha> azure rollback`)
+- Backup and recovery are limited to the VM disk; volumes persist across deallocation
 
 #### 8.6.4 Deployment Strategy
 
 ```mermaid
 flowchart LR
     Build["Build"] --> Test["Test"]
-    Test --> DeployStaging["Deploy to Staging"]
-    DeployStaging --> TestStaging["Test in Staging"]
-    TestStaging -->|Pass| DeployProd["Deploy to Production"]
+    Test --> DeployStaging["Deploy to Azure VM (azure up)"]
+    DeployStaging --> TestStaging["Test on the VM"]
+    TestStaging -->|Pass| DeployProd["Demo / Deallocate (azure down)"]
     DeployProd --> Monitor["Monitor"]
     TestStaging -->|Fail| Fix["Fix"]
     Fix --> Build
@@ -424,9 +422,24 @@ flowchart LR
 |:-----|:------------|:----------|
 | Build | Build all services and applications | Every code push |
 | Test | Run unit and integration tests | Every code push |
-| Deploy Staging | Deploy to staging environment | Every main branch push |
-| Test Staging | Run smoke tests and manual verification | Every staging deployment |
-| Deploy Production | Deploy to production environment | Scheduled (manual trigger) |
+| Deploy to Azure VM | `scripts/deploy.sh azure up` (pull GHCR images, `compose up -d --wait`) | Per test session (manual) |
+| Test on the VM | Run smoke tests and manual verification | Every deployment |
+| Deallocate | `scripts/deploy.sh azure down` after testing (disk + static IP cost only) | End of every session |
+
+#### 8.6.5 Health Checks and Logging (PBL6-49)
+
+Every .NET service (gateway, auth, job, search, app, profile, notif) exposes two probes:
+
+| Endpoint | Purpose | Behaviour |
+|:---------|:--------|:----------|
+| `GET /health` | Cheap liveness (used by the compose healthchecks) | Static `{"status":"ok","service":"<name>"}`, no dependency calls |
+| `GET /health/ready` | Readiness (dependency checks) | HTTP 503 when a required dependency is unhealthy; exception text is never returned |
+
+Readiness checks per service: **auth** - PostgreSQL, Redis (only when `REDIS_URL` is set); **job** - PostgreSQL, Kafka publisher circuit-breaker state (open circuit = degraded, an HTTP fallback exists); **search** - Elasticsearch (unhealthy = 503), Redis (degraded, the cache falls back to misses); **gateway** - proxy configuration loaded (routes and clusters), plus an optional upstream probe via `HEALTH_READY_CHECK_UPSTREAMS=true` reported as degraded only; **app** - PostgreSQL, Kafka TCP check (degraded); **profile** - PostgreSQL; **notif** - PostgreSQL, Kafka and SMTP TCP checks (degraded).
+
+Logging uses Serilog with compact JSON console output (outside Development), a service-name enricher and `X-Correlation-Id` propagation: an incoming id is accepted only if it is at most 64 characters of letters, digits, `-`, `_` or `.`; otherwise a new id is generated. The id is echoed in the response (and forwarded to upstreams by the gateway) and attached to every log event. `/health` requests are logged at Verbose level; request headers, bodies and tokens are not logged.
+
+> **Implementation status:** gateway #23, auth-svc #33, job-svc #30, search-svc #14, app-svc #8, profile-svc #7 and notif-svc #7 (all still open pull requests at the time of writing).
 | Monitor | Monitor after deployment for issues | Ongoing |
 
 ---
@@ -619,6 +632,20 @@ flowchart TB
     RecruiterCheck -->|Fail| Forbidden
     UserCheck -->|Fail| Forbidden
 ```
+
+#### 8.8.2.1 Gateway Route Policies (PBL6-44)
+
+The gateway applies an authorisation policy per YARP route. Policies `Admin`, `Recruiter` and `User` (candidate) check the `role` claim; `Authenticated` only requires a valid JWT. Routes without a policy are anonymous. Routes where the downstream service allows more than one role (or the resource owner) stay on `Authenticated` and are enforced by the service itself.
+
+| Policy | Routes |
+|:-------|:-------|
+| Anonymous | `/api/auth/*`, public reads under `/api/jobs/*`, `/api/categories/*`, `/api/companies/*`, `/api/search/*`, `/api/applications/status-flow`, `GET /api/profiles/{userId}` (public profile), health routes |
+| `Admin` | `/api/admin/users/*`, `/api/admin/stats`, `/api/admin/jobs/*` |
+| `Recruiter` | `POST /api/jobs`, `GET /api/jobs/recruiter`, `PUT`/`DELETE /api/jobs/{id}`, `POST /api/companies`, `PUT /api/companies/{id}` |
+| `User` | `POST /api/applications`, `GET /api/applications/me` |
+| `Authenticated` | other `/api/applications/*` (by job, status update, CV download), other `/api/profiles/*`, `/api/notifications/*` |
+
+An anonymous call to a protected route returns 401; a valid token with the wrong role returns 403. Status: the `Admin` policy routes are merged (gateway #21); the `Recruiter`/`User` policies are in gateway #23 (open at the time of writing; it bundles RBAC with health/logging and optional SonarCloud). Admin user management, job approval and stats are served by auth-svc #30/#31/#32 and job-svc #26 (merged).
 
 ---
 

@@ -29,7 +29,7 @@ All repositories are hosted under the [dut-pbl6-2026](https://github.com/dut-pbl
 - `job-platform-mobile` — Flutter mobile app
 - `job-platform-crawler` — Python Scrapy crawler
 - `job-platform-ai-svc` — AI copilot & resume scoring (optional)
-- `job-platform-infra` — Docker Compose, K8s manifests, deployment scripts
+- `job-platform-infra` — Docker Compose (dev + prod), Azure VM deployment scripts, K8s manifests
 
 ## Contributing
 
