@@ -288,8 +288,8 @@ Vì không thể tham chiếu thư mục trực tiếp (`../shared/`) giữa cá
 
 | Tuần | Nhiệm vụ | Người phụ trách | Độ khó |
 |:---|:---|:---|:---|
-| Tuần 9 | Thiết lập dịch vụ Python FastAPI, Tích hợp API OpenAI/Gemini, LangChain/Semantic Kernel cơ bản | TM2 (chính) + TM1 | 7/10 |
-| Tuần 9 | Thiết lập kho vector Elasticsearch, Nhúng mô tả công việc, Đường ống RAG cơ bản | TM2 | 8/10 |
+| Tuần 9 | Thiết lập dịch vụ Python FastAPI, Mô hình mã nguồn mở tự host (multilingual-e5-small, Qwen2.5) với Gemini dự phòng, Khung RAG cơ bản | TM2 (chính) + TM1 | 7/10 |
+| Tuần 9 | Thiết lập kho vector Elasticsearch (HNSW), Nhúng mô tả công việc hàng loạt, Bộ truy xuất vector nội bộ | TM2 | 8/10 |
 | Tuần 10 | API Chat: POST /api/ai/chat, Phản hồi luồng (Server-Sent Events) | TM2 | 7/10 |
 | Tuần 10 | React: Thành phần Chat UI, Quản lý ngữ cảnh cho cuộc trò chuyện | TM3 | 6/10 |
 | Tuần 10 | Flutter: Màn hình Chat, Xử lý luồng | TM4 | 7/10 |

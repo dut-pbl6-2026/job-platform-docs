@@ -291,8 +291,8 @@ Since direct folder references (`../shared/`) are not possible across repositori
 
 | Week | Tasks | Assignee | Difficulty |
 |:---|:---|:---|:---|
-| Week 9 | Setup Python FastAPI service, OpenAI/Gemini API integration, LangChain/Semantic Kernel basic | TM2 (primary) + TM1 | 7/10 |
-| Week 9 | Elasticsearch vector store setup, Embedding job descriptions, Basic RAG pipeline | TM2 | 8/10 |
+| Week 9 | Setup Python FastAPI service, Self-hosted open-source models (multilingual-e5-small, Qwen2.5) with Gemini fallback, Basic RAG pipeline | TM2 (primary) + TM1 | 7/10 |
+| Week 9 | Elasticsearch vector store setup (HNSW), Batch embedding job descriptions, Local vector retriever | TM2 | 8/10 |
 | Week 10 | Chat API endpoint: POST /api/ai/chat, Streaming response (Server-Sent Events) | TM2 | 7/10 |
 | Week 10 | React: Chat UI component, Context management for conversation | TM3 | 6/10 |
 | Week 10 | Flutter: Chat screen, Stream handling | TM4 | 7/10 |

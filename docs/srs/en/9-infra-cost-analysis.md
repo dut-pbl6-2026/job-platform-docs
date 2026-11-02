@@ -97,8 +97,8 @@ The following table provides a cost analysis for the infrastructure components o
 | **CI/CD Pipeline** | GitHub Actions | 2,000 free minutes/month (private repos), unlimited (public repos) | Always Free (within limits) | $0 |
 | **Code Quality** | SonarCloud | Optional CI job, runs only when the `SONAR_TOKEN` secret exists (see 3.13) | Free for public projects | $0 |
 | **Monitoring Stack** | Grafana Cloud | 10,000 Prometheus metrics, 50 GB logs, 50 GB traces/month | Always Free (within limits) | $0 |
-| **AI Services (LLM)** | OpenAI | $5 free credits | Promotional / Limited | $0 |
-| **AI Services (LLM)** | Google Gemini | ~60 requests/minute free | Always Free (within limits) | $0 |
+| **AI Services (Self-Hosted)** | In-service open-source models (multilingual-e5-small, Qwen2.5) on CPU | Local inference, $0 API token costs | Always Free / Open Source | $0 |
+| **AI Services (Cloud Fallback / Eval)** | Google Gemini / OpenAI | Free tier (~15-60 RPM) / promo credits | Evaluation / Fallback | $0 |
 | **Domain / Tunnel** | Cloudflare Tunnel | Secure public exposure without public IP or paid domain | Always Free | $0 |
 
 ---
@@ -137,7 +137,7 @@ The following strategies keep the infrastructure within the Azure for Students c
 | **Student Credit Rotation** | Use Azure for Students credit (3 accounts x $100, not pooled); rotate to the next subscription when credit runs low | `AZURE_SUBSCRIPTION_ID` + re-run `scripts/azure-provision.sh` |
 | **Free Tier Utilization** | Use Always Free tiers for services outside the compose stack | Cloudflare R2, GHCR, GitHub Actions, Grafana Cloud (Supabase, Upstash, Bonsai kept as alternatives) |
 | **Egress Cost Avoidance** | Use services with free data transfer (egress) | Cloudflare R2 provides free egress |
-| **AI API Cost Management** | Use free tier LLM providers strategically | Gemini for high-volume requests, OpenAI credits for prototyping |
+| **Self-Hosted AI & Fallback Management** | Run open-source AI models (multilingual-e5, Qwen2.5) locally on CPU; use free-tier cloud APIs for evaluation | Completely eliminates runtime API costs and rate limits; cloud providers serve as optional evaluation baseline |
 | **Containerized Deployment** | Package all services using Docker; images built in CI and published to GHCR | `docker-compose.prod.yml` pulls GHCR images onto the Azure VM |
 | **Self-Hosted Data Services (test env)** | PostgreSQL, Redis, Elasticsearch and Kafka run inside the compose stack on the VM, avoiding managed-service quotas | Data persists on the VM disk across deallocation; never `docker compose down -v` |
 | **Infrastructure as Code** | Automate infrastructure provisioning | Reduces manual errors and management costs |

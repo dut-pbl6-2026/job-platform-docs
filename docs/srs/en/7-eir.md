@@ -215,7 +215,7 @@ The system integrates with several external services. The following table docume
 |:-----------------|:--------|:---------|:------------|:----------|:-----------------|
 | **Email Service (SMTP)** | Send email notifications | SMTP/ TLS | Email (HTML + Plain Text) | SHOULD | Medium |
 | **Push Notification Service (FCM)** | Mobile push notifications | HTTP/ REST | JSON | SHOULD | Medium |
-| **AI Service (OpenAI/Gemini)** | AI chatbot and resume scoring | HTTP/ REST | JSON | NICE | Low (Feature-specific) |
+| **AI Service (Self-Hosted / Cloud Provider)** | AI chatbot, embeddings, and resume scoring | Local In-Process / HTTP REST | Tensor / JSON | NICE | Low (Feature-specific) |
 | **Telegram Bot API** | Job alerts via Telegram | HTTP/ Webhook | JSON | NICE | Low (Feature-specific) |
 | **Object Storage (Cloudflare R2)** | Store CV files and avatars | S3-compatible API | Binary files | SHOULD | Medium |
 | **Managed Database (Supabase)** | PostgreSQL database | TCP/ PostgreSQL | SQL | MUST | High |
@@ -247,16 +247,20 @@ The system integrates with several external services. The following table docume
 | **Deep Linking** | Supported via custom data payload |
 | **Retry Policy** | 3 attempts (FCM automatically retries) |
 
-##### 7.4.4.3 AI Service (OpenAI / Google Gemini)
+##### 7.4.4.3 AI Engine & Providers (Self-Hosted / Cloud Fallback)
+
+The AI Service employs a pluggable architecture:
+- **Primary (Self-Hosted):** In-service open-source models executing on CPU (`intfloat/multilingual-e5-small` for embeddings/vector search; `Qwen2.5-1.5B/3B-Instruct` or equivalent quantized via llama.cpp/Ollama for RAG generation and CV matching). Operates fully local at $0 API cost and zero data leakage.
+- **External Fallback & Evaluation (OpenAI / Google Gemini):** Cloud-hosted LLM APIs used for offline dataset generation (distillation), evaluation benchmarks, or as optional runtime fallback via configuration (`USE_EXTERNAL_AI_FALLBACK=true`).
 
 | Attribute | Specification |
 |:----------|:---------------|
-| **Protocol** | HTTPS REST API |
-| **Authentication** | API key |
-| **Data Format** | JSON |
-| **Rate Limits** | Gemini: ~60 requests/minute free; OpenAI: limited by credits |
-| **Retry Policy** | 3 attempts with exponential backoff |
-| **Fallback** | Cache responses where possible; return graceful error messages |
+| **Protocol** | In-process Python / PyTorch / llama-cpp-python (Local) or HTTPS REST API (Cloud Fallback) |
+| **Authentication** | None (Local) / API key via environment variable (Cloud Fallback) |
+| **Data Format** | Tensors / JSON |
+| **Rate Limits** | Local: constrained only by CPU/RAM; Fallback Gemini: ~15-60 requests/minute free |
+| **Retry Policy** | 3 attempts with exponential backoff (for cloud fallback) |
+| **Fallback** | Primary local model execution; fallback to cached responses or cloud provider if local inference is disabled |
 
 ##### 7.4.4.4 Object Storage (Cloudflare R2)
 

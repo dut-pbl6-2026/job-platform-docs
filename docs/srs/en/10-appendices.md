@@ -418,6 +418,7 @@ This appendix tracks all revisions made to the SRS document.
 | CHG-005 | 2026-08-17 | Added reference to Part 9 for zero-cost infrastructure | 2.4.3 |
 | CHG-006 | 2026-08-17 | Added Social Login as Nice to Have user story | 2.6.3 |
 | CHG-007 | 2026-11-01 | Deploy target set to a single Azure VM (Azure for Students credit); health/readiness and logging (PBL6-49), gateway route policies (PBL6-44), optional SonarCloud CI (PBL6-50) | 2.3, 2.4.3, 3.13, 4.11, 6 (REL-06), 8.6, 8.8.2, 9; 2026-11-01 update: Terraform + manual CD (PBL6-83), GHCR publishing (PBL6-84), static IP cost (9.3-9.4, 9.7.4) |
+| CHG-008 | 2026-11-02 | Adopt self-hosted open-source AI architecture (multilingual-e5-small for embeddings, Qwen2.5 for generation) running locally on CPU at $0 runtime cost; designate cloud LLM APIs (Gemini/OpenAI) as optional evaluation/fallback providers | 2.4.3, 2.5, 5.2, 5.8, 7.4.4.3, 9; master-plan W9-10 |
 
 ---
 

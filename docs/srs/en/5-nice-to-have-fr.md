@@ -46,21 +46,21 @@ flowchart LR
 
 #### 5.2.1 Description
 
-The AI Job Copilot is a conversational assistant that helps job seekers with career-related queries. Using Retrieval-Augmented Generation (RAG), it provides context-aware responses based on job data, company information, and general career advice. This feature demonstrates modern AI integration and provides significant user value.
+The AI Job Copilot is a conversational assistant that helps job seekers with career-related queries. Using Retrieval-Augmented Generation (RAG) powered by self-hosted open-source models (such as `Qwen2.5-1.5B/3B-Instruct` and `multilingual-e5-small` running locally on CPU, with pluggable fallback to Google Gemini / OpenAI), it provides context-aware responses based on job data, company information, and general career advice at zero external API cost. This feature demonstrates modern, privacy-preserving AI integration and provides significant user value.
 
 #### 5.2.2 Functional Requirements
 
 | ID | Requirement | Acceptance Criteria |
 |:---|:------------|:-------------------|
 | AI-01-01 | The system shall provide a chat interface for job-related queries | - Chat endpoint: `POST /api/ai/chat`<br>- Users can ask questions about jobs, careers, companies<br>- Responses generated based on job data and general knowledge |
-| AI-01-02 | The system shall support Retrieval-Augmented Generation (RAG) | - Job descriptions embedded and stored in vector database<br>- User queries converted to embeddings<br>- Relevant job contexts retrieved and used in response generation |
+| AI-01-02 | The system shall support Retrieval-Augmented Generation (RAG) | - Job descriptions embedded via self-hosted bi-encoder (`multilingual-e5-small`) and stored in vector database<br>- User queries converted to embeddings using the same model<br>- Relevant job contexts retrieved from Elasticsearch and used in response generation via local LLM or cloud fallback |
 | AI-01-03 | The system shall maintain bounded conversation context | - Session history stored per user (Redis + PostgreSQL)<br>- **Context window: at most 20 most recent messages or 8,000 tokens** (configurable per LLM)<br>- When exceeded, drop oldest messages, log truncation event; notify user: “Conversation is long, I’ll only remember the last 20 messages” and suggest starting a new session<br>- Context maintained across messages in the same `sessionId`; **session TTL 24h idle** (Redis), summary kept 30 days in DB<br>- User can start a new conversation (`DELETE /api/ai/session/{id}`) |
 | AI-01-04 | The system shall support streaming responses | - Responses streamed token by token (Server-Sent Events)<br>- Users see responses as they are generated; first token < 500ms (PERF-01)<br>- Cancel generation if needed |
 | AI-01-05 | The system shall include job-specific responses | - When asked about jobs, responds with relevant job listings<br>- Includes job title, company, link to job<br>- Can explain job requirements in natural language |
 | AI-01-06 | The system shall support career advice | - Answers questions about CV writing, interview tips<br>- Provides salary expectations by role and location<br>- Suggests career paths based on skills and experience |
 | AI-01-07 | The system shall handle queries in Vietnamese and English | - Understands and responds in both languages<br>- Response language matches query language<br>- Handles Vietnamese diacritics and accents |
 | AI-01-08 | The system shall include basic guardrails | - Refuses inappropriate or irrelevant queries<br>- Stays on-topic (career and jobs)<br>- Provides disclaimer about AI-generated content |
-| AI-01-09 | The system shall summarize old context and limit cost | - When exceeding 20 messages / 8,000 tokens, summarize old history via LLM into a system prompt to retain long-term context<br>- Each response capped at **512 tokens**, **20 requests / user / hour** (Redis rate-limit), exceeded → `429 Too Many Requests`<br>- Log token usage for cost monitoring (Gemini free tier / OpenAI credits) |
+| AI-01-09 | The system shall summarize old context and limit cost | - When exceeding 20 messages / 8,000 tokens, summarize old history via LLM into a system prompt to retain long-term context<br>- Each response capped at **512 tokens**, **20 requests / user / hour** (Redis rate-limit), exceeded → `429 Too Many Requests`<br>- Primary local execution incurs $0 per-token cost; log token usage for fallback API monitoring (Gemini free tier / OpenAI credits) |
 
 #### 5.2.3 API Specifications
 
@@ -375,7 +375,7 @@ Vector Search extends Elasticsearch with semantic search capabilities. Instead o
 
 | ID | Requirement | Acceptance Criteria |
 |:---|:------------|:-------------------|
-| VECTOR-01-01 | The system shall generate embeddings for job descriptions | - Embeddings generated using AI service (OpenAI/Gemini)<br>- Embeddings stored in Elasticsearch vector field<br>- Embeddings refreshed when job is updated |
+| VECTOR-01-01 | The system shall generate embeddings for job descriptions | - Embeddings generated using self-hosted bi-encoder model (`multilingual-e5-small`, 384 dims, CPU-optimized) or cloud AI service (OpenAI/Gemini fallback)<br>- Embeddings stored in Elasticsearch dense_vector field (HNSW indexing, cosine similarity)<br>- Embeddings refreshed when job is updated |
 | VECTOR-01-02 | The system shall support semantic search | - User query embedded using the same model<br>- Vector similarity search in Elasticsearch<br>- Results ranked by semantic relevance |
 | VECTOR-01-03 | The system shall support hybrid search | - Combine keyword search with vector search<br>- Weighted scoring (keyword 40%, vector 60%)<br>- Configurable weights |
 | VECTOR-01-04 | The system shall support filtering with semantic search | - Apply filters (location, salary, etc.) with vector search<br>- Filters applied after vector search<br>- Performance acceptable (< 500ms) |

@@ -215,7 +215,7 @@ Hệ thống tích hợp với một số dịch vụ bên ngoài. Bảng sau đ
 |:---------------------|:---------|:----------|:------------------|:---------------|:-----------------|
 | **Dịch vụ Email (SMTP)** | Gửi thông báo email | SMTP/ TLS | Email (HTML + Văn bản thuần) | NÊN CÓ | Trung bình |
 | **Dịch vụ Thông báo đẩy (FCM)** | Thông báo đẩy trên di động | HTTP/ REST | JSON | NÊN CÓ | Trung bình |
-| **Dịch vụ AI (OpenAI/Gemini)** | Chatbot AI và chấm điểm CV | HTTP/ REST | JSON | TỐT NÊN CÓ | Thấp (Theo tính năng) |
+| **Dịch vụ AI (Tự host / Cloud)** | Chatbot AI, embeddings và chấm điểm CV | Nội bộ trong tiến trình / HTTP REST | Tensor / JSON | TỐT NÊN CÓ | Thấp (Theo tính năng) |
 | **Telegram Bot API** | Cảnh báo việc làm qua Telegram | HTTP/ Webhook | JSON | TỐT NÊN CÓ | Thấp (Theo tính năng) |
 | **Lưu trữ đối tượng (Cloudflare R2)** | Lưu tệp CV và ảnh đại diện | S3-compatible API | Tệp nhị phân | NÊN CÓ | Trung bình |
 | **Cơ sở dữ liệu được quản lý (Supabase)** | Cơ sở dữ liệu PostgreSQL | TCP/ PostgreSQL | SQL | BẮT BUỘC | Cao |
@@ -247,16 +247,20 @@ Hệ thống tích hợp với một số dịch vụ bên ngoài. Bảng sau đ
 | **Deep Linking** | Hỗ trợ qua payload dữ liệu tùy chỉnh |
 | **Chính sách thử lại** | 3 lần (FCM tự động thử lại) |
 
-##### 7.4.4.3 Dịch vụ AI (OpenAI / Google Gemini)
+##### 7.4.4.3 Động cơ AI & Nhà cung cấp (Tự host / Cloud dự phòng)
+
+Dịch vụ AI sử dụng kiến trúc cắm rút linh hoạt:
+- **Chính (Tự host):** Các mô hình mã nguồn mở thực thi trực tiếp trên CPU (`intfloat/multilingual-e5-small` cho embedding/tìm kiếm vector; `Qwen2.5-1.5B/3B-Instruct` hoặc tương đương được lượng tử hóa qua llama.cpp/Ollama cho luồng RAG và chấm điểm CV). Vận hành hoàn toàn cục bộ với chi phí $0 và bảo mật dữ liệu tuyệt đối.
+- **Dự phòng & Đánh giá bên ngoài (OpenAI / Google Gemini):** Các API LLM đám mây phục vụ việc sinh dữ liệu kiểm thử/huấn luyện ngoại tuyến (distillation), làm mốc đối chuẩn đánh giá (benchmark), hoặc làm fallback lúc chạy thông qua cấu hình (`USE_EXTERNAL_AI_FALLBACK=true`).
 
 | Thuộc tính | Đặc tả |
 |:-----------|:-------|
-| **Giao thức** | HTTPS REST API |
-| **Xác thực** | API key |
-| **Định dạng dữ liệu** | JSON |
-| **Giới hạn tốc độ** | Gemini: ~60 yêu cầu/phút miễn phí; OpenAI: giới hạn bởi tín dụng |
-| **Chính sách thử lại** | 3 lần với thời gian chờ tăng dần |
-| **Dự phòng** | Lưu đệm phản hồi khi có thể; trả về thông báo lỗi mượt mà |
+| **Giao thức** | Tiến trình nội bộ Python / PyTorch / llama-cpp-python (Cục bộ) hoặc HTTPS REST API (Cloud dự phòng) |
+| **Xác thực** | Không yêu cầu (Cục bộ) / API key qua biến môi trường (Cloud dự phòng) |
+| **Định dạng dữ liệu** | Tensor / JSON |
+| **Giới hạn tốc độ** | Cục bộ: chỉ giới hạn bởi tài nguyên CPU/RAM; Cloud Gemini: ~15-60 yêu cầu/phút miễn phí |
+| **Chính sách thử lại** | 3 lần với thời gian chờ tăng dần (đối với cloud fallback) |
+| **Dự phòng** | Mặc định chạy mô hình nội bộ; chuyển sang dữ liệu cache hoặc cloud provider nếu tắt inference cục bộ |
 
 ##### 7.4.4.4 Lưu trữ đối tượng (Cloudflare R2)
 
