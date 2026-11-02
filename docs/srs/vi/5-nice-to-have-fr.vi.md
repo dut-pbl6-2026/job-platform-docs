@@ -46,21 +46,21 @@ flowchart LR
 
 #### 5.2.1 Mô tả
 
-Trợ lý AI việc làm là một trợ lý trò chuyện giúp người tìm việc với các câu hỏi liên quan đến sự nghiệp. Sử dụng Phương pháp Tăng cường Truy xuất (RAG), nó cung cấp phản hồi nhận biết ngữ cảnh dựa trên dữ liệu việc làm, thông tin công ty và lời khuyên nghề nghiệp chung. Tính năng này thể hiện tích hợp AI hiện đại và cung cấp giá trị đáng kể cho người dùng.
+Trợ lý AI việc làm là một trợ lý trò chuyện giúp người tìm việc với các câu hỏi liên quan đến sự nghiệp. Sử dụng Phương pháp Tăng cường Truy xuất (RAG) kết hợp các mô hình mã nguồn mở tự host (như `Qwen2.5-1.5B/3B-Instruct` và `multilingual-e5-small` chạy cục bộ trên CPU, hỗ trợ fallback linh hoạt sang Google Gemini / OpenAI), hệ thống cung cấp phản hồi nhận biết ngữ cảnh dựa trên dữ liệu việc làm, thông tin công ty và lời khuyên nghề nghiệp với chi phí API bằng $0 và bảo mật dữ liệu tối đa. Tính năng này thể hiện năng lực làm chủ công nghệ AI ứng dụng hiện đại và mang lại giá trị cao cho người dùng.
 
 #### 5.2.2 Yêu cầu chức năng
 
 | ID | Yêu cầu | Tiêu chí chấp nhận |
 |:---|:--------|:-------------------|
 | AI-01-01 | Hệ thống cung cấp giao diện trò chuyện cho các truy vấn liên quan đến việc làm | - Điểm cuối trò chuyện: `POST /api/ai/chat`<br>- Người dùng có thể đặt câu hỏi về công việc, nghề nghiệp, công ty<br>- Phản hồi được tạo dựa trên dữ liệu việc làm và kiến thức chung |
-| AI-01-02 | Hệ thống hỗ trợ Phương pháp Tăng cường Truy xuất (RAG) | - Mô tả công việc được nhúng và lưu trong cơ sở dữ liệu vector<br>- Truy vấn người dùng được chuyển đổi thành embeddings<br>- Ngữ cảnh công việc liên quan được truy xuất và sử dụng trong tạo phản hồi |
+| AI-01-02 | Hệ thống hỗ trợ Phương pháp Tăng cường Truy xuất (RAG) | - Mô tả công việc được nhúng bằng mô hình bi-encoder tự host (`multilingual-e5-small`) và lưu trong cơ sở dữ liệu vector<br>- Truy vấn người dùng được chuyển đổi thành embeddings cùng mô hình<br>- Ngữ cảnh công việc liên quan được truy xuất từ Elasticsearch và đưa vào mô hình LLM cục bộ (hoặc cloud fallback) để tạo phản hồi |
 | AI-01-03 | Hệ thống duy trì ngữ cảnh hội thoại có giới hạn | - Lịch sử phiên được lưu cho mỗi người dùng (Redis + PostgreSQL)<br>- **Cửa sổ ngữ cảnh: tối đa 20 tin nhắn gần nhất hoặc 8.000 token** (cấu hình theo LLM)<br>- Khi vượt ngưỡng, loại bỏ tin nhắn cũ nhất, ghi log sự kiện cắt ngữ cảnh; thông báo cho người dùng: “Hội thoại đã dài, tôi sẽ chỉ nhớ 20 tin nhắn gần nhất” và đề xuất bắt đầu phiên mới<br>- Ngữ cảnh được duy trì qua nhiều tin nhắn trong cùng `sessionId`; **TTL phiên 24 giờ không hoạt động** (Redis), tóm tắt lưu 30 ngày trong DB<br>- Người dùng có thể bắt đầu hội thoại mới (`DELETE /api/ai/session/{id}`) |
 | AI-01-04 | Hệ thống hỗ trợ phản hồi luồng | - Phản hồi được phát luồng token theo token (Server-Sent Events)<br>- Người dùng thấy phản hồi khi chúng được tạo; first token < 500ms (PERF-01)<br>- Có thể hủy tạo phản hồi nếu cần |
 | AI-01-05 | Hệ thống bao gồm phản hồi theo công việc cụ thể | - Khi được hỏi về công việc, phản hồi với danh sách việc làm liên quan<br>- Bao gồm tiêu đề công việc, công ty, liên kết đến công việc<br>- Có thể giải thích yêu cầu công việc bằng ngôn ngữ tự nhiên |
 | AI-01-06 | Hệ thống hỗ trợ tư vấn nghề nghiệp | - Trả lời câu hỏi về viết CV, mẹo phỏng vấn<br>- Cung cấp kỳ vọng lương theo vai trò và địa điểm<br>- Đề xuất lộ trình nghề nghiệp dựa trên kỹ năng và kinh nghiệm |
 | AI-01-07 | Hệ thống xử lý truy vấn bằng tiếng Việt và tiếng Anh | - Hiểu và phản hồi bằng cả hai ngôn ngữ<br>- Ngôn ngữ phản hồi khớp với ngôn ngữ truy vấn<br>- Xử lý dấu và thanh tiếng Việt |
 | AI-01-08 | Hệ thống bao gồm các biện pháp bảo vệ cơ bản | - Từ chối các truy vấn không phù hợp hoặc không liên quan<br>- Giữ đúng chủ đề (nghề nghiệp và việc làm)<br>- Cung cấp tuyên bố miễn trừ về nội dung do AI tạo ra |
-| AI-01-09 | Hệ thống tóm tắt ngữ cảnh cũ và giới hạn chi phí | - Khi vượt 20 tin / 8.000 token, tóm tắt lịch sử cũ bằng LLM thành system prompt để giữ ngữ cảnh dài hạn<br>- Mỗi phản hồi giới hạn **512 tokens**, **20 requests / user / giờ** (Redis rate-limit), vượt → `429 Too Many Requests`<br>- Ghi log token usage để giám sát chi phí (Gemini free tier / OpenAI credits) |
+| AI-01-09 | Hệ thống tóm tắt ngữ cảnh cũ và giới hạn chi phí | - Khi vượt 20 tin / 8.000 token, tóm tắt lịch sử cũ bằng LLM thành system prompt để giữ ngữ cảnh dài hạn<br>- Mỗi phản hồi giới hạn **512 tokens**, **20 requests / user / giờ** (Redis rate-limit), vượt → `429 Too Many Requests`<br>- Xử lý nội bộ với chi phí $0 token; ghi log token usage khi sử dụng API dự phòng bên ngoài (Gemini free tier / OpenAI credits) |
 
 #### 5.2.3 Đặc tả API
 
@@ -375,7 +375,7 @@ Tìm kiếm Vector mở rộng Elasticsearch với khả năng tìm kiếm ngữ
 
 | ID | Yêu cầu | Tiêu chí chấp nhận |
 |:---|:--------|:-------------------|
-| VECTOR-01-01 | Hệ thống tạo embeddings cho mô tả công việc | - Embeddings được tạo bằng dịch vụ AI (OpenAI/Gemini)<br>- Embeddings được lưu trong trường vector Elasticsearch<br>- Embeddings được làm mới khi công việc được cập nhật |
+| VECTOR-01-01 | Hệ thống tạo embeddings cho mô tả công việc | - Embeddings được tạo bằng mô hình bi-encoder tự host (`multilingual-e5-small`, 384 chiều, tối ưu CPU) hoặc dịch vụ AI cloud (OpenAI/Gemini dự phòng)<br>- Embeddings được lưu trong trường `dense_vector` Elasticsearch (chỉ mục HNSW, cosine similarity)<br>- Embeddings được làm mới khi công việc được cập nhật |
 | VECTOR-01-02 | Hệ thống hỗ trợ tìm kiếm ngữ nghĩa | - Truy vấn người dùng được nhúng bằng cùng mô hình<br>- Tìm kiếm độ tương tự vector trong Elasticsearch<br>- Kết quả được xếp hạng theo mức độ liên quan ngữ nghĩa |
 | VECTOR-01-03 | Hệ thống hỗ trợ tìm kiếm kết hợp | - Kết hợp tìm kiếm từ khóa với tìm kiếm vector<br>- Chấm điểm có trọng số (từ khóa 40%, vector 60%)<br>- Trọng số có thể cấu hình |
 | VECTOR-01-04 | Hệ thống hỗ trợ lọc với tìm kiếm ngữ nghĩa | - Áp dụng bộ lọc (địa điểm, lương, v.v.) với tìm kiếm vector<br>- Bộ lọc được áp dụng sau tìm kiếm vector<br>- Hiệu năng chấp nhận được (< 500ms) |

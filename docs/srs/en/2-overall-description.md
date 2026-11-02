@@ -283,7 +283,7 @@ This requires the use of:
 - Azure for Students credit for ONE on-demand Linux VM (deallocated when not testing)
 - Always Free tiers for the services outside the compose stack (Cloudflare R2, GHCR; Supabase, Upstash, Bonsai as alternatives)
 - Free services (GitHub Actions, Grafana Cloud, Cloudflare Tunnel)
-- Prudent AI API usage (Gemini free tier, OpenAI promotional credits)
+- Self-hosted open-source AI models (e.g., multilingual-e5 for embedding, Qwen2.5 for chat) with $0 runtime cost; prudent fallback/evaluation API usage (Gemini free tier, OpenAI promotional credits)
 
 #### 2.4.4 Security Constraints
 
@@ -310,7 +310,7 @@ This requires the use of:
 | A-02 | The team can access the internet for cloud services and documentation | Low |
 | A-03 | vieclam.gov.vn remains accessible and does not implement anti-crawling measures | Medium | → If violated, trigger CRAWL-01-07 (seed-data fallback + detailed error logging; see 3.10.2) |
 | A-04 | Free-tier services (Supabase, Upstash, etc.) will remain available with current limits | Low |
-| A-05 | AI service providers (OpenAI/Gemini) maintain their free tier offerings | Medium |
+| A-05 | AI service: Primary self-hosted models run locally; external providers (OpenAI/Gemini) maintain free tiers for evaluation/fallback | Low |
 | A-06 | All team members have capable development machines | Medium |
 | A-07 | The project timeline of 16 weeks is adequate for the defined scope | High |
 
@@ -321,7 +321,7 @@ This requires the use of:
 | D-01 | Version control repository availability | Cannot version control or collaborate |
 | D-02 | Cloud provider free tier availability | Increased cost, potential budget overrun |
 | D-03 | vieclam.gov.vn data availability | Limited test data for search and crawl features |
-| D-04 | Third-party AI API availability | AI features cannot be implemented |
+| D-04 | Third-party AI API availability | Low impact (primary features operate on self-hosted local models; only fallback/evaluation impacted) |
 | D-05 | Push notification service availability | Mobile push notifications unusable |
 | D-06 | Managed database uptime | Data persistence failure |
 

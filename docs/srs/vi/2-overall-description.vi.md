@@ -283,7 +283,7 @@ Hạ tầng phải nằm trong các gói miễn phí hoặc tín dụng khuyến
 - Tín dụng Azure for Students cho MỘT VM Linux theo nhu cầu (deallocate khi không kiểm thử)
 - Các gói Always Free cho các dịch vụ ngoài stack compose (Cloudflare R2, GHCR; Supabase, Upstash, Bonsai làm phương án thay thế)
 - Các dịch vụ miễn phí (GitHub Actions, Grafana Cloud, Cloudflare Tunnel)
-- Sử dụng API AI hợp lý (Gemini free tier, tín dụng khuyến mãi OpenAI)
+- Tự host các mô hình AI mã nguồn mở (ví dụ: multilingual-e5 cho embedding, Qwen2.5 cho chat) với chi phí vận hành $0; sử dụng hợp lý API bên thứ ba cho dự phòng/đánh giá (Gemini free tier, tín dụng khuyến mãi OpenAI)
 
 #### 2.4.4 Ràng buộc bảo mật
 
@@ -310,7 +310,7 @@ Hạ tầng phải nằm trong các gói miễn phí hoặc tín dụng khuyến
 | A-02 | Nhóm có thể truy cập internet cho các dịch vụ đám mây và tài liệu | Thấp |
 | A-03 | vieclam.gov.vn vẫn có thể truy cập và không áp dụng biện pháp chống thu thập | Trung bình | → Nếu vi phạm, kích hoạt CRAWL-01-07 (fallback seed data + ghi log chi tiết; xem 3.10.2) |
 | A-04 | Các dịch vụ gói miễn phí (Supabase, Upstash, v.v.) sẽ duy trì các giới hạn hiện tại | Thấp |
-| A-05 | Các nhà cung cấp dịch vụ AI (OpenAI/Gemini) duy trì các gói miễn phí của họ | Trung bình |
+| A-05 | Dịch vụ AI: Các mô hình chính tự host chạy cục bộ; các nhà cung cấp bên ngoài (OpenAI/Gemini) duy trì gói miễn phí cho mục đích đánh giá/dự phòng | Thấp |
 | A-06 | Tất cả thành viên nhóm đều có máy phát triển đủ năng lực | Trung bình |
 | A-07 | Lộ trình 16 tuần là đủ cho phạm vi đã xác định | Cao |
 
@@ -321,7 +321,7 @@ Hạ tầng phải nằm trong các gói miễn phí hoặc tín dụng khuyến
 | D-01 | Sẵn có kho lưu trữ kiểm soát phiên bản | Không thể quản lý phiên bản hoặc cộng tác |
 | D-02 | Sẵn có gói miễn phí từ nhà cung cấp đám mây | Tăng chi phí, có thể vượt ngân sách |
 | D-03 | Sẵn có dữ liệu từ vieclam.gov.vn | Dữ liệu kiểm thử hạn chế cho tính năng tìm kiếm và thu thập |
-| D-04 | Sẵn có API AI bên thứ ba | Không thể triển khai tính năng AI |
+| D-04 | Sẵn có API AI bên thứ ba | Tác động thấp (tính năng cốt lõi chạy trên mô hình tự host cục bộ; chỉ ảnh hưởng đánh giá/dự phòng) |
 | D-05 | Sẵn có dịch vụ thông báo đẩy | Không sử dụng được thông báo đẩy trên di động |
 | D-06 | Tính sẵn sàng của cơ sở dữ liệu được quản lý | Lỗi lưu trữ dữ liệu |
 

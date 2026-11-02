@@ -97,8 +97,8 @@ Bảng sau đây cung cấp phân tích chi phí cho các thành phần hạ t�
 | **Đường ống CI/CD** | GitHub Actions | 2.000 phút miễn phí/tháng (repo riêng), không giới hạn (repo công) | Always Free (trong giới hạn) | $0 |
 | **Chất lượng mã** | SonarCloud | Job CI tùy chọn, chỉ chạy khi có secret `SONAR_TOKEN` (xem 3.13) | Miễn phí cho dự án công khai | $0 |
 | **Ngăn xếp Giám sát** | Grafana Cloud | 10.000 chỉ số Prometheus, 50 GB logs, 50 GB traces/tháng | Always Free (trong giới hạn) | $0 |
-| **Dịch vụ AI (LLM)** | OpenAI | $5 tín dụng miễn phí | Khuyến mãi / Giới hạn | $0 |
-| **Dịch vụ AI (LLM)** | Google Gemini | ~60 yêu cầu/phút miễn phí | Always Free (trong giới hạn) | $0 |
+| **Dịch vụ AI (Tự host)** | Các mô hình mã nguồn mở (multilingual-e5-small, Qwen2.5) trên CPU | Xử lý nội bộ, chi phí API token $0 | Always Free / Open Source | $0 |
+| **Dịch vụ AI (Cloud dự phòng / Đánh giá)** | Google Gemini / OpenAI | Gói miễn phí (~15-60 RPM) / tín dụng khuyến mãi | Đánh giá / Dự phòng | $0 |
 | **Tên miền / Đường hầm** | Cloudflare Tunnel | Tiếp xúc công khai an toàn không cần IP công khai hoặc tên miền trả phí | Always Free | $0 |
 
 ---
@@ -137,7 +137,7 @@ Các chiến lược sau giữ hạ tầng nằm trong tín dụng Azure for Stu
 | **Luân phiên tín dụng sinh viên** | Dùng tín dụng Azure for Students (3 tài khoản x $100, không gộp chung); chuyển sang subscription tiếp theo khi sắp hết | `AZURE_SUBSCRIPTION_ID` + chạy lại `scripts/azure-provision.sh` |
 | **Tận dụng Gói miễn phí** | Dùng gói Always Free cho các dịch vụ ngoài stack compose | Cloudflare R2, GHCR, GitHub Actions, Grafana Cloud (Supabase, Upstash, Bonsai giữ làm phương án thay thế) |
 | **Tránh chi phí Egress** | Sử dụng dịch vụ có chuyển dữ liệu miễn phí | Cloudflare R2 cung cấp egress miễn phí |
-| **Quản lý chi phí API AI** | Sử dụng nhà cung cấp LLM gói miễn phí một cách chiến lược | Gemini cho yêu cầu số lượng lớn, tín dụng OpenAI cho tạo mẫu |
+| **Mô hình AI tự host & Quản lý dự phòng** | Chạy mô hình mã nguồn mở (multilingual-e5, Qwen2.5) trực tiếp trên CPU; sử dụng API đám mây miễn phí cho đánh giá | Loại bỏ hoàn toàn chi phí gọi API và không lo giới hạn rate-limit; API cloud dùng làm mốc đánh giá |
 | **Triển khai Container hóa** | Đóng gói tất cả dịch vụ bằng Docker; image được build trong CI và đẩy lên GHCR | `docker-compose.prod.yml` kéo image GHCR về VM Azure |
 | **Dịch vụ dữ liệu tự lưu trữ (môi trường kiểm thử)** | PostgreSQL, Redis, Elasticsearch và Kafka chạy trong stack compose trên VM, tránh hạn mức dịch vụ được quản lý | Dữ liệu nằm trên đĩa VM, còn nguyên sau khi deallocate; không bao giờ `docker compose down -v` |
 | **Hạ tầng dưới dạng mã** | Tự động hóa cung cấp hạ tầng | Giảm lỗi thủ công và chi phí quản lý |
