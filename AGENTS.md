@@ -24,6 +24,8 @@ Vietnam Job Platform (`pbl6`) — `dut-pbl6-2026` 14 multirepos: `shared auth-sv
 ```
 docs/master-plan.md          # priority + architecture + 16w roadmap + team
 docs/master-plan.vi.md       # VI mirror
+docs/api-conventions.md      # REST naming/shape/pagination/enum rules (normative) + known deviations
+docs/api-conventions.vi.md   # VI mirror
 docs/srs/en/{1..10}.md       # EN SRS
 docs/srs/vi/{1..10}.vi.md    # VI SRS
 .github/git-strategy.md      # branch/commit/PR/release
@@ -59,4 +61,4 @@ Every .NET svc: `/health` liveness `{"status":"ok","service":..}` + `/health/rea
 
 ## Workflow
 
-Keep EN/VI sync on every edit. Keep `master-plan.md` in sync with SRS changes. `feature/docs-*` or `docs/*` → `main` per `CONTRIBUTING.md`.
+Keep EN/VI sync on every edit. Keep `master-plan.md` in sync with SRS changes. API rows in the SRS must follow `docs/api-conventions.md` (camelCase JSON/query, plural paths, 0-based pagination, canonical enums); on conflict the conventions win and the SRS row is fixed. `feature/docs-*` or `docs/*` → `main` per `CONTRIBUTING.md`.

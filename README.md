@@ -11,6 +11,7 @@ This is the **meta/docs repository** of the [dut-pbl6-2026](https://github.com/d
 | `docs/master-plan.md` / `.vi.md` | 16-week master plan, architecture, team assignments (EN/VI) |
 | `docs/srs/en/` | Software Requirements Specification (English) |
 | `docs/srs/vi/` | Software Requirements Specification (Vietnamese) |
+| `docs/api-conventions.md` / `.vi.md` | API conventions: naming, pagination, enums, known deviations (EN/VI) |
 | `.github/git-strategy.md` | Git branching, commit, and release conventions |
 
 ## Related Repositories

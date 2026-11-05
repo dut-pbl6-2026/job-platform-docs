@@ -235,24 +235,28 @@ The Profile Service manages user profiles, including personal information, skill
 
 | ID | Requirement | Acceptance Criteria |
 |:---|:------------|:-------------------|
-| PROFILE-01-01 | The system shall allow users to create/update their profile | - PUT endpoint: `PUT /api/profile`<br>- Fields: full_name, phone, address, headline, summary<br>- User ID from authentication for authorisation |
-| PROFILE-01-02 | The system shall allow users to add/update skills | - POST endpoint: `POST /api/profile/skills`<br>- Skills: name, proficiency (1-5), years_of_experience<br>- Skills linked to user profile |
-| PROFILE-01-03 | The system shall allow users to manage work experience | - CRUD endpoints for experience entries<br>- Fields: company, title, start_date, end_date, description, is_current<br>- Multiple experiences per user |
-| PROFILE-01-04 | The system shall allow users to manage education history | - CRUD endpoints for education entries<br>- Fields: institution, degree, field, start_date, end_date<br>- Multiple education entries per user |
-| PROFILE-01-05 | The system shall allow users to view their own profile | - GET endpoint: `GET /api/profile/me`<br>- Returns complete profile with all sections<br>- Public view option for recruiters |
-| PROFILE-01-06 | The system shall allow users to view other users' public profiles | - GET endpoint: `GET /api/profile/{userId}`<br>- Returns limited public information<br>- Does not include sensitive data |
+| PROFILE-01-01 | The system shall allow users to create/update their profile | - PUT endpoint: `PUT /api/profiles/me`<br>- Fields: fullName, phone, address, headline, summary<br>- User ID from authentication for authorisation |
+| PROFILE-01-02 | The system shall allow users to add/update skills | - POST endpoint: `POST /api/profiles/skills`<br>- Skills: name, proficiency (1-5), yearsOfExperience<br>- Skills linked to user profile |
+| PROFILE-01-03 | The system shall allow users to manage work experience | - CRUD endpoints for experience entries<br>- Fields: company, title, startDate, endDate, description, isCurrent<br>- Multiple experiences per user |
+| PROFILE-01-04 | The system shall allow users to manage education history | - CRUD endpoints for education entries<br>- Fields: institution, degree, field, startDate, endDate, grade<br>- Multiple education entries per user |
+| PROFILE-01-05 | The system shall allow users to view their own profile | - GET endpoint: `GET /api/profiles/me`<br>- Returns complete profile with all sections<br>- Public view option for recruiters |
+| PROFILE-01-06 | The system shall allow users to view other users' public profiles | - GET endpoint: `GET /api/profiles/{userId}`<br>- Returns limited public information<br>- Does not include sensitive data |
 
 #### 3.6.3 API Specifications
 
 | Endpoint | Method | Request Body | Response | Validation Rules |
 |:---------|:-------|:-------------|:---------|:-----------------|
-| `/api/profile` | PUT | ProfileUpdateDTO | `{ message }` | User must be authenticated |
-| `/api/profile/me` | GET | - | ProfileDetailDTO | User must be authenticated |
-| `/api/profile/{userId}` | GET | - | PublicProfileDTO | Valid user ID |
-| `/api/profile/skills` | POST | SkillDTO | `{ id, message }` | User must be authenticated; proficiency must be 1-5 |
-| `/api/profile/skills/{id}` | DELETE | - | `{ message }` | User must be the skill owner |
-| `/api/profile/experience` | POST | ExperienceDTO | `{ id, message }` | User must be authenticated |
-| `/api/profile/education` | POST | EducationDTO | `{ id, message }` | User must be authenticated |
+| `/api/profiles/me` | PUT | ProfileUpdateDTO | `{ id, message }` | User must be authenticated |
+| `/api/profiles/me` | GET | - | ProfileDetailDTO | User must be authenticated |
+| `/api/profiles/{userId}` | GET | - | PublicProfileDTO | Valid user ID |
+| `/api/profiles/skills` | POST | SkillDTO | `{ id, message }` | User must be authenticated; proficiency must be 1-5 |
+| `/api/profiles/skills/{id}` | DELETE | - | 204 No Content | User must be the skill owner |
+| `/api/profiles/experiences` | POST | ExperienceDTO | `{ id, message }` | User must be authenticated |
+| `/api/profiles/experiences/{id}` | PUT / DELETE | ExperienceDTO / - | `{ id, message }` / 204 No Content | User must be the entry owner |
+| `/api/profiles/educations` | POST | EducationDTO | `{ id, message }` | User must be authenticated |
+| `/api/profiles/educations/{id}` | PUT / DELETE | EducationDTO / - | `{ id, message }` / 204 No Content | User must be the entry owner |
+
+Field names and shapes follow the [API conventions](../../api-conventions.md) (camelCase JSON).
 
 #### 3.6.4 Data Model
 
@@ -280,7 +284,7 @@ The API Gateway acts as the single entry point for all client requests. It handl
 
 | ID | Requirement | Acceptance Criteria |
 |:---|:------------|:-------------------|
-| GW-01-01 | The gateway shall route requests to the appropriate microservice | - Path-based routing rules defined<br>- `/api/auth/*` routes to Auth Service<br>- `/api/jobs/*` routes to Job Service<br>- `/api/search/*` routes to Search Service<br>- `/api/applications/*` routes to Application Service<br>- `/api/profile/*` routes to Profile Service<br>- Route resolution works for all endpoints |
+| GW-01-01 | The gateway shall route requests to the appropriate microservice | - Path-based routing rules defined<br>- `/api/auth/*` routes to Auth Service<br>- `/api/jobs/*` routes to Job Service<br>- `/api/search/*` routes to Search Service<br>- `/api/applications/*` routes to Application Service<br>- `/api/profiles/*` routes to Profile Service<br>- Route resolution works for all endpoints |
 | GW-01-02 | The gateway shall validate JWT tokens on protected routes | - All routes except `/api/auth/login` and `/api/auth/register` require JWT<br>- Token validated: signature, expiry, audience<br>- 401 Unauthorised if token invalid |
 | GW-01-03 | The gateway shall forward user claims to downstream services | - Claims (user_id, role) forwarded as headers<br>- Headers: X-User-Id, X-User-Role<br>- Services can use these for authorisation |
 | GW-01-04 | The gateway shall support CORS configuration | - CORS policy allowing Web and Mobile origins<br>- Allowed methods: GET, POST, PUT, DELETE, OPTIONS<br>- Allowed headers: Authorisation, Content-Type |
@@ -297,8 +301,9 @@ The API Gateway acts as the single entry point for all client requests. It handl
 | `/api/jobs/*` | Job Service | Yes |
 | `/api/search/*` | Search Service | Yes |
 | `/api/applications/*` | Application Service | Yes |
-| `/api/profile/*` | Profile Service | Yes |
+| `/api/profiles/*` | Profile Service | Yes |
 | `/api/notifications/*` | Notification Service | Yes |
+| `/api/ai/*` | AI Service | Yes |
 | `/api/health` | Gateway (aggregated) | No |
 
 ---

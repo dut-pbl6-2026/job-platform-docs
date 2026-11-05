@@ -234,18 +234,18 @@ This appendix provides the API specifications for all services. Complete OpenAPI
 | **Application** | `/api/applications/{id}` | GET | Application details | MUST |
 | **Application** | `/api/applications/job/{jobId}` | GET | Job applications (recruiter) | MUST |
 | **Application** | `/api/applications/{id}/status` | PUT | Update application status | MUST |
-| **Profile** | `/api/profile` | PUT | Update profile | MUST |
-| **Profile** | `/api/profile/me` | GET | Get profile | MUST |
-| **Profile** | `/api/profile/{userId}` | GET | Get public profile | MUST |
-| **Profile** | `/api/profile/skills` | POST | Add skill | MUST |
-| **Profile** | `/api/profile/experience` | POST | Add work experience | MUST |
-| **Profile** | `/api/profile/education` | POST | Add education | MUST |
+| **Profile** | `/api/profiles/me` | PUT | Update profile | MUST |
+| **Profile** | `/api/profiles/me` | GET | Get profile | MUST |
+| **Profile** | `/api/profiles/{userId}` | GET | Get public profile | MUST |
+| **Profile** | `/api/profiles/skills` | POST | Add skill | MUST |
+| **Profile** | `/api/profiles/experiences` | POST | Add work experience | MUST |
+| **Profile** | `/api/profiles/educations` | POST | Add education | MUST |
 | **Notification** | `/api/notifications/history` | GET | Notification history | SHOULD |
 | **Admin** | `/api/admin/users` | GET | User management | SHOULD |
-| **Admin** | `/api/admin/jobs/pending` | GET | Pending jobs | SHOULD |
+| **Admin** | `/api/admin/jobs` | GET | Jobs by status (`?status=Pending` for the moderation queue) | SHOULD |
 | **Admin** | `/api/admin/categories` | POST | Create category | SHOULD |
-| **Admin** | `/api/admin/statistics` | GET | Platform statistics | SHOULD |
-| **Admin** | `/api/admin/health` | GET | System health | SHOULD |
+| **Admin** | `/api/admin/stats` | GET | Platform statistics | SHOULD |
+| **Admin** | `/api/health` | GET | System health (gateway aggregate) | SHOULD |
 | **AI** | `/api/ai/chat` | POST | AI chatbot (context 20 msgs / 8000 tokens, streaming, 512 tokens, 20 req/h) | NICE |
 | **AI** | `/api/ai/session` | POST | Create chat session | NICE |
 | **AI** | `/api/ai/session/{sessionId}` | DELETE | Delete chat session | NICE |

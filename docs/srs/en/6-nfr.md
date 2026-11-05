@@ -79,7 +79,7 @@ Security requirements define how the system protects data, prevents unauthorised
 | `refresh_tokens.token_hash`, `password_reset_tokens.token_hash` | `auth_db` | SHA-256 hash (no plaintext) | TLS | Auth Service only |
 | `API keys / secrets` | Secret Manager / K8s Secret | Vault encryption | TLS | Only required service |
 
-**SEC-08 test criteria:** (1) Direct read of `profile_db.profiles.phone` is Base64 ciphertext, decryptable only with key from Secret Manager; (2) `GET /api/profile/{id}` public omits phone/address; (3) CV URL is pre-signed, unsigned access → 403; (4) No secret found in repo / logs.
+**SEC-08 test criteria:** (1) Direct read of `profile_db.profiles.phone` is Base64 ciphertext, decryptable only with key from Secret Manager; (2) `GET /api/profiles/{userId}` public omits phone/address; (3) CV URL is pre-signed, unsigned access → 403; (4) No secret found in repo / logs.
 
 ---
 

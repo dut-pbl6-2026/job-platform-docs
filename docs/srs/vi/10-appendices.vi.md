@@ -234,18 +234,18 @@ Phụ lục này cung cấp đặc tả API cho tất cả dịch vụ. Tài li�
 | **Ứng tuyển** | `/api/applications/{id}` | GET | Chi tiết ứng tuyển | BẮT BUỘC |
 | **Ứng tuyển** | `/api/applications/job/{jobId}` | GET | Ứng tuyển theo công việc (nhà tuyển dụng) | BẮT BUỘC |
 | **Ứng tuyển** | `/api/applications/{id}/status` | PUT | Cập nhật trạng thái ứng tuyển | BẮT BUỘC |
-| **Hồ sơ** | `/api/profile` | PUT | Cập nhật hồ sơ | BẮT BUỘC |
-| **Hồ sơ** | `/api/profile/me` | GET | Lấy hồ sơ | BẮT BUỘC |
-| **Hồ sơ** | `/api/profile/{userId}` | GET | Lấy hồ sơ công khai | BẮT BUỘC |
-| **Hồ sơ** | `/api/profile/skills` | POST | Thêm kỹ năng | BẮT BUỘC |
-| **Hồ sơ** | `/api/profile/experience` | POST | Thêm kinh nghiệm làm việc | BẮT BUỘC |
-| **Hồ sơ** | `/api/profile/education` | POST | Thêm giáo dục | BẮT BUỘC |
+| **Hồ sơ** | `/api/profiles/me` | PUT | Cập nhật hồ sơ | BẮT BUỘC |
+| **Hồ sơ** | `/api/profiles/me` | GET | Lấy hồ sơ | BẮT BUỘC |
+| **Hồ sơ** | `/api/profiles/{userId}` | GET | Lấy hồ sơ công khai | BẮT BUỘC |
+| **Hồ sơ** | `/api/profiles/skills` | POST | Thêm kỹ năng | BẮT BUỘC |
+| **Hồ sơ** | `/api/profiles/experiences` | POST | Thêm kinh nghiệm làm việc | BẮT BUỘC |
+| **Hồ sơ** | `/api/profiles/educations` | POST | Thêm giáo dục | BẮT BUỘC |
 | **Thông báo** | `/api/notifications/history` | GET | Lịch sử thông báo | NÊN CÓ |
 | **Quản trị** | `/api/admin/users` | GET | Quản lý người dùng | NÊN CÓ |
-| **Quản trị** | `/api/admin/jobs/pending` | GET | Tin đang chờ | NÊN CÓ |
+| **Quản trị** | `/api/admin/jobs` | GET | Tin theo trạng thái (`?status=Pending` cho hàng chờ duyệt) | NÊN CÓ |
 | **Quản trị** | `/api/admin/categories` | POST | Tạo danh mục | NÊN CÓ |
-| **Quản trị** | `/api/admin/statistics` | GET | Thống kê nền tảng | NÊN CÓ |
-| **Quản trị** | `/api/admin/health` | GET | Sức khỏe hệ thống | NÊN CÓ |
+| **Quản trị** | `/api/admin/stats` | GET | Thống kê nền tảng | NÊN CÓ |
+| **Quản trị** | `/api/health` | GET | Sức khỏe hệ thống (gateway tổng hợp) | NÊN CÓ |
 | **AI** | `/api/ai/chat` | POST | Chatbot AI (context 20 tin / 8000 token, stream, 512 tokens, 20 req/h) | TỐT NÊN CÓ |
 | **AI** | `/api/ai/session` | POST | Tạo phiên chat | TỐT NÊN CÓ |
 | **AI** | `/api/ai/session/{sessionId}` | DELETE | Xóa phiên chat | TỐT NÊN CÓ |
