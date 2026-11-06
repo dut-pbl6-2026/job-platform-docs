@@ -235,24 +235,28 @@ Dịch vụ Hồ sơ quản lý hồ sơ người dùng, bao gồm thông tin c�
 
 | ID | Yêu cầu | Tiêu chí chấp nhận |
 |:---|:--------|:-------------------|
-| PROFILE-01-01 | Hệ thống cho phép người dùng tạo/cập nhật hồ sơ | - Điểm cuối PUT: `PUT /api/profile`<br>- Các trường: full_name, phone, address, headline, summary<br>- User ID từ xác thực để phân quyền |
-| PROFILE-01-02 | Hệ thống cho phép người dùng thêm/cập nhật kỹ năng | - Điểm cuối POST: `POST /api/profile/skills`<br>- Kỹ năng: name, proficiency (1-5), years_of_experience<br>- Kỹ năng được liên kết với hồ sơ người dùng |
-| PROFILE-01-03 | Hệ thống cho phép người dùng quản lý kinh nghiệm làm việc | - Điểm cuối CRUD cho các mục kinh nghiệm<br>- Các trường: company, title, start_date, end_date, description, is_current<br>- Nhiều kinh nghiệm trên mỗi người dùng |
-| PROFILE-01-04 | Hệ thống cho phép người dùng quản lý lịch sử giáo dục | - Điểm cuối CRUD cho các mục giáo dục<br>- Các trường: institution, degree, field, start_date, end_date<br>- Nhiều mục giáo dục trên mỗi người dùng |
-| PROFILE-01-05 | Hệ thống cho phép người dùng xem hồ sơ của chính họ | - Điểm cuối GET: `GET /api/profile/me`<br>- Trả về hồ sơ đầy đủ với tất cả các phần<br>- Tùy chọn xem công khai cho nhà tuyển dụng |
-| PROFILE-01-06 | Hệ thống cho phép người dùng xem hồ sơ công khai của người dùng khác | - Điểm cuối GET: `GET /api/profile/{userId}`<br>- Trả về thông tin công khai giới hạn<br>- Không bao gồm dữ liệu nhạy cảm |
+| PROFILE-01-01 | Hệ thống cho phép người dùng tạo/cập nhật hồ sơ | - Điểm cuối PUT: `PUT /api/profiles/me`<br>- Các trường: fullName, phone, address, headline, summary<br>- User ID từ xác thực để phân quyền |
+| PROFILE-01-02 | Hệ thống cho phép người dùng thêm/cập nhật kỹ năng | - Điểm cuối POST: `POST /api/profiles/skills`<br>- Kỹ năng: name, proficiency (1-5), yearsOfExperience<br>- Kỹ năng được liên kết với hồ sơ người dùng |
+| PROFILE-01-03 | Hệ thống cho phép người dùng quản lý kinh nghiệm làm việc | - Điểm cuối CRUD cho các mục kinh nghiệm<br>- Các trường: company, title, startDate, endDate, description, isCurrent<br>- Nhiều kinh nghiệm trên mỗi người dùng |
+| PROFILE-01-04 | Hệ thống cho phép người dùng quản lý lịch sử giáo dục | - Điểm cuối CRUD cho các mục giáo dục<br>- Các trường: institution, degree, field, startDate, endDate, grade<br>- Nhiều mục giáo dục trên mỗi người dùng |
+| PROFILE-01-05 | Hệ thống cho phép người dùng xem hồ sơ của chính họ | - Điểm cuối GET: `GET /api/profiles/me`<br>- Trả về hồ sơ đầy đủ với tất cả các phần<br>- Tùy chọn xem công khai cho nhà tuyển dụng |
+| PROFILE-01-06 | Hệ thống cho phép người dùng xem hồ sơ công khai của người dùng khác | - Điểm cuối GET: `GET /api/profiles/{userId}`<br>- Trả về thông tin công khai giới hạn<br>- Không bao gồm dữ liệu nhạy cảm |
 
 #### 3.6.3 Đặc tả API
 
 | Điểm cuối | Phương thức | Body yêu cầu | Phản hồi | Quy tắc xác thực |
 |:----------|:------------|:-------------|:---------|:-----------------|
-| `/api/profile` | PUT | ProfileUpdateDTO | `{ message }` | Người dùng phải được xác thực |
-| `/api/profile/me` | GET | - | ProfileDetailDTO | Người dùng phải được xác thực |
-| `/api/profile/{userId}` | GET | - | PublicProfileDTO | User ID hợp lệ |
-| `/api/profile/skills` | POST | SkillDTO | `{ id, message }` | Người dùng phải được xác thực; proficiency phải là 1-5 |
-| `/api/profile/skills/{id}` | DELETE | - | `{ message }` | Người dùng phải là chủ sở hữu kỹ năng |
-| `/api/profile/experience` | POST | ExperienceDTO | `{ id, message }` | Người dùng phải được xác thực |
-| `/api/profile/education` | POST | EducationDTO | `{ id, message }` | Người dùng phải được xác thực |
+| `/api/profiles/me` | PUT | ProfileUpdateDTO | `{ id, message }` | Người dùng phải được xác thực |
+| `/api/profiles/me` | GET | - | ProfileDetailDTO | Người dùng phải được xác thực |
+| `/api/profiles/{userId}` | GET | - | PublicProfileDTO | User ID hợp lệ |
+| `/api/profiles/skills` | POST | SkillDTO | `{ id, message }` | Người dùng phải được xác thực; proficiency phải là 1-5 |
+| `/api/profiles/skills/{id}` | DELETE | - | 204 No Content | Người dùng phải là chủ sở hữu kỹ năng |
+| `/api/profiles/experiences` | POST | ExperienceDTO | `{ id, message }` | Người dùng phải được xác thực |
+| `/api/profiles/experiences/{id}` | PUT / DELETE | ExperienceDTO / - | `{ id, message }` / 204 No Content | Người dùng phải là chủ sở hữu mục |
+| `/api/profiles/educations` | POST | EducationDTO | `{ id, message }` | Người dùng phải được xác thực |
+| `/api/profiles/educations/{id}` | PUT / DELETE | EducationDTO / - | `{ id, message }` / 204 No Content | Người dùng phải là chủ sở hữu mục |
+
+Tên field và cấu trúc tuân theo [Quy ước API](../../api-conventions.vi.md) (JSON camelCase).
 
 #### 3.6.4 Mô hình dữ liệu
 
@@ -280,7 +284,7 @@ API Gateway đóng vai trò là điểm vào duy nhất cho tất cả yêu cầ
 
 | ID | Yêu cầu | Tiêu chí chấp nhận |
 |:---|:--------|:-------------------|
-| GW-01-01 | Gateway định tuyến yêu cầu đến microservice phù hợp | - Quy tắc định tuyến dựa trên đường dẫn được xác định<br>- `/api/auth/*` định tuyến đến Auth Service<br>- `/api/jobs/*` định tuyến đến Job Service<br>- `/api/search/*` định tuyến đến Search Service<br>- `/api/applications/*` định tuyến đến Application Service<br>- `/api/profile/*` định tuyến đến Profile Service<br>- Giải quyết định tuyến hoạt động cho tất cả điểm cuối |
+| GW-01-01 | Gateway định tuyến yêu cầu đến microservice phù hợp | - Quy tắc định tuyến dựa trên đường dẫn được xác định<br>- `/api/auth/*` định tuyến đến Auth Service<br>- `/api/jobs/*` định tuyến đến Job Service<br>- `/api/search/*` định tuyến đến Search Service<br>- `/api/applications/*` định tuyến đến Application Service<br>- `/api/profiles/*` định tuyến đến Profile Service<br>- Giải quyết định tuyến hoạt động cho tất cả điểm cuối |
 | GW-01-02 | Gateway xác thực token JWT trên các route được bảo vệ | - Tất cả route trừ `/api/auth/login` và `/api/auth/register` đều yêu cầu JWT<br>- Token được xác thực: chữ ký, thời hạn, audience<br>- 401 Unauthorised nếu token không hợp lệ |
 | GW-01-03 | Gateway chuyển tiếp các claim của người dùng đến các dịch vụ hạ nguồn | - Các claim (user_id, role) được chuyển tiếp dưới dạng header<br>- Headers: X-User-Id, X-User-Role<br>- Các dịch vụ có thể sử dụng để phân quyền |
 | GW-01-04 | Gateway hỗ trợ cấu hình CORS | - Chính sách CORS cho phép nguồn gốc từ Web và Mobile<br>- Phương thức được phép: GET, POST, PUT, DELETE, OPTIONS<br>- Headers được phép: Authorisation, Content-Type |
@@ -297,8 +301,9 @@ API Gateway đóng vai trò là điểm vào duy nhất cho tất cả yêu cầ
 | `/api/jobs/*` | Job Service | Có |
 | `/api/search/*` | Search Service | Có |
 | `/api/applications/*` | Application Service | Có |
-| `/api/profile/*` | Profile Service | Có |
+| `/api/profiles/*` | Profile Service | Có |
 | `/api/notifications/*` | Notification Service | Có |
+| `/api/ai/*` | AI Service | Có |
 | `/api/health` | Gateway (tổng hợp) | Không |
 
 ---

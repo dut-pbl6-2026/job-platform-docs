@@ -191,8 +191,8 @@ Tìm kiếm Nâng cao mở rộng khả năng tìm kiếm cơ bản với nhiề
 | ADV-01-01 | Hệ thống hỗ trợ lọc theo khoảng lương | - Lọc theo lương tối thiểu<br>- Lọc theo lương tối đa<br>- Hỗ trợ tiền tệ VND và USD<br>- Thanh trượt hoặc trường nhập |
 | ADV-01-02 | Hệ thống hỗ trợ lọc theo kỹ năng | - Lọc theo kỹ năng yêu cầu<br>- Logic AND/OR cho nhiều kỹ năng<br>- Tự động hoàn thành kỹ năng |
 | ADV-01-03 | Hệ thống hỗ trợ lọc theo địa điểm | - Lọc theo thành phố/tỉnh<br>- Lọc theo quận/huyện (tùy chọn)<br>- Hỗ trợ tùy chọn "làm việc từ xa" |
-| ADV-01-04 | Hệ thống hỗ trợ lọc theo loại hình công việc | - Lọc theo loại hình: Toàn thời gian, Bán thời gian, Hợp đồng, Thực tập, Freelance<br>- Cho phép chọn nhiều<br>- Tùy chọn "Bất kỳ" rõ ràng |
-| ADV-01-05 | Hệ thống hỗ trợ lọc theo cấp độ kinh nghiệm | - Lọc theo cấp độ: Mới vào nghề, Junior, Trung cấp, Senior, Lead<br>- Cho phép chọn nhiều<br>- Tùy chọn "Bất kỳ" rõ ràng |
+| ADV-01-04 | Hệ thống hỗ trợ lọc theo loại hình công việc | - Lọc theo loại hình: `FullTime` (Toàn thời gian), `PartTime` (Bán thời gian), `Contract` (Hợp đồng), `Internship` (Thực tập) (giá trị chuẩn: [Quy ước API](../../api-conventions.vi.md) §6; `Freelance` là quyết định còn mở)<br>- Cho phép chọn nhiều<br>- Tùy chọn "Bất kỳ" rõ ràng |
+| ADV-01-05 | Hệ thống hỗ trợ lọc theo cấp độ kinh nghiệm | - Lọc theo cấp độ: `Entry` (Mới vào nghề), `Mid` (Trung cấp), `Senior`, `Lead` (giá trị chuẩn: [Quy ước API](../../api-conventions.vi.md) §6; `Junior` là quyết định còn mở)<br>- Cho phép chọn nhiều<br>- Tùy chọn "Bất kỳ" rõ ràng |
 | ADV-01-06 | Hệ thống hỗ trợ tìm kiếm toàn văn tiếng Việt | - Phân tích văn bản tiếng Việt (xử lý dấu và thanh)<br>- Loại bỏ từ dừng cho các từ tiếng Việt phổ biến<br>- Stemming cho từ tiếng Việt |
 | ADV-01-07 | Hệ thống hỗ trợ kết quả tìm kiếm phân khúc | - Hiển thị số lượng bộ lọc với mỗi kết quả<br>- Số lượng công việc khớp với mỗi giá trị bộ lọc<br>- Cập nhật động khi chọn bộ lọc |
 | ADV-01-08 | Hệ thống hỗ trợ sắp xếp kết quả tìm kiếm | - Sắp xếp theo độ liên quan (mặc định)<br>- Sắp xếp theo ngày đăng (mới nhất)<br>- Sắp xếp theo lương (cao/thấp nhất) |
@@ -201,7 +201,7 @@ Tìm kiếm Nâng cao mở rộng khả năng tìm kiếm cơ bản với nhiề
 
 | Điểm cuối | Phương thức | Tham số truy vấn | Phản hồi | Quy tắc xác thực |
 |:----------|:------------|:-----------------|:---------|:-----------------|
-| `/api/search/advanced` | GET | `q`, `location`, `salary_min`, `salary_max`, `skills`, `employment_type`, `experience_level`, `category`, `page`, `size`, `sort` | `{ items, total, page, size, totalPages, facets }` | Giá trị lương phải hợp lệ; page >= 0; size từ 1-100 |
+| `/api/search/jobs` (bộ lọc nâng cao trên cùng endpoint) | GET | `q`, `location`, `category` (UUID danh mục), `minSalary`, `maxSalary`, `skills`, `skillOp` (`or` mặc định \| `and`), `employmentType`, `experienceLevel`, `sortBy`, `page`, `size` | `{ items, total, page, size, totalPages, facets? }` | Giá trị lương phải hợp lệ; page >= 0; size từ 1-100; tham số nhiều giá trị phân tách bằng dấu phẩy (OR trong một tham số, AND giữa các tham số) |
 | `/api/search/skills` | GET | `q` (tùy chọn) | `[ { id, name, count } ]` | Tham số truy vấn chỉ dùng cho tự động hoàn thành |
 | `/api/search/locations` | GET | `q` (tùy chọn) | `[ { id, name, count } ]` | Tham số truy vấn chỉ dùng cho tự động hoàn thành |
 
@@ -211,8 +211,8 @@ Tìm kiếm Nâng cao mở rộng khả năng tìm kiếm cơ bản với nhiề
 |:-------|:-----|:------------------|:------|
 | Khoảng lương | Khoảng số | VND: 0-5M, 5-10M, 10-20M, 20M+ | 10-20M |
 | Địa điểm | Văn bản | Thành phố/Tỉnh | Hồ Chí Minh, Hà Nội, Đà Nẵng |
-| Loại hình công việc | Từ khóa | Toàn thời gian, Bán thời gian, Hợp đồng, Thực tập, Freelance | Toàn thời gian |
-| Cấp độ kinh nghiệm | Từ khóa | Mới vào nghề, Junior, Trung cấp, Senior, Lead | Junior |
+| Loại hình công việc | Từ khóa | FullTime, PartTime, Contract, Internship | FullTime |
+| Cấp độ kinh nghiệm | Từ khóa | Entry, Mid, Senior, Lead | Mid |
 | Danh mục | Từ khóa | IT, Tài chính, Marketing, Y tế, v.v. | IT |
 | Kỹ năng | Từ khóa | JavaScript, Python, React, v.v. | React |
 
@@ -286,13 +286,18 @@ Bảng quản trị cung cấp giao diện quản trị để quản lý ngườ
 
 | Điểm cuối | Phương thức | Body yêu cầu | Phản hồi | Quy tắc xác thực |
 |:----------|:------------|:-------------|:---------|:-----------------|
-| `/api/admin/users` | GET | Query: `q, role, status, page, size` | Danh sách người dùng phân trang | Yêu cầu vai trò Quản trị viên |
-| `/api/admin/users/{userId}` | PUT | `{ role, is_active }` | `{ message }` | Yêu cầu vai trò Quản trị viên |
-| `/api/admin/jobs/pending` | GET | Query: `page, size` | Danh sách tin phân trang | Yêu cầu vai trò Quản trị viên |
-| `/api/admin/jobs/{jobId}/approve` | POST | `{ approved, reason? }` | `{ message }` | Yêu cầu vai trò Quản trị viên |
+| `/api/admin/users` | GET | Query: `q, role, isActive, page, size` | Danh sách người dùng phân trang | Yêu cầu vai trò Quản trị viên |
+| `/api/admin/users/{userId}/activate` | PATCH | - | `{ message }` | Yêu cầu vai trò Quản trị viên |
+| `/api/admin/users/{userId}/deactivate` | PATCH | `{ reason? }` | `{ message }` | Yêu cầu vai trò Quản trị viên |
+| `/api/admin/users/{userId}/role` | PATCH | `{ role }` | `{ message }` | Yêu cầu vai trò Quản trị viên; chưa triển khai |
+| `/api/admin/jobs` | GET | Query: `status` (ví dụ `Pending`), `page, size` | Danh sách tin phân trang | Yêu cầu vai trò Quản trị viên |
+| `/api/admin/jobs/{jobId}/approve` | POST | `{ note? }` | `{ message, jobId }` | Yêu cầu vai trò Quản trị viên; tin phải ở trạng thái `Pending` |
+| `/api/admin/jobs/{jobId}/reject` | POST | `{ reason }` | `{ message, jobId }` | Yêu cầu vai trò Quản trị viên; tin phải ở trạng thái `Pending`; bắt buộc có `reason` |
 | `/api/admin/categories` | POST | `{ name, description }` | `{ id, message }` | Yêu cầu vai trò Quản trị viên |
-| `/api/admin/statistics` | GET | Query: `period` (daily/weekly/monthly) | StatisticsDTO | Yêu cầu vai trò Quản trị viên |
-| `/api/admin/health` | GET | - | HealthCheckDTO | Yêu cầu vai trò Quản trị viên |
+| `/api/admin/stats` | GET | - | AdminStatsDTO `{ users, jobs, applications }` | Yêu cầu vai trò Quản trị viên; xu hướng ngày/tuần/tháng chưa triển khai |
+| `/api/health` | GET | - | `{ status, services: [ { name, status, latencyMs } ] }` | Do gateway phục vụ (tổng hợp sức khỏe các service) |
+
+Tên, phân trang và giá trị enum tuân theo [Quy ước API](../../api-conventions.vi.md). Các điểm lệch hiện tại của phần triển khai (phân trang đếm từ 1, `search` thay cho `q` ở `/api/admin/users`) được theo dõi tại §10 của tài liệu đó.
 
 #### 4.7.4 Thống kê quản trị
 

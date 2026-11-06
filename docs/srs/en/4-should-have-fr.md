@@ -191,8 +191,8 @@ Advanced Search extends basic search capabilities with multiple filters, full-te
 | ADV-01-01 | The system shall support salary range filtering | - Filter by minimum salary<br>- Filter by maximum salary<br>- Support VND and USD currencies<br>- Range sliders or input fields |
 | ADV-01-02 | The system shall support skill-based filtering | - Filter by required skills<br>- Boolean AND/OR logic for multiple skills<br>- Skills auto-completion |
 | ADV-01-03 | The system shall support location filtering | - Filter by city/province<br>- Filter by district (optional)<br>- Support "remote" as a location option |
-| ADV-01-04 | The system shall support employment type filtering | - Filter by employment type: Full-time, Part-time, Contract, Internship, Freelance<br>- Multiple selection allowed<br>- Clear "Any" option |
-| ADV-01-05 | The system shall support experience level filtering | - Filter by experience level: Entry, Junior, Mid, Senior, Lead<br>- Multiple selection allowed<br>- Clear "Any" option |
+| ADV-01-04 | The system shall support employment type filtering | - Filter by employment type: `FullTime`, `PartTime`, `Contract`, `Internship` (canonical values: [API conventions](../../api-conventions.md) §6; `Freelance` is an open decision)<br>- Multiple selection allowed<br>- Clear "Any" option |
+| ADV-01-05 | The system shall support experience level filtering | - Filter by experience level: `Entry`, `Mid`, `Senior`, `Lead` (canonical values: [API conventions](../../api-conventions.md) §6; `Junior` is an open decision)<br>- Multiple selection allowed<br>- Clear "Any" option |
 | ADV-01-06 | The system shall support Vietnamese full-text search | - Vietnamese text analysis (accent and diacritic handling)<br>- Stop word removal for common Vietnamese words<br>- Stemming for Vietnamese words |
 | ADV-01-07 | The system shall support faceted search results | - Display filter counts with each result<br>- Number of jobs matching each filter value<br>- Dynamic updates on filter selection |
 | ADV-01-08 | The system shall support sorting of search results | - Sort by relevance (default)<br>- Sort by date posted (newest first)<br>- Sort by salary (highest/lowest) |
@@ -201,7 +201,7 @@ Advanced Search extends basic search capabilities with multiple filters, full-te
 
 | Endpoint | Method | Query Parameters | Response | Validation Rules |
 |:---------|:-------|:------------------|:---------|:-----------------|
-| `/api/search/advanced` | GET | `q`, `location`, `salary_min`, `salary_max`, `skills`, `employment_type`, `experience_level`, `category`, `page`, `size`, `sort` | `{ items, total, page, size, totalPages, facets }` | Salary values must be valid; page >= 0; size between 1 and 100 |
+| `/api/search/jobs` (advanced filters on the same endpoint) | GET | `q`, `location`, `category` (category UUID), `minSalary`, `maxSalary`, `skills`, `skillOp` (`or` default \| `and`), `employmentType`, `experienceLevel`, `sortBy`, `page`, `size` | `{ items, total, page, size, totalPages, facets? }` | Salary values must be valid; page >= 0; size between 1 and 100; multi-value parameters are comma-separated (OR within a parameter, AND across parameters) |
 | `/api/search/skills` | GET | `q` (optional) | `[ { id, name, count } ]` | Query parameter for autocomplete only |
 | `/api/search/locations` | GET | `q` (optional) | `[ { id, name, count } ]` | Query parameter for autocomplete only |
 
@@ -211,8 +211,8 @@ Advanced Search extends basic search capabilities with multiple filters, full-te
 |:------|:-----|:-------------|:--------|
 | Salary Range | Numeric Range | VND: 0-5M, 5-10M, 10-20M, 20M+ | 10-20M |
 | Location | Text | City/Province | Ho Chi Minh, Hanoi, Da Nang |
-| Employment Type | Keyword | Full-time, Part-time, Contract, Internship, Freelance | Full-time |
-| Experience Level | Keyword | Entry, Junior, Mid, Senior, Lead | Junior |
+| Employment Type | Keyword | FullTime, PartTime, Contract, Internship | FullTime |
+| Experience Level | Keyword | Entry, Mid, Senior, Lead | Mid |
 | Category | Keyword | IT, Finance, Marketing, Healthcare, etc. | IT |
 | Skills | Keyword | JavaScript, Python, React, etc. | React |
 
@@ -286,13 +286,18 @@ The Admin Panel provides administrative interfaces for managing users, jobs, and
 
 | Endpoint | Method | Request Body | Response | Validation Rules |
 |:---------|:-------|:-------------|:---------|:-----------------|
-| `/api/admin/users` | GET | Query: `q, role, status, page, size` | Paginated user list | Admin role required |
-| `/api/admin/users/{userId}` | PUT | `{ role, is_active }` | `{ message }` | Admin role required |
-| `/api/admin/jobs/pending` | GET | Query: `page, size` | Paginated job list | Admin role required |
-| `/api/admin/jobs/{jobId}/approve` | POST | `{ approved, reason? }` | `{ message }` | Admin role required |
+| `/api/admin/users` | GET | Query: `q, role, isActive, page, size` | Paginated user list | Admin role required |
+| `/api/admin/users/{userId}/activate` | PATCH | - | `{ message }` | Admin role required |
+| `/api/admin/users/{userId}/deactivate` | PATCH | `{ reason? }` | `{ message }` | Admin role required |
+| `/api/admin/users/{userId}/role` | PATCH | `{ role }` | `{ message }` | Admin role required; not implemented yet |
+| `/api/admin/jobs` | GET | Query: `status` (e.g. `Pending`), `page, size` | Paginated job list | Admin role required |
+| `/api/admin/jobs/{jobId}/approve` | POST | `{ note? }` | `{ message, jobId }` | Admin role required; job must be `Pending` |
+| `/api/admin/jobs/{jobId}/reject` | POST | `{ reason }` | `{ message, jobId }` | Admin role required; job must be `Pending`; `reason` is required |
 | `/api/admin/categories` | POST | `{ name, description }` | `{ id, message }` | Admin role required |
-| `/api/admin/statistics` | GET | Query: `period` (daily/weekly/monthly) | StatisticsDTO | Admin role required |
-| `/api/admin/health` | GET | - | HealthCheckDTO | Admin role required |
+| `/api/admin/stats` | GET | - | AdminStatsDTO `{ users, jobs, applications }` | Admin role required; daily/weekly/monthly trends not implemented yet |
+| `/api/health` | GET | - | `{ status, services: [ { name, status, latencyMs } ] }` | Served by the gateway (aggregated upstream health) |
+
+Names, pagination and enum values follow the [API conventions](../../api-conventions.md). Current deviations of the implementation (1-based pages, `search` instead of `q` on `/api/admin/users`) are tracked there in §10.
 
 #### 4.7.4 Admin Statistics
 

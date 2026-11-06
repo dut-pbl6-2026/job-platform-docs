@@ -79,7 +79,7 @@ Yêu cầu bảo mật xác định cách hệ thống bảo vệ dữ liệu, n
 | `refresh_tokens.token_hash`, `password_reset_tokens.token_hash` | `auth_db` | Hash SHA-256 (không lưu plaintext) | TLS | Chỉ Auth Service |
 | `API keys / secrets` | Secret Manager / K8s Secret | Vault encryption | TLS | Chỉ service cần thiết |
 
-**Tiêu chí kiểm thử SEC-08:** (1) Đọc trực tiếp `profile_db.profiles.phone` phải là ciphertext Base64, giải mã bằng khóa từ Secret Manager mới ra plaintext; (2) `GET /api/profile/{id}` public không chứa phone/address; (3) CV URL là pre-signed, truy cập không có chữ ký → 403; (4) Không tìm thấy secret nào trong repo / log.
+**Tiêu chí kiểm thử SEC-08:** (1) Đọc trực tiếp `profile_db.profiles.phone` phải là ciphertext Base64, giải mã bằng khóa từ Secret Manager mới ra plaintext; (2) `GET /api/profiles/{userId}` public không chứa phone/address; (3) CV URL là pre-signed, truy cập không có chữ ký → 403; (4) Không tìm thấy secret nào trong repo / log.
 
 ---
 
