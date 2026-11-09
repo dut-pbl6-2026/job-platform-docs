@@ -226,6 +226,7 @@ This appendix provides the API specifications for all services. Complete OpenAPI
 | **Job** | `/api/jobs/{id}` | PUT | Update job | MUST |
 | **Job** | `/api/jobs/{id}` | DELETE | Delete job | MUST |
 | **Job** | `/api/jobs/{id}` | GET | Get job details | MUST |
+| **Job** | `/api/jobs/recommended` | GET | Personal job recommendations (job seeker) | NICE |
 | **Job** | `/api/categories` | GET | Get job categories | MUST |
 | **Search** | `/api/search/jobs` | GET | Search jobs | MUST |
 | **Search** | `/api/search/suggest` | GET | Autocomplete suggestions | MUST |
