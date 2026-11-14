@@ -274,6 +274,8 @@ The Analytics Dashboard provides visual insights into platform activity. It help
 **Target Week:** Week 13  
 **Difficulty:** 6/10  
 
+> **Implemented in job-svc** (PBL6-10): item-item collaborative filtering on applications, content fallback by category/location, popular fallback. Skill matching from profiles is not part of this endpoint.
+
 #### 5.6.1 Description
 
 Job Recommendation provides personalised job suggestions based on user behaviour, skills, application history, and interactions. This enhances user engagement and increases the likelihood of finding suitable jobs.
@@ -284,7 +286,7 @@ Job Recommendation provides personalised job suggestions based on user behaviour
 |:---|:------------|:-------------------|
 | RECOMMEND-01-01 | The system shall provide job recommendations for job seekers | - Recommendation endpoint: `GET /api/jobs/recommended`<br>- Recommendations based on user profile and history<br>- Return up to 10 recommendations |
 | RECOMMEND-01-02 | The system shall use content-based filtering | - Based on user skills matching job requirements<br>- Based on user location and job locations<br>- Based on categories of previously viewed/applied jobs |
-| RECOMMEND-01-03 | The system shall consider user behaviour | - Jobs viewed or saved<br>- Jobs applied for<br>- Searches performed |
+| RECOMMEND-01-03 | The system shall consider user behaviour | - Jobs viewed or saved<br>- Jobs applied for<br>- Searches performed<br>- **Signals in use:** applications; saved jobs once the save-job API exists; total job views (popularity only). Per-user views and searches are not recorded |
 | RECOMMEND-01-04 | The system shall provide explanations for recommendations | - Reason displayed with each recommendation<br>- Example: "Based on your React and JavaScript skills"<br>- Example: "Similar to jobs you've viewed" |
 | RECOMMEND-01-05 | The system shall support recommendation refresh | - Recommendations regenerated periodically<br>- New recommendations on page refresh<br>- Cache with TTL of 6 hours |
 | RECOMMEND-01-06 | The system shall handle cold start users | - For new users, recommend popular jobs<br>- For users with no history, show trending jobs<br>- Gradually refine as user behaviour is collected |
@@ -309,8 +311,8 @@ flowchart TB
 
 | Endpoint | Method | Query Parameters | Response | Validation Rules |
 |:---------|:-------|:------------------|:---------|:-----------------|
-| `/api/jobs/recommended` | GET | `limit`, `refresh` | `{ items, reasons }` | User must be authenticated; role must be Job Seeker |
-| `/api/jobs/recommended/explain` | GET | `job_id` | `{ reason, score }` | User must be authenticated |
+| `/api/jobs/recommended` | GET | `limit` (1–10, default 10), `refresh` (bool) | `{ items, total, isCached, generatedAt }`; each item has the job summary with nested `company`/`category`, `strategy` (`Collaborative` \| `Content` \| `Popular`) and `reason` | Role User (job seeker); 401/403 as Problem Details; invalid `limit`/`refresh` → 400 with `errors.limit`/`errors.refresh` |
+| `/api/jobs/recommended/explain` | GET | `jobId` | `{ reason, score }` | (deferred, not implemented) User must be authenticated |
 
 ---
 

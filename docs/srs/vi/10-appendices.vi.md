@@ -226,6 +226,7 @@ Phụ lục này cung cấp đặc tả API cho tất cả dịch vụ. Tài li�
 | **Tin** | `/api/jobs/{id}` | PUT | Cập nhật tin | BẮT BUỘC |
 | **Tin** | `/api/jobs/{id}` | DELETE | Xóa tin | BẮT BUỘC |
 | **Tin** | `/api/jobs/{id}` | GET | Lấy chi tiết tin | BẮT BUỘC |
+| **Tin** | `/api/jobs/recommended` | GET | Gợi ý việc làm cá nhân (ứng viên) | TỐT NÊN CÓ |
 | **Tin** | `/api/categories` | GET | Lấy danh mục tin | BẮT BUỘC |
 | **Tìm kiếm** | `/api/search/jobs` | GET | Tìm kiếm tin | BẮT BUỘC |
 | **Tìm kiếm** | `/api/search/suggest` | GET | Gợi ý tự động hoàn thành | BẮT BUỘC |

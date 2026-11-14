@@ -274,6 +274,8 @@ Bảng điều khiển phân tích cung cấp thông tin trực quan về hoạt
 **Tuần mục tiêu:** Tuần 13  
 **Độ khó:** 6/10  
 
+> **Đã triển khai trong job-svc** (PBL6-10): lọc cộng tác item-item trên lượt ứng tuyển, dự phòng theo nội dung (danh mục/địa điểm), dự phòng việc phổ biến. Khớp kỹ năng từ hồ sơ không thuộc điểm cuối này.
+
 #### 5.6.1 Mô tả
 
 Gợi ý việc làm cung cấp đề xuất công việc cá nhân hóa dựa trên hành vi người dùng, kỹ năng, lịch sử ứng tuyển và tương tác. Điều này nâng cao mức độ tương tác của người dùng và tăng khả năng tìm thấy công việc phù hợp.
@@ -284,7 +286,7 @@ Gợi ý việc làm cung cấp đề xuất công việc cá nhân hóa dựa t
 |:---|:--------|:-------------------|
 | RECOMMEND-01-01 | Hệ thống cung cấp gợi ý việc làm cho người tìm việc | - Điểm cuối gợi ý: `GET /api/jobs/recommended`<br>- Gợi ý dựa trên hồ sơ và lịch sử người dùng<br>- Trả về tối đa 10 gợi ý |
 | RECOMMEND-01-02 | Hệ thống sử dụng lọc dựa trên nội dung | - Dựa trên kỹ năng người dùng khớp với yêu cầu công việc<br>- Dựa trên vị trí người dùng và vị trí công việc<br>- Dựa trên danh mục của công việc đã xem/ứng tuyển trước đó |
-| RECOMMEND-01-03 | Hệ thống xem xét hành vi người dùng | - Công việc đã xem hoặc lưu<br>- Công việc đã ứng tuyển<br>- Tìm kiếm đã thực hiện |
+| RECOMMEND-01-03 | Hệ thống xem xét hành vi người dùng | - Công việc đã xem hoặc lưu<br>- Công việc đã ứng tuyển<br>- Tìm kiếm đã thực hiện<br>- **Tín hiệu đang dùng:** lượt ứng tuyển; tin đã lưu khi có API lưu tin; tổng lượt xem tin (chỉ cho độ phổ biến). Chưa ghi nhận lượt xem theo người dùng và tìm kiếm |
 | RECOMMEND-01-04 | Hệ thống cung cấp giải thích cho các gợi ý | - Lý do hiển thị với mỗi gợi ý<br>- Ví dụ: "Dựa trên kỹ năng React và JavaScript của bạn"<br>- Ví dụ: "Tương tự như công việc bạn đã xem" |
 | RECOMMEND-01-05 | Hệ thống hỗ trợ làm mới gợi ý | - Gợi ý được tạo lại định kỳ<br>- Gợi ý mới khi làm mới trang<br>- Cache với TTL 6 giờ |
 | RECOMMEND-01-06 | Hệ thống xử lý người dùng mới (cold start) | - Đối với người dùng mới, gợi ý công việc phổ biến<br>- Đối với người dùng không có lịch sử, hiển thị công việc xu hướng<br>- Tinh chỉnh dần khi hành vi người dùng được thu thập |
@@ -309,8 +311,8 @@ flowchart TB
 
 | Điểm cuối | Phương thức | Tham số truy vấn | Phản hồi | Quy tắc xác thực |
 |:----------|:------------|:-----------------|:---------|:-----------------|
-| `/api/jobs/recommended` | GET | `limit`, `refresh` | `{ items, reasons }` | Người dùng phải được xác thực; vai trò phải là Người tìm việc |
-| `/api/jobs/recommended/explain` | GET | `job_id` | `{ reason, score }` | Người dùng phải được xác thực |
+| `/api/jobs/recommended` | GET | `limit` (1–10, mặc định 10), `refresh` (bool) | `{ items, total, isCached, generatedAt }`; mỗi item gồm tóm tắt tin với `company`/`category` lồng nhau, `strategy` (`Collaborative` \| `Content` \| `Popular`) và `reason` | Vai trò User (người tìm việc); 401/403 dạng Problem Details; `limit`/`refresh` sai → 400 kèm `errors.limit`/`errors.refresh` |
+| `/api/jobs/recommended/explain` | GET | `jobId` | `{ reason, score }` | (hoãn, chưa triển khai) Người dùng phải được xác thực |
 
 ---
 
