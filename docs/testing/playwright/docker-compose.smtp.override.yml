@@ -1,0 +1,7 @@
+# Dùng khi test: auth-svc trong Docker phải gửi mail tới container MailHog
+# (mặc định SMTP_HOST=localhost trỏ vào chính container auth nên mail không tới MailHog).
+services:
+  auth:
+    environment:
+      SMTP_HOST: mailhog
+      SMTP_PORT: "1025"

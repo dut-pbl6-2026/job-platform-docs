@@ -1,0 +1,72 @@
+﻿Test Case ID,Test Case Description,Test Case Procedure,Expected Results,Pre-conditions,Test Type,Automation Tool / Script
+[AUTH-01-07/08] Quên mật khẩu & đặt lại mật khẩu (US-02b) — tests/password-reset.spec.ts,,,,,,
+PWD-UI-01,Gửi yêu cầu quên mật khẩu với email đã đăng ký,"1. Mở /forgot-password
+2. Nhập email đã đăng ký
+3. Bấm ""Gửi liên kết đặt lại""
+4. Đọc MailHog (GET /api/v2/search?kind=to&query=email)","- Hiện thông báo thành công ""Nếu email tồn tại, liên kết đặt lại đã được gửi""
+- MailHog có email chứa link /reset-password?token=...",Có tài khoản User đã đăng ký (qua API); web chạy; MailHog :8025 nhận email của auth-svc,Automation,Playwright (TypeScript): page.getByRole('status') toContainText; expect.poll() lấy token từ MailHog
+PWD-UI-02,Email không tồn tại → cùng thông báo (chống dò email),"1. Mở /forgot-password
+2. Nhập email chưa đăng ký
+3. Bấm ""Gửi liên kết đặt lại""","- Hiện đúng thông báo thành công như PWD-UI-01
+- Không hiện lỗi (role=alert)",Không cần đăng nhập,Automation,Playwright (TypeScript): toContainText(GENERIC); getByRole('alert') toHaveCount(0)
+PWD-UI-03,"Email sai định dạng → báo lỗi phía client, không gọi API","1. Mở /forgot-password
+2. Nhập ""not-an-email""
+3. Bấm gửi","- Hiện lỗi ""Email không hợp lệ""
+- KHÔNG có request POST /forgot-password",Không cần đăng nhập,Automation,Playwright (TypeScript): page.on('request') + expect(called).toBe(false)
+PWD-UI-04,Mật khẩu mới yếu → báo lỗi,"1. Mở link reset từ email (/reset-password?token=...)
+2. Nhập mật khẩu ""weakpass"" + xác nhận giống nhau
+3. Bấm ""Đặt lại mật khẩu""","- Hiện lỗi ""Mật khẩu 8+ ký tự, 1 chữ hoa, 1 số""
+- Token chưa bị tiêu thụ",Có token từ PWD-UI-01,Automation,Playwright (TypeScript): getByPlaceholder(...).fill(); getByRole('alert') toHaveText(...)
+PWD-UI-05,Xác nhận mật khẩu không khớp → báo lỗi,"1. Mở link reset
+2. Mật khẩu mới ""NewPassw0rd1"", xác nhận ""Different1Pass""
+3. Bấm đặt lại","- Hiện lỗi ""Xác nhận mật khẩu không khớp""",Có token từ PWD-UI-01,Automation,Playwright (TypeScript): toHaveText('Xác nhận mật khẩu không khớp')
+PWD-UI-06,Luồng đầy đủ: mở link trong email → đặt mật khẩu mới,"1. Mở link reset lấy từ email
+2. Kiểm tra ô Token được điền sẵn
+3. Nhập mật khẩu mới hợp lệ + xác nhận
+4. Bấm ""Đặt lại mật khẩu""","- Ô Token tự điền đúng token
+- Hiện thông báo thành công
+- Tự chuyển về /login",Có token từ PWD-UI-01,Automation,Playwright (TypeScript): toHaveValue(token); toHaveURL(/\/login/)
+PWD-UI-07,Đăng nhập bằng mật khẩu mới,"1. Mở /login
+2. Nhập email + mật khẩu mới
+3. Bấm Đăng nhập",- Vào được /dashboard,Đã chạy PWD-UI-06,Automation,Playwright (TypeScript): loginViaUi(); toHaveURL(/dashboard/)
+PWD-UI-08,Đăng nhập bằng mật khẩu cũ bị từ chối,"1. Mở /login
+2. Nhập email + mật khẩu cũ
+3. Bấm Đăng nhập","- Hiện lỗi (role=alert), vẫn ở /login",Đã chạy PWD-UI-06,Automation,Playwright (TypeScript): getByRole('alert') toBeVisible(); toHaveURL(/login/)
+PWD-UI-09,Link reset đã dùng (one-time) không dùng lại được,"1. Mở lại link reset đã dùng ở PWD-UI-06
+2. Nhập mật khẩu mới hợp lệ
+3. Bấm đặt lại","- Hiện lỗi ""Token không hợp lệ hoặc đã hết hạn""",Đã chạy PWD-UI-06,Automation,Playwright (TypeScript): toHaveText('Token không hợp lệ hoặc đã hết hạn')
+PWD-UI-10,Token nhập tay sai,"1. Mở /reset-password (không có token)
+2. Nhập token ""totally-invalid-token"" + mật khẩu hợp lệ
+3. Bấm đặt lại","- Hiện lỗi ""Token không hợp lệ hoặc đã hết hạn""",Không cần đăng nhập,Automation,Playwright (TypeScript): toHaveText('Token không hợp lệ hoặc đã hết hạn')
+PWD-UI-11,Gửi quá 5 lần/IP/giờ → UI báo thất bại (HTTP 429),"1. Mở /forgot-password
+2. Gửi yêu cầu lặp lại tới khi vượt hạn mức (đã dùng 2 lần ở UI-01/02)","- Lần vượt hạn mức: hiện lỗi ""Gửi yêu cầu thất bại. Vui lòng thử lại.""",Bộ đếm rate-limit mới (restart auth-svc trước khi chạy — run-tests.sh làm sẵn),Automation,Playwright (TypeScript): vòng lặp submit; getByRole('alert') toContainText('Gửi yêu cầu thất bại')
+PWD-UI-12,Link reset quá hạn 15 phút,"1. Tạo token qua forgot-password
+2. UPDATE ""PasswordResetTokens"" SET ""ExpiresAt"" = now() - interval '1 minute'
+3. Mở link, đặt mật khẩu mới","- Hiện lỗi ""Token không hợp lệ hoặc đã hết hạn""",Có token; truy cập được DB auth,Manual,Chưa tự động hóa (cần chỉnh DB/đồng hồ)
+[PROFILE-01] Quản lý hồ sơ cá nhân (PROFILE-01-01 → 01-05) — tests/profile.spec.ts,,,,,,
+PROF-UI-01,Chưa đăng nhập vào /profile,1. Mở /profile khi chưa đăng nhập,- Bị chuyển về /login,Chưa đăng nhập,Automation,Playwright (TypeScript): page.goto('/profile'); toHaveURL(/login/)
+PROF-UI-02,Hồ sơ mới hiện họ tên mặc định và trạng thái trống,"1. Đăng nhập
+2. Mở /profile","- Tiêu đề ""Hồ sơ của tôi""; tên = họ tên đăng ký
+- ""Chưa có chức danh"", ""Chưa có kỹ năng""",Có tài khoản User đã đăng ký; đã đăng nhập trên UI (/dashboard),Automation,Playwright (TypeScript): locator('.profile-name') toHaveText; getByText('Chưa có kỹ năng')
+PROF-UI-03,Sửa thông tin hợp lệ (PROFILE-01-01),"1. Bấm ""Sửa thông tin""
+2. Nhập Họ tên, Chức danh, Điện thoại, Địa chỉ
+3. Bấm ""Lưu""","- Hiện ""Đã lưu hồ sơ""
+- Trang hiển thị giá trị mới (tên, chức danh, số điện thoại)",Có tài khoản User đã đăng ký; đã đăng nhập trên UI (/dashboard),Automation,Playwright (TypeScript): fill(); getByText('Đã lưu hồ sơ') toBeVisible()
+PROF-UI-04,Họ tên quá ngắn,"1. Bấm ""Sửa thông tin""
+2. Nhập họ tên ""A""
+3. Bấm ""Lưu""","- Hiện lỗi ""Họ tên tối thiểu 2 ký tự""; không lưu",Có tài khoản User đã đăng ký; đã đăng nhập trên UI (/dashboard),Automation,Playwright (TypeScript): getByText('Họ tên tối thiểu 2 ký tự') toBeVisible()
+PROF-UI-05,Thêm rồi xóa kỹ năng (PROFILE-01-02),"1. Mục Kỹ năng → ""Thêm""
+2. Tên ""C#"", mức 4/5, 3 năm → ""Lưu kỹ năng""
+3. Bấm × ở chip C#","- Chip ""C# · 4/5 · 3 năm"" xuất hiện
+- Sau khi xóa, chip biến mất",Có tài khoản User đã đăng ký; đã đăng nhập trên UI (/dashboard),Automation,Playwright (TypeScript): locator('input[type=range]').fill('4'); skill-chip toContainText / toHaveCount(0)
+PROF-UI-06,Thêm kỹ năng thiếu tên,"1. Mục Kỹ năng → ""Thêm""
+2. Để trống tên → ""Lưu kỹ năng""","- Hiện lỗi ""Nhập tên kỹ năng""",Có tài khoản User đã đăng ký; đã đăng nhập trên UI (/dashboard),Automation,Playwright (TypeScript): getByText('Nhập tên kỹ năng') toBeVisible()
+PROF-UI-07,Thêm kinh nghiệm làm việc (PROFILE-01-03),"1. Mục Kinh nghiệm → ""Thêm""
+2. Công ty ""Enfue"", chức danh, ngày bắt đầu, tick ""Đang làm việc"" → ""Lưu kinh nghiệm""","- Mục Kinh nghiệm hiển thị ""Enfue""",Có tài khoản User đã đăng ký; đã đăng nhập trên UI (/dashboard),Automation,Playwright (TypeScript): getByLabel('Đang làm việc').check(); toBeVisible()
+PROF-UI-08,Thêm học vấn (PROFILE-01-04),"1. Mục Học vấn → ""Thêm""
+2. Trường ""DUT"", bằng ""Cử nhân"", ngành, ngày bắt đầu → ""Lưu học vấn""","- Hiển thị ""Cử nhân — Kỹ thuật phần mềm"" và ""DUT""",Có tài khoản User đã đăng ký; đã đăng nhập trên UI (/dashboard),Automation,Playwright (TypeScript): getByText('Cử nhân — Kỹ thuật phần mềm') toBeVisible()
+PROF-UI-09,Dữ liệu sửa trên UI phải được lưu ở backend (PROFILE-01-05) — LỖI ĐÃ BIẾT,"1. Sửa Chức danh = ""Persisted Headline"" và lưu trên UI
+2. Gọi GET /api/profiles/me bằng JWT của user","- KỲ VỌNG: HTTP 200, headline = ""Persisted Headline""
+- THỰC TẾ: UI gọi /api/profile/* (số ít) → 404 → web chuyển sang mock localStorage nên backend không có dữ liệu → test ghi nhận là expected-fail",Có tài khoản User đã đăng ký; đã đăng nhập trên UI (/dashboard),Automation (bug),Playwright (TypeScript): test.fail(); request.get('/api/profiles/me') expect(200)
+PROF-UI-10,Thêm học vấn thiếu ngành,"1. Mục Học vấn → ""Thêm""
+2. Chỉ nhập Trường ""DUT"" → ""Lưu học vấn""","- Hiện lỗi ""Điền trường, bằng, ngành, ngày bắt đầu"" (UI chặt hơn backend, backend cho phép bỏ trống bằng/ngành)",Có tài khoản User đã đăng ký; đã đăng nhập trên UI (/dashboard),Automation,"Playwright (TypeScript): getByText('Điền trường, bằng, ngành, ngày bắt đầu') toBeVisible()"
