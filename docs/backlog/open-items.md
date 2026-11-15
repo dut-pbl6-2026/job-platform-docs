@@ -17,7 +17,9 @@ These need a decision or an external input. Nothing here can be finished by code
 | A7 | Web build variable | Set repository variable `VITE_API_URL=https://jobs.ioaspire.com` in the web repo, so the published build calls the right host. | Open. |
 | A8 | Existing Postgres volume | Init scripts run only on an empty data volume. An existing VM needs a one-off ownership migration; dev needs `docker compose down -v` once. | Open. Only if a VM already has data. |
 | A9 | Gmail sending limits | A consumer Google account has a daily sending cap. Confirm volume is acceptable, or pick a transactional mail provider. | Open. |
-| A10 | First Company of an organisation | Self-serve company sign-up with a verified work email (chosen, AUTH-01-10 and AUTH-01-11). Not chosen: (a) operator script, (b) Admin creates Companies, (c) manual approval. | Decided 2026-11-15 by the owner. Specified in AUTH-01-06, AUTH-01-10 and AUTH-01-11. |
+| A10 | First Company of an organisation | Self-serve company sign-up with a verified work email (chosen, AUTH-01-10 and AUTH-01-11). A sign-up whose domain already belongs to a verified Company becomes a join request for that Company's admin, not a second Company (AUTH-01-12). Not chosen: (a) operator script, (b) Admin creates Companies, (c) manual approval. | Decided 2026-11-15 by the owner. Specified in AUTH-01-06, AUTH-01-10 to AUTH-01-15. |
+| A11 | Join-request waiting period | `COMPANY_JOIN_REQUEST_TTL_DAYS`. The SRS records **7 days** as the proposed default (AUTH-01-13). After expiry the requester may escalate to support (AUTH-01-14); there is no automatic takeover. | Open. The owner chooses the number. |
+| A12 | Meaning of `Company.verified` | The SRS records the proposed meaning: set to true when the founding admin completes work-email verification (AUTH-01-10, AUTH-01-11). It proves a mailbox at the domain, not that the company is genuine, and domain routing (AUTH-01-12) relies on it. Alternative: a manual platform check before a Company is verified (slower; close to option (c) of A10). Note: the first person to sign up with a domain becomes that Company's admin, so a squatter can claim a domain before the real company does. | Open. The owner confirms the meaning or picks the alternative. |
 
 ## B. Decided, engineering in progress
 
@@ -34,13 +36,13 @@ These need a decision or an external input. Nothing here can be finished by code
 | B9 | CVs to Azure Blob Storage | Private container, access by short-lived SAS URL or streaming. |
 | B10 | Backups | Daily dump of Postgres and CV blobs, 7-day retention, tested restore. |
 | B11 | Scoring worker | Runs automatically when an applicant applies. Compares CV to job description. Recruiter sees the score on the applicant list and the application detail. Applicants never see it. |
-| B12 | Invite codes for recruiter registration | Invite codes let a recruiter join an existing Company only. Only the company creator (`companies.created_by`, the company admin) issues codes. Single-use, 7-day expiry. Registration validates and redeems the code through job-svc. Company sign-up does not use codes. Specified in SRS AUTH-01-06, AUTH-01-09 and AUTH-01-10. Engineering in progress. |
+| B12 | Invite codes for recruiter registration | Invite codes let a recruiter join an existing Company only. Only the company creator (`companies.created_by`, the company admin) issues codes. Each code is bound to one email address and is accepted only with that address. Single-use, 7-day expiry. Registration validates and redeems the code through job-svc. Company sign-up does not use codes. Specified in SRS AUTH-01-06, AUTH-01-09, AUTH-01-10 and AUTH-01-15. Engineering in progress. |
 | B13 | Crawled jobs as external events | Crawler publishes `job.external` to Kafka; search-svc indexes it with embeddings. |
 | B14 | Recruiter id on `application.submitted` | Add the recruiter user id to the event so notif-svc can email the recruiter. |
 | B15 | Search JSON to camelCase | search-svc responses change from snake_case to camelCase, and ai-svc and web change with it. |
 | B16 | Shared release 0.3.1 | Bump the version and add CHANGELOG.md once the DLQ PR merges. |
 | B17 | Closed jobs hidden from public detail | Decided. Implement in job-svc and confirm Pending stays hidden. |
-| B18 | Mobile and web registration flow | "Check your email" screen, `/verify-email` page, and resend-verification screen. |
+| B18 | Mobile and web registration flow | "Check your email" screen, `/verify-email` page, and resend-verification screen. Also the join-request status screen with the escalate action (AUTH-01-13, AUTH-01-14), and the invite-code field that asks for the bound email (AUTH-01-15). |
 | B19 | Resend-verification endpoint | For unverified accounts whose link expired. Rate-limited, generic response. |
 | B20 | Refresh-token concurrency | Concurrency token on the refresh-token row so only one refresh wins. |
 | B21 | Mask emails in audit logs | Done in auth-svc PR #46. Confirm across other services. |
@@ -64,6 +66,9 @@ These need a decision or an external input. Nothing here can be finished by code
 | C9 | Gateway HSTS consistency with the edge (Caddy sets it). |
 | C10 | Dependabot: patch bumps only. .NET 11 stays deferred. |
 | C11 | Linting: Biome is the gate in web. Mobile and backend have no equivalent check to review. |
+| C12 | Multi-company (agency) support: one account managing several Companies. Not in scope now; one Company per account (AUTH-01-06). |
+| C13 | Email to the Company admin when a join request is created. Not in this version (AUTH-01-12). |
+| C14 | Remove `POST /api/companies`. Every Recruiter has a Company, so the endpoint always returns `409 ACCOUNT_ALREADY_HAS_COMPANY` (AUTH-01-06). Decide whether to delete it. |
 
 ## D. Known limits accepted for now
 
