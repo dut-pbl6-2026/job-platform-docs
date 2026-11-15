@@ -58,25 +58,30 @@ Dịch vụ Xác thực quản lý danh tính người dùng, đăng ký, đăng
 | AUTH-01-03 | Hệ thống cấp access token với thời gian hiệu lực giới hạn | - Access token có hiệu lực trong 1 giờ<br>- Token chứa user ID, email và các claim về vai trò<br>- Token được ký mã hóa bằng mật mã |
 | AUTH-01-04 | Hệ thống hỗ trợ cơ chế làm mới token có thời hạn xác định | - Điểm cuối làm mới: `POST /api/auth/refresh`<br>- Refresh token có hiệu lực **7 ngày** kể từ khi cấp (có thể cấu hình qua `REFRESH_TOKEN_TTL_DAYS`); nếu chọn “Ghi nhớ đăng nhập” → **30 ngày** (`REFRESH_TOKEN_REMEMBER_ME_TTL_DAYS`)<br>- Refresh token được lưu dạng **hash SHA-256** với `expiry_date` (TTL tuyệt đối, không sliding) và `is_revoked`, index trên `expiry_date`, purge cron hàng ngày<br>- Refresh token cũ bị vô hiệu hóa khi sử dụng (rotation); phát hiện reuse → thu hồi cả family và yêu cầu đăng nhập lại<br>- Hết hạn → `401 Unauthorized` và yêu cầu đăng nhập lại; cặp token mới được trả về khi hợp lệ |
 | AUTH-01-05 | Hệ thống hỗ trợ đăng xuất (vô hiệu hóa token) | - Điểm cuối đăng xuất: `POST /api/auth/logout`<br>- Refresh token bị vô hiệu hóa<br>- Access token vẫn có hiệu lực cho đến khi hết hạn (không blocklist; TTL ngắn 1 giờ) |
-| AUTH-01-06 | Hệ thống gán vai trò và liên kết Company trong quá trình đăng ký | - Trường vai trò trong form đăng ký<br>- Vai trò mặc định = Người dùng<br>- Vai trò Nhà tuyển dụng yêu cầu `companyId` (FK → Company); nếu chưa có Company, client tạo trước qua `POST /api/companies` hoặc gửi `companyName` (deprecated) để server tự tạo Company |
+| AUTH-01-06 | Hệ thống gán vai trò và liên kết Nhà tuyển dụng với một Company đã có trong quá trình đăng ký | - Trường vai trò trong form đăng ký<br>- Vai trò mặc định = Người dùng<br>- Đăng ký Nhà tuyển dụng yêu cầu `inviteCode` hợp lệ (AUTH-01-09); Company được lấy từ mã, không lấy từ dữ liệu client gửi lên<br>- Đăng ký không bao giờ tạo Company; đường tạo tự động qua `companyName` (deprecated) bị loại bỏ (auth-svc chưa từng triển khai)<br>- Company do Nhà tuyển dụng đã đăng nhập tạo qua `POST /api/companies`; người đó là `created_by` và là người duy nhất phát mã mời của Company<br>- Mục mở A10: chưa có đường đưa Company đầu tiên của một tổ chức vào hệ thống |
 | AUTH-01-07 | Hệ thống cho phép yêu cầu đặt lại mật khẩu qua email | - Điểm cuối: `POST /api/auth/forgot-password { email }`<br>- Nếu email tồn tại, tạo reset_token (UUID), lưu **hash SHA-256** + `expiry_date` = 15 phút, `is_used=false`<br>- Gửi email chứa link `{WEB_URL}/reset-password?token=...` (TTL 15 phút, one-time)<br>- Luôn trả `200 OK` kể cả khi email không tồn tại (chống enumeration)<br>- Rate-limit: 5 yêu cầu / IP / giờ |
 | AUTH-01-08 | Hệ thống cho phép đặt lại mật khẩu bằng token | - Điểm cuối: `POST /api/auth/reset-password { token, newPassword }`<br>- Token phải hợp lệ, chưa hết hạn, chưa dùng<br>- `newPassword` phải thỏa mãn độ mạnh như AUTH-01-01<br>- Vô hiệu hóa token sau khi dùng (`is_used=true`), **thu hồi tất cả refresh tokens** của user (bắt đăng nhập lại trên thiết bị khác)<br>- Trả về `200 OK` + hướng dẫn đăng nhập lại |
+| AUTH-01-09 | Hệ thống chỉ cho phép người tạo Company phát hành mã mời Nhà tuyển dụng dùng một lần và có thời hạn | - Điểm cuối phát hành: `POST /api/companies/{id}/invite-codes` (job-svc). Người gọi phải có vai trò Nhà tuyển dụng và bằng `companies.created_by`; nếu không trả `403 INVITE_CODE_NOT_CREATOR`. Company có `created_by` là GUID rỗng (dữ liệu cũ) không được phát mã<br>- Mã: 12 ký tự từ bảng `ABCDEFGHJKLMNPQRSTUVWXYZ23456789` (không có 0, O, 1, I), sinh bằng bộ sinh số ngẫu nhiên an toàn về mật mã; hiển thị dạng `XXXX-XXXX-XXXX`<br>- Phản hồi chỉ hiển thị mã gốc một lần. Máy chủ chỉ lưu băm SHA-256 của mã đã chuẩn hóa (cắt khoảng trắng, chữ hoa, bỏ dấu gạch) trong cột duy nhất. Mã gốc không bao giờ được ghi log hoặc trả lại<br>- Hạn: 7 ngày kể từ khi phát hành (`INVITE_CODE_TTL_DAYS`, mặc định 7). Không gia hạn trượt<br>- Dùng một lần: auth-svc gọi `check` (chỉ đọc), kiểm tra email chưa tồn tại, rồi gọi `redeem`, một lệnh cập nhật có điều kiện (`used_at IS NULL AND expires_at > now`) trả về `companyId`. Mỗi mã chỉ đổi được một lần<br>- Nếu tạo người dùng thất bại sau khi redeem, auth-svc gọi `release` với `inviteCodeId`. Nếu release cũng thất bại, mã vẫn ở trạng thái đã dùng và người tạo phải phát mã mới<br>- Mọi mã không hợp lệ (không tồn tại, sai định dạng, hết hạn, đã dùng) đều trả cùng một lỗi `422 INVITE_CODE_INVALID`<br>- Endpoint nội bộ được bảo vệ bởi `JOB_INTERNAL_TOKEN_FOR_AUTH` (fail-closed: 401 khi chưa đặt hoặc sai token) và không đi qua gateway<br>- `POST /api/auth/register` giữ nguyên giới hạn tần suất và quy tắc lỗi hiện có; mã mời không tạo thêm tín hiệu lộ sự tồn tại của tài khoản |
 
 #### 3.2.3 Đặc tả API
 
 | Điểm cuối | Phương thức | Body yêu cầu | Phản hồi | Quy tắc xác thực |
 |:----------|:------------|:-------------|:---------|:-----------------|
-| `/api/auth/register` | POST | `{ email, password, fullName, role, companyId?, companyName? (deprecated) }` | `{ userId, message }` | Email phải là duy nhất; mật khẩu đáp ứng yêu cầu độ mạnh; vai trò phải hợp lệ; nếu `role=Recruiter` phải có `companyId` hoặc `companyName`; `companyId` ưu tiên |
+| `/api/auth/register` | POST | `{ email, password, fullName, role, inviteCode? }` | `{ userId, message }` | Email phải là duy nhất; mật khẩu đáp ứng yêu cầu độ mạnh; vai trò phải hợp lệ; nếu `role=Recruiter` bắt buộc có `inviteCode` và mã phải đổi được thành một Company (AUTH-01-09), nếu không trả `422 INVITE_CODE_INVALID`; `companyId` và `companyName` bị bỏ qua |
 | `/api/auth/login` | POST | `{ email, password, rememberMe? }` | `{ accessToken, refreshToken, user }` | Thông tin đăng nhập phải khớp; tài khoản phải đang hoạt động; `rememberMe` quyết định TTL refresh (7 vs 30 ngày) |
 | `/api/auth/refresh` | POST | `{ refreshToken }` | `{ accessToken, refreshToken }` | Token phải hợp lệ, chưa hết hạn (7/30 ngày) và chưa bị thu hồi; reuse → thu hồi family |
 | `/api/auth/logout` | POST | `{ refreshToken }` | `{ message }` | Token phải hợp lệ và chưa bị thu hồi |
 | `/api/auth/me` | GET | (Bearer Token) | `{ user }` | Token phải hợp lệ; trả về hồ sơ người dùng |
 | `/api/auth/forgot-password` | POST | `{ email }` | `{ message }` | Luôn 200 OK; rate-limit 5/IP/giờ |
 | `/api/auth/reset-password` | POST | `{ token, newPassword }` | `{ message }` | Token hợp lệ, chưa hết hạn (15 phút), chưa dùng; mật khẩu đạt độ mạnh |
-| `/api/companies` | POST | `{ name, tax_code?, website?, description?, logo_url?, address?, industry?, size? }` | `{ id, message }` | Yêu cầu vai trò Nhà tuyển dụng hoặc Quản trị viên; `name` duy nhất; `tax_code` duy nhất nếu có |
+| `/api/companies` | POST | `{ name, tax_code?, website?, description?, logo_url?, address?, industry?, size? }` | `{ id, message }` | Yêu cầu vai trò Nhà tuyển dụng; người gọi trở thành `created_by`; `name` duy nhất; `tax_code` duy nhất nếu có |
 | `/api/companies/{id}` | GET | - | CompanyDetailDTO | Public; id hợp lệ |
 | `/api/companies` | GET | Query: `q, page, size` | Paginated `[Company]` | Public |
 | `/api/companies/{id}` | PUT | `{ name, tax_code?, website?, description?, logo_url?, address?, industry?, size? }` | `{ message }` | Yêu cầu vai trò Nhà tuyển dụng là chủ sở hữu (`created_by`); `name` duy nhất; `tax_code` duy nhất nếu có; **phần mở rộng** (NICE) hỗ trợ US-07b "tạo và quản lý hồ sơ công ty" |
+| `/api/companies/{id}/invite-codes` | POST | - | `{ id, code, expiresAt }` (201; `code` chỉ hiển thị một lần) | Yêu cầu vai trò Nhà tuyển dụng và người gọi = `created_by`, nếu không trả `403 INVITE_CODE_NOT_CREATOR`; Company không tồn tại trả `404 COMPANY_NOT_FOUND`; xem AUTH-01-09 |
+| `/api/internal/invite-codes/check` | POST | `{ code }` | `{ companyId, companyName }` | Chỉ nội bộ, không đi qua gateway; bearer `JOB_INTERNAL_TOKEN_FOR_AUTH` (fail-closed `401`); chỉ đọc; mã không hợp lệ trả `422 INVITE_CODE_INVALID` |
+| `/api/internal/invite-codes/redeem` | POST | `{ code }` | `{ inviteCodeId, companyId }` | Cùng cơ chế xác thực; dùng một lần, nguyên tử; mã không hợp lệ trả `422 INVITE_CODE_INVALID` |
+| `/api/internal/invite-codes/{id}/release` | POST | - | `204 No Content` | Cùng cơ chế xác thực; chỉ xóa `used_at` sau khi đăng ký thất bại |
 
 #### 3.2.4 Mô hình dữ liệu
 
@@ -86,6 +91,7 @@ Dịch vụ Xác thực quản lý danh tính người dùng, đăng ký, đăng
 | Refresh Token | id, token_hash (duy nhất, SHA-256), user_id, expiry_date (TTL tuyệt đối 7 ngày, 30 ngày nếu rememberMe), is_revoked, created_at | Nhiều Refresh Tokens thuộc về một User |
 | Password Reset Token | id, user_id (FK), token_hash (SHA-256, duy nhất), expiry_date (TTL 15 phút), is_used, created_at | Nhiều Password Reset Tokens thuộc về một User |
 | Company | id, name (duy nhất), tax_code (duy nhất, nullable), verified (bool, mặc định false), logo_url, website, description, address, industry, size, created_by (FK → User, chủ sở hữu Recruiter), created_at, updated_at | Một Company có nhiều Users (Recruiters); Một Company có nhiều Jobs |
+| Mã mời (Invite Code) | id, company_id (FK → Company), code_hash (SHA-256 hex, duy nhất), created_by (FK → User, người phát hành), expires_at (created_at + 7 ngày), used_at (nullable), created_at | Nhiều Mã mời thuộc về một Company; mỗi mã được đổi tối đa một lần |
 
 ---
 
@@ -630,7 +636,7 @@ flowchart TB
 
 | Thành phần | ID | Tính năng chính | Tuần mục tiêu | Người phụ trách |
 |:-----------|:---|:----------------|:--------------|:----------------|
-| Dịch vụ Xác thực | AUTH-01 | Đăng ký, Đăng nhập, JWT, Làm mới Token (7/30 ngày), Đăng xuất, Quên/Đặt lại mật khẩu (TTL 15 phút) | 1 | TM1 |
+| Dịch vụ Xác thực | AUTH-01 | Đăng ký, Đăng nhập, JWT, Làm mới Token (7/30 ngày), Đăng xuất, Quên/Đặt lại mật khẩu (TTL 15 phút), Mã mời Nhà tuyển dụng (7 ngày, dùng một lần) | 1 | TM1 |
 | Dịch vụ Tin tuyển dụng | JOB-01 | CRUD Tin, Danh mục, Tin đã lưu | 2 | TM2 |
 | Dịch vụ Tìm kiếm | SEARCH-01 | Tìm kiếm Từ khóa, Lọc Địa điểm, Phân trang | 2 | TM2 |
 | Dịch vụ Ứng tuyển | APP-01 | Ứng tuyển, Tải CV, Theo dõi Trạng thái, Lịch sử | 3 | TM1 |

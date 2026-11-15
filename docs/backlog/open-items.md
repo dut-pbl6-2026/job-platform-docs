@@ -17,6 +17,7 @@ These need a decision or an external input. Nothing here can be finished by code
 | A7 | Web build variable | Set repository variable `VITE_API_URL=https://jobs.ioaspire.com` in the web repo, so the published build calls the right host. | Open. |
 | A8 | Existing Postgres volume | Init scripts run only on an empty data volume. An existing VM needs a one-off ownership migration; dev needs `docker compose down -v` once. | Open. Only if a VM already has data. |
 | A9 | Gmail sending limits | A consumer Google account has a daily sending cap. Confirm volume is acceptable, or pick a transactional mail provider. | Open. |
+| A10 | First Company of an organisation | `POST /api/companies` needs a Recruiter, and Recruiter registration now needs an invite code for an existing Company (AUTH-01-06, AUTH-01-09). Nothing in the platform creates the first Company or its first creator. Options: (a) an operator creates the first Company and creator with a one-off script; (b) Admin may create Companies (SRS 3.2.3 and gateway policy change); (c) a manual approval step. | Open. Does not block the invite-code work, but blocks onboarding a new employer. |
 
 ## B. Decided, engineering in progress
 
@@ -33,7 +34,7 @@ These need a decision or an external input. Nothing here can be finished by code
 | B9 | CVs to Azure Blob Storage | Private container, access by short-lived SAS URL or streaming. |
 | B10 | Backups | Daily dump of Postgres and CV blobs, 7-day retention, tested restore. |
 | B11 | Scoring worker | Runs automatically when an applicant applies. Compares CV to job description. Recruiter sees the score on the applicant list and the application detail. Applicants never see it. |
-| B12 | Invite codes for recruiter registration | Only the company creator issues codes. Single-use, 7-day expiry. Registration validates the code through job-svc. |
+| B12 | Invite codes for recruiter registration | Only the company creator (`companies.created_by`) issues codes. Single-use, 7-day expiry. Registration validates and redeems the code through job-svc. Specified in SRS AUTH-01-06 and AUTH-01-09. Engineering in progress. |
 | B13 | Crawled jobs as external events | Crawler publishes `job.external` to Kafka; search-svc indexes it with embeddings. |
 | B14 | Recruiter id on `application.submitted` | Add the recruiter user id to the event so notif-svc can email the recruiter. |
 | B15 | Search JSON to camelCase | search-svc responses change from snake_case to camelCase, and ai-svc and web change with it. |
