@@ -241,6 +241,7 @@ Phụ lục này cung cấp đặc tả API cho tất cả dịch vụ. Tài li�
 | **Tin** | `/api/categories` | GET | Lấy danh mục tin | BẮT BUỘC |
 | **Tìm kiếm** | `/api/search/jobs` | GET | Tìm kiếm tin | BẮT BUỘC |
 | **Tìm kiếm** | `/api/search/suggest` | GET | Gợi ý tự động hoàn thành | BẮT BUỘC |
+| **Nội bộ (search-svc)** | `/api/search/index`, `/api/search/bulk-index`, `/api/search/index/{id}` | POST, POST, DELETE | Ghi chỉ mục chỉ cho script tái lập chỉ mục vận hành (`X-Internal-Token` = `SEARCH_INDEX_TOKEN`); sự kiện job đi vào chỉ mục qua Kafka, route gateway là ẩn danh nên token là hàng rào duy nhất | BẮT BUỘC |
 | **Ứng tuyển** | `/api/applications` | POST | Ứng tuyển | BẮT BUỘC |
 | **Ứng tuyển** | `/api/applications/me` | GET | Lịch sử của ứng viên | BẮT BUỘC |
 | **Ứng tuyển** | `/api/applications/{id}` | GET | Chi tiết ứng tuyển | BẮT BUỘC |

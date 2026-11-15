@@ -241,6 +241,7 @@ This appendix provides the API specifications for all services. Complete OpenAPI
 | **Job** | `/api/categories` | GET | Get job categories | MUST |
 | **Search** | `/api/search/jobs` | GET | Search jobs | MUST |
 | **Search** | `/api/search/suggest` | GET | Autocomplete suggestions | MUST |
+| **Internal (search-svc)** | `/api/search/index`, `/api/search/bulk-index`, `/api/search/index/{id}` | POST, POST, DELETE | Index writes for the ops reindex script only (`X-Internal-Token` = `SEARCH_INDEX_TOKEN`); job events reach the index over Kafka, gateway route is anonymous so the token is the only barrier | MUST |
 | **Application** | `/api/applications` | POST | Apply for job | MUST |
 | **Application** | `/api/applications/me` | GET | Applicant's history | MUST |
 | **Application** | `/api/applications/{id}` | GET | Application details | MUST |

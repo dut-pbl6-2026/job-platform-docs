@@ -187,6 +187,7 @@ The Search Service provides full-text search capabilities. It indexes job postin
 |:---------|:-------|:------------------|:---------|:-----------------|
 | `/api/search/jobs` | GET | `q`, `location`, `page`, `size` | `{ items, total, page, size, totalPages }` | Page must be >= 0; size must be between 1 and 100 |
 | `/api/search/suggest` | GET | `q` | `[ "suggestion1", ... ]` | Query parameter is required |
+| `/api/search/index`, `/api/search/bulk-index`, `/api/search/index/{id}` | POST, POST, DELETE | - | `200`; `401` when the header is missing or wrong; `503` when `SEARCH_INDEX_TOKEN` is unset outside Development | Internal index writes, not for clients. The header `X-Internal-Token` must equal `SEARCH_INDEX_TOKEN` (SHA-256, fixed-time compare), and the gateway route for `/api/search/*` is anonymous, so the token is the only barrier. The only caller is the ops script `scripts/reindex_jobs.py`, which copies the documents of an old index into the current one so each document gets its embedding again after a mapping change. Job events reach the index over Kafka; job-svc no longer calls these endpoints |
 
 #### 3.4.4 Searchable Fields
 
@@ -326,7 +327,7 @@ The API Gateway acts as the single entry point for all client requests. It handl
 | `/api/auth/register-company` | Auth Service | No |
 | `/api/auth/verify-email` | Auth Service | No |
 | `/api/auth/login` | Auth Service | No |
-| `/api/auth/*` | Auth Service | Yes |
+| `/api/auth/*` | Auth Service | No at the gateway (the route is anonymous, because login, refresh, register, register-company, verify-email and the password-reset endpoints are under it). Auth-svc requires a valid token on `/me` and `/logout` itself, so the enforcement point is the service, not the route |
 | `/api/jobs/*` | Job Service | Yes |
 | `/api/search/*` | Search Service | Yes |
 | `/api/applications/*` | Application Service | Yes |
@@ -337,6 +338,8 @@ The API Gateway acts as the single entry point for all client requests. It handl
 | `/api/companies/me/join-request`, `/api/companies/me/join-request/escalate` | Job Service | Yes |
 | `POST /api/companies`, `PUT /api/companies/{id}`, `POST /api/companies/{id}/invite-codes`, `/api/companies/{id}/join-requests*` | Job Service | Yes, Recruiter role (ownership check in the service) |
 | `/api/health` | Gateway (aggregated) | No |
+
+This table is the coarse routing view. The per-route policies in §8.8.2.1 (Gateway Route Policies) are authoritative and more specific: public reads under `/api/jobs/*`, `/api/search/*`, `/api/companies/*`, `GET /api/profiles/{userId}` and `/api/applications/status-flow` are anonymous, while the mutating routes under the same prefixes need a token, and a role where the table above says so. Routes without a policy are anonymous; a request to a protected route with no token returns `401` and with the wrong role returns `403`.
 
 Company routes: the literal `/api/companies/me/join-request*` routes must match before `/api/companies/{id}`, so `me` is never read as a company id. Recruiter routes are checked by job-svc against the forwarded `X-User-Role` and `X-User-Id` headers (GW-01-03). Internal routes (`/api/internal/*`) are never routed by the gateway.
 
