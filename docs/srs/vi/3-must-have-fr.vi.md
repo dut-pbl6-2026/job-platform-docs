@@ -187,6 +187,7 @@ Dịch vụ Tìm kiếm cung cấp khả năng tìm kiếm toàn văn. Nó lập
 |:----------|:------------|:-----------------|:---------|:-----------------|
 | `/api/search/jobs` | GET | `q`, `location`, `page`, `size` | `{ items, total, page, size, totalPages }` | Page phải >= 0; size phải nằm trong khoảng 1-100 |
 | `/api/search/suggest` | GET | `q` | `[ "gợi ý1", ... ]` | Tham số truy vấn là bắt buộc |
+| `/api/search/index`, `/api/search/bulk-index`, `/api/search/index/{id}` | POST, POST, DELETE | - | `200`; `401` khi thiếu hoặc sai header; `503` khi `SEARCH_INDEX_TOKEN` chưa đặt và không phải môi trường Development | Ghi chỉ mục nội bộ, không dành cho client. Header `X-Internal-Token` phải bằng `SEARCH_INDEX_TOKEN` (SHA-256, so sánh thời gian cố định), và route gateway cho `/api/search/*` là ẩn danh, nên token là hàng rào duy nhất. Người gọi duy nhất là script vận hành `scripts/reindex_jobs.py`: script chép tài liệu của một chỉ mục cũ sang chỉ mục hiện tại để mỗi tài liệu được tạo lại embedding sau khi đổi mapping. Sự kiện job đi vào chỉ mục qua Kafka; job-svc không còn gọi các điểm cuối này |
 
 #### 3.4.4 Các trường có thể tìm kiếm
 
@@ -326,7 +327,7 @@ API Gateway đóng vai trò là điểm vào duy nhất cho tất cả yêu cầ
 | `/api/auth/register-company` | Auth Service | Không |
 | `/api/auth/verify-email` | Auth Service | Không |
 | `/api/auth/login` | Auth Service | Không |
-| `/api/auth/*` | Auth Service | Có |
+| `/api/auth/*` | Auth Service | Không ở gateway (route ẩn danh, vì login, refresh, register, register-company, verify-email và các điểm cuối đặt lại mật khẩu nằm dưới nó). Auth-svc tự yêu cầu token hợp lệ trên `/me` và `/logout`, nên nơi kiểm soát là service, không phải route |
 | `/api/jobs/*` | Job Service | Có |
 | `/api/search/*` | Search Service | Có |
 | `/api/applications/*` | Application Service | Có |
@@ -337,6 +338,8 @@ API Gateway đóng vai trò là điểm vào duy nhất cho tất cả yêu cầ
 | `/api/companies/me/join-request`, `/api/companies/me/join-request/escalate` | Job Service | Có |
 | `POST /api/companies`, `PUT /api/companies/{id}`, `POST /api/companies/{id}/invite-codes`, `/api/companies/{id}/join-requests*` | Job Service | Có, vai trò Nhà tuyển dụng (kiểm tra chủ sở hữu trong service) |
 | `/api/health` | Gateway (tổng hợp) | Không |
+
+Bảng này là góc nhìn định tuyến thô. Chính sách theo từng route ở §8.8.2.1 (Chính sách route của Gateway) là căn cứ và chi tiết hơn: các thao tác đọc công khai dưới `/api/jobs/*`, `/api/search/*`, `/api/companies/*`, `GET /api/profiles/{userId}` và `/api/applications/status-flow` là ẩn danh, còn các route thay đổi dữ liệu dưới cùng các tiền tố đó cần token, và cần vai trò khi bảng trên ghi. Route không có chính sách là ẩn danh; gọi route được bảo vệ mà không có token trả `401`, sai vai trò trả `403`.
 
 Thứ tự khớp route Company: các route cố định `/api/companies/me/join-request*` phải khớp trước `/api/companies/{id}`, để `me` không bị đọc như mã Company. Các route yêu cầu Nhà tuyển dụng được job-svc kiểm tra qua header `X-User-Role` và `X-User-Id` được chuyển tiếp (GW-01-03). Route nội bộ (`/api/internal/*`) không bao giờ được gateway định tuyến.
 
