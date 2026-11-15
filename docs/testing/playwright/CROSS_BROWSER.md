@@ -1,30 +1,30 @@
-# Kiểm thử đa trình duyệt và thiết bị (PBL6-68)
+# Cross-Browser and Device Testing (PBL6-68)
 
-Chạy cùng bộ test E2E (`password-reset`, `profile`, `resume-score`) trên 5 project Playwright. Demo-record không nằm trong phạm vi.
+Runs the same E2E suite (`password-reset`, `profile`, `resume-score`) on 5 Playwright projects. Demo-record is out of scope.
 
-## Phạm vi và giới hạn
+## Scope and limits
 
-| Project | Engine | Thiết bị | Ghi chú |
+| Project | Engine | Device | Notes |
 |---|---|---|---|
 | `chromium` | Chromium | Desktop | |
 | `firefox` | Firefox | Desktop | |
-| `webkit` | WebKit | Desktop | Engine WebKit của Playwright, **không phải Safari** |
-| `mobile-pixel-5` | Chromium | Pixel 5 (giả lập) | Giả lập viewport và user agent, **không phải thiết bị thật** |
-| `mobile-iphone-13` | WebKit | iPhone 13 (giả lập) | Giả lập, **không phải iOS 16+ thật** |
+| `webkit` | WebKit | Desktop | Playwright's WebKit engine, **not Safari** |
+| `mobile-pixel-5` | Chromium | Pixel 5 (emulated) | Emulated viewport and user agent, **not a real device** |
+| `mobile-iphone-13` | WebKit | iPhone 13 (emulated) | Emulated, **not real iOS 16+** |
 
-Chưa kiểm thử: Safari thật, iOS 16+ thật, Android 12+ thật. Các kết quả dưới đây không được coi là bằng chứng cho các thiết bị đó.
+Not tested yet: real Safari, real iOS 16+, real Android 12+. The results below must not be taken as evidence for those devices.
 
-## Môi trường
+## Environment
 
-- Stack dev (`job-platform-infra`, `docker compose up`) đang chạy, gateway ở `:5000`.
-- Web dev ở `:3000` (`VITE_API_BASE_URL=http://localhost:5000/api`).
-- auth-svc dùng `docker-compose.smtp.override.yml` để gửi mail tới MailHog (`:8025`).
-- `SCORE_JOB_ID` phải là job **Python** đang Active (test RS-UI-03 kiểm tra điểm CV cho job Python).
-- Playwright `1.64.1`, chạy trong image `mcr.microsoft.com/playwright:v1.64.1-noble`. Image Ubuntu này là nền tảng WebKit được hỗ trợ. Trên Fedora, các thư viện WebKit không khớp (ICU 74 không có sẵn).
+- Dev stack (`job-platform-infra`, `docker compose up`) is running, gateway on `:5000`.
+- Web dev server on `:3000` (`VITE_API_BASE_URL=http://localhost:5000/api`).
+- auth-svc uses `docker-compose.smtp.override.yml` to send mail to MailHog (`:8025`).
+- `SCORE_JOB_ID` must be an active **Python** job (test RS-UI-03 checks the CV score for the Python job).
+- Playwright `1.64.1`, runs in the image `mcr.microsoft.com/playwright:v1.64.1-noble`. This Ubuntu image is the supported platform for WebKit. On Fedora, the WebKit libraries do not match (ICU 74 is not available).
 
-## Cách chạy
+## How to run
 
-Chạy từng project riêng và reset bộ đếm giới hạn gửi mail của auth-svc trước mỗi project. Nếu chạy cả 5 project trong một lần, bộ đếm 5 lần/giờ sẽ bị dùng chung và các test sau đó sẽ lỗi không liên quan đến code.
+Run each project separately and reset the auth-svc mail rate-limit counter before each project. If all 5 projects run in one go, the 5-per-hour counter is shared and later tests fail for reasons unrelated to the code.
 
 ```bash
 # trước mỗi project
@@ -44,11 +44,11 @@ docker run --rm --network host -v "$PWD:/work" -w /work \
   --project=<project> --workers=1
 ```
 
-## Kết quả
+## Results
 
-Mỗi project chạy 29 test.
+Each project runs 29 tests.
 
-| Project | Đạt | Lỗi | Lỗi duy nhất |
+| Project | Passed | Failed | Only failure |
 |---|---|---|---|
 | `chromium` | 28 | 1 | PWD-UI-11 |
 | `firefox` | 28 | 1 | PWD-UI-11 |
@@ -56,22 +56,22 @@ Mỗi project chạy 29 test.
 | `mobile-pixel-5` | 28 | 1 | PWD-UI-11 |
 | `mobile-iphone-13` | 28 | 1 | PWD-UI-11 |
 
-### Lỗi PWD-UI-11 (lỗi sản phẩm, không phải lỗi test)
+### PWD-UI-11 failure (product defect, not a test defect)
 
-Test kiểm tra: gửi quá 5 yêu cầu quên mật khẩu trong 1 giờ thì UI hiển thị thông báo gửi thất bại bằng tiếng Việt.
+What the test checks: after more than 5 forgot-password requests within 1 hour, the UI shows a failure message in Vietnamese.
 
-Thực tế: giới hạn hoạt động đúng, nhưng trang quên mật khẩu hiển thị thông báo gốc của backend bằng tiếng Anh: `Forgot password request limit exceeded. Please try again later.`
+What happens: the limit works correctly, but the forgot-password page shows the backend's original message in English: `Forgot password request limit exceeded. Please try again later.`
 
-Vi phạm quy tắc: copy giao diện chỉ dùng tiếng Việt. Cần sửa ở `job-platform-web` (`ForgotPasswordPage`, ánh xạ lỗi 429 sang thông báo tiếng Việt). Đây là lỗi web, không sửa trong bộ test.
+Rule violation: UI copy must be Vietnamese only. Fix in `job-platform-web` (`ForgotPasswordPage`, map the 429 error to a Vietnamese message). This is a web defect; it is not fixed in the test suite.
 
-### Các sửa đổi trong bộ test (lỗi test, không phải lỗi sản phẩm)
+### Changes made to the test suite (test defects, not product defects)
 
-- Selector trường nhập đã lỗi thời: `#email` → `#forgot-email`; `getByPlaceholder` → `#reset-pwd`, `#reset-confirm`, `#reset-token` (trang reset không đặt placeholder).
-- Sau đăng nhập, app chuyển tới `/jobs` (không có route `/dashboard`).
-- Thông báo link đã dùng: khớp theo nội dung thay vì khớp chính xác từng chữ, vì alert có thêm link "Nhận liên kết mới".
-- `SCORE_JOB_ID` trỏ tới job React trước đây; test RS-UI-03 cần job Python.
+- Outdated input selectors: `#email` → `#forgot-email`; `getByPlaceholder` → `#reset-pwd`, `#reset-confirm`, `#reset-token` (the reset page does not set placeholders).
+- After login, the app redirects to `/jobs` (there is no `/dashboard` route).
+- Link message: matched by content instead of exact text, because the alert also contains the link "Nhận liên kết mới" ("Get a new link").
+- `SCORE_JOB_ID` pointed to a React job earlier; test RS-UI-03 needs a Python job.
 
-## Không chắc chắn
+## Uncertainties
 
-- Kết quả WebKit và iPhone là của engine WebKit trong Playwright và chế độ giả lập, không phải Safari hay thiết bị thật.
-- Kết quả chỉ dựa trên một lần chạy cho mỗi project, trên stack dev local.
+- The WebKit and iPhone results come from the WebKit engine in Playwright and emulation mode, not from Safari or a real device.
+- The results are based on a single run per project, on the local dev stack.

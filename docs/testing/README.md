@@ -1,17 +1,17 @@
-# Kiểm thử tự động E2E (Playwright) — Quên/đặt lại mật khẩu & Hồ sơ cá nhân
+# Automated E2E Testing (Playwright) — Forgot/Reset Password & Personal Profile
 
-| File | Nội dung |
+| File | Contents |
 |:--|:--|
-| `test-cases.xlsx` / `test-cases.csv` | Bảng test case (22 case: 20 Automation, 1 Automation ghi nhận lỗi, 1 Manual) |
-| `playwright/tests/password-reset.spec.ts` | 11 test UI cho AUTH-01-07/08 |
-| `playwright/tests/profile.spec.ts` | 10 test UI cho PROFILE-01 |
-| `playwright/tests/resume-score.spec.ts` | 8 test UI/API cho SCORE-01 (chấm điểm CV); cần `SCORE_JOB_ID=<uuid job>`, gateway có route `/api/ai/*`, `ai-svc` :6000, `job-svc` :5002. Fixture CV trong `playwright/tests/fixtures/` (PDF text, PDF scan, DOCX, PDF trống, .txt) |
-| `playwright/run-tests.sh` | Chuẩn bị môi trường (SMTP→MailHog, reset rate-limit) rồi chạy Playwright |
+| `test-cases.xlsx` / `test-cases.csv` | Test case table (22 cases: 20 Automation, 1 Automation that records a defect, 1 Manual) |
+| `playwright/tests/password-reset.spec.ts` | 11 UI tests for AUTH-01-07/08 |
+| `playwright/tests/profile.spec.ts` | 10 UI tests for PROFILE-01 |
+| `playwright/tests/resume-score.spec.ts` | 8 UI/API tests for SCORE-01 (CV scoring); requires `SCORE_JOB_ID=<job uuid>`, the gateway must have the `/api/ai/*` route, `ai-svc` on :6000, `job-svc` on :5002. CV fixtures are in `playwright/tests/fixtures/` (text PDF, scanned PDF, DOCX, empty PDF, .txt) |
+| `playwright/run-tests.sh` | Prepares the environment (SMTP→MailHog, resets the rate limit) and then runs Playwright |
 
-Chạy: `cd playwright && WEB_URL=http://localhost:3000 ./run-tests.sh`, xem báo cáo bằng `npx playwright show-report`.
-Mỗi test đều có trace, screenshot (video khi fail) → dùng làm minh chứng cho báo cáo.
+Run: `cd playwright && WEB_URL=http://localhost:3000 ./run-tests.sh`; view the report with `npx playwright show-report`.
+Every test records a trace and a screenshot (video on failure) → use these as evidence for the report.
 
-Lưu ý:
-- `docker-compose.yml` dev đặt `SMTP_HOST=localhost` nên mail reset không tới MailHog; `playwright/docker-compose.smtp.override.yml` chỉ sửa khi test.
-- Container web ở `:5173` là bản build cũ; khi test hãy chạy web từ `main` (Vite, cổng 3000 vì gateway chỉ cho CORS 5173/3000) và đặt `VITE_API_BASE_URL=http://localhost:5000/api`.
-- **Lỗi đã biết (PROF-UI-09):** web gọi `/api/profile/*` (số ít), gateway chỉ có `/api/profiles/*` → 404 → web dùng dữ liệu giả trong localStorage.
+Notes:
+- The dev `docker-compose.yml` sets `SMTP_HOST=localhost`, so reset emails do not reach MailHog; `playwright/docker-compose.smtp.override.yml` should only be applied when testing.
+- The web container on `:5173` is an old build; when testing, run the web app from `main` (Vite, port 3000 because the gateway only allows CORS from 5173/3000) and set `VITE_API_BASE_URL=http://localhost:5000/api`.
+- **Known issue (PROF-UI-09):** the web app calls `/api/profile/*` (singular), but the gateway only has `/api/profiles/*` → 404 → the web app falls back to mock data in localStorage.
