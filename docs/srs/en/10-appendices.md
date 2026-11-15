@@ -279,7 +279,7 @@ This appendix provides the database schema for all services following the databa
 | **users** | id (UUID, PK), email (unique), password_hash, full_name, role, company_id (FK → companies.id, nullable; set once for a Recruiter), is_active, created_at, updated_at | User account information; Recruiter belongs to one Company |
 | **refresh_tokens** | id (UUID, PK), user_id (FK), token_hash (SHA-256, unique), expiry_date (absolute TTL 7 days, 30 days if rememberMe, indexed), is_revoked, created_at | Refresh tokens for JWT rotation; daily purge cron |
 | **password_reset_tokens** | id (UUID, PK), user_id (FK), token_hash (SHA-256, unique), expiry_date (TTL 15 min, indexed), is_used, created_at | Password reset tokens (one-time) |
-| **pending_company_signups** | id (UUID, PK), company_name, tax_code (nullable), email, password_hash, token_hash (SHA-256, unique), full_name, expiry_date (created_at + 24 h, indexed), created_at | Company sign-up waiting for email verification (AUTH-01-10, AUTH-01-11); deleted on verification or expiry |
+| **pending_company_signups** | id (UUID, PK), company_name, tax_code (nullable), email, password_hash, token_hash (SHA-256, unique), full_name, expiry_date (created_at + 24 h, indexed), created_at | Company sign-up waiting for email verification (AUTH-01-10, AUTH-01-11); deleted on verification, on a later sign-up for the same email, or on expiry |
 | **companies** | id (UUID, PK), name (unique), tax_code (unique, nullable), verified (bool, default false), email_domain (unique, nullable), logo_url, website, description, address, industry, size, created_by (FK → users.id, Recruiter owner), created_at, updated_at | Company profile; one Company has many Users and many Jobs |
 
 ### E.2 Job Database (job_db)
