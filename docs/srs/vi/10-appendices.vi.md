@@ -217,12 +217,15 @@ Phụ lục này cung cấp đặc tả API cho tất cả dịch vụ. Tài li�
 | **Xác thực** | `/api/auth/me` | GET | Hồ sơ người dùng hiện tại | BẮT BUỘC |
 | **Xác thực** | `/api/auth/forgot-password` | POST | Yêu cầu đặt lại mật khẩu (TTL 15 phút, one-time, rate-limit 5/IP/giờ) | BẮT BUỘC |
 | **Xác thực** | `/api/auth/reset-password` | POST | Đặt lại mật khẩu bằng token | BẮT BUỘC |
+| **Xác thực** | `/api/auth/register-company` | POST | Company tự đăng ký (bắt buộc email công việc đã xác minh) | BẮT BUỘC |
+| **Xác thực** | `/api/auth/verify-email` | POST | Xác minh email đăng ký Company; tạo quản trị viên và Company (dùng một lần, 24 giờ) | BẮT BUỘC |
 | **Công ty** | `/api/companies` | POST | Tạo Company | BẮT BUỘC |
 | **Công ty** | `/api/companies/{id}` | GET | Chi tiết Company | BẮT BUỘC |
 | **Công ty** | `/api/companies` | GET | Danh sách / tìm kiếm Company | BẮT BUỘC |
 | **Công ty** | `/api/companies/{id}` | PUT | Cập nhật Company (chỉ Recruiter chủ sở hữu) | NICE (phần mở rộng: US-07b quản lý hồ sơ công ty) |
-| **Công ty** | `/api/companies/{id}/invite-codes` | POST | Phát hành mã mời Nhà tuyển dụng (chỉ người tạo; mã gốc chỉ trả về một lần) | BẮT BUỘC |
+| **Công ty** | `/api/companies/{id}/invite-codes` | POST | Phát hành mã mời Nhà tuyển dụng để gia nhập Company đã có (chỉ người tạo; mã gốc chỉ trả về một lần) | BẮT BUỘC |
 | **Nội bộ (job-svc)** | `/api/internal/invite-codes/check`, `/redeem`, `/{id}/release` | POST | Kiểm tra, đổi và giải phóng mã mời cho auth-svc; bearer `JOB_INTERNAL_TOKEN_FOR_AUTH`; không đi qua gateway | BẮT BUỘC |
+| **Nội bộ (job-svc)** | `/api/internal/companies` | POST | Tạo Company cho đăng ký doanh nghiệp đã xác minh (chỉ auth-svc); bearer `JOB_INTERNAL_TOKEN_FOR_AUTH`; không đi qua gateway | BẮT BUỘC |
 | **Tin** | `/api/jobs` | POST | Tạo tin | BẮT BUỘC |
 | **Tin** | `/api/jobs/recruiter` | GET | Lấy tin của nhà tuyển dụng | BẮT BUỘC |
 | **Tin** | `/api/jobs/{id}` | PUT | Cập nhật tin | BẮT BUỘC |
@@ -270,6 +273,7 @@ Phụ lục này cung cấp lược đồ cơ sở dữ liệu cho tất cả d�
 | **users** | id (UUID, PK), email (unique), password_hash, full_name, role, company_id (FK → companies.id, nullable, chỉ Recruiter), is_active, created_at, updated_at | Thông tin tài khoản người dùng; Recruiter thuộc một Company |
 | **refresh_tokens** | id (UUID, PK), user_id (FK), token_hash (SHA-256, unique), expiry_date (TTL tuyệt đối 7 ngày, 30 ngày nếu rememberMe, indexed), is_revoked, created_at | Refresh tokens cho cơ chế làm mới JWT; purge cron hàng ngày |
 | **password_reset_tokens** | id (UUID, PK), user_id (FK), token_hash (SHA-256, unique), expiry_date (TTL 15 phút, indexed), is_used, created_at | Token đặt lại mật khẩu (one-time) |
+| **pending_company_signups** | id (UUID, PK), company_name, tax_code (nullable), email, password_hash, token_hash (SHA-256, duy nhất), full_name, expiry_date (created_at + 24 giờ, indexed), created_at | Đăng ký Company chờ xác minh email (AUTH-01-10, AUTH-01-11); bị xóa khi xác minh hoặc hết hạn |
 | **companies** | id (UUID, PK), name (unique), tax_code (unique, nullable), verified (bool, default false), logo_url, website, description, address, industry, size, created_by (FK → users.id, chủ sở hữu Recruiter), created_at, updated_at | Hồ sơ Company; một Company có nhiều Users và nhiều Jobs |
 
 ### E.2 Cơ sở dữ liệu Tin (job_db)
