@@ -9,7 +9,7 @@
 //
 // Tiêu chí đạt (đặt trước khi chạy, không chỉnh theo kết quả):
 //   - >= 95% request trả đúng status (200) → metric checks{endpoint:X}
-//   - p95 latency: list < 500ms, search < 800ms, detail < 300ms, login < 800ms
+//   - p95 latency: list < 500ms, search < 800ms, detail < 300ms, login < 1000ms (PERF-01a, 25 concurrent logins)
 // Lưu ý: gateway có global rate limit 600 request/phút/IP (Gateway.Api/Program.cs).
 // Vượt ngưỡng này sẽ nhận 429; script KHÔNG tắt hay né giới hạn đó. 429 được tính là lỗi.
 
@@ -43,7 +43,9 @@ export const options = {
     'http_req_duration{endpoint:list}': ['p(95)<500'],
     'http_req_duration{endpoint:search}': ['p(95)<800'],
     'http_req_duration{endpoint:detail}': ['p(95)<300'],
-    'http_req_duration{endpoint:login}': ['p(95)<800'],
+    // PERF-01a: 95% of login requests within 1000ms at 25 concurrent logins (this scenario is 25 VU).
+    // The 100-concurrent login level has no SLO and is not asserted here.
+    'http_req_duration{endpoint:login}': ['p(95)<1000'],
   },
 };
 

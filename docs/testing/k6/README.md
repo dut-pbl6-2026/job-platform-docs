@@ -48,9 +48,9 @@ Tổng 100 VU = 4 scenario × 25 VU, mỗi scenario gọi một endpoint:
 | list | < 500 ms |
 | search | < 800 ms |
 | detail | < 300 ms |
-| login | < 800 ms |
+| login | < 1000 ms (PERF-01a: 95% trong 1000 ms ở 25 đăng nhập đồng thời; scenario login có 25 VU) |
 
-Ngưỡng p95 bám theo NFR `PERF-01` (p95 < 500 ms) và `PERF-02` (search p95 < 200 ms). Các ngưỡng trên nới lỏng hơn để đo trên WSL2 local; đây không phải chỉ tiêu production.
+Ngưỡng p95 bám theo NFR `PERF-01` (p95 < 500 ms), `PERF-01a` (login p95 < 1000 ms ở 25 đăng nhập đồng thời) và `PERF-02` (search p95 < 200 ms). Mức 100 đăng nhập đồng thời không có SLO: script không khẳng định p95 cho mức đó. Các ngưỡng trên nới lỏng hơn để đo trên WSL2 local; đây không phải chỉ tiêu production.
 
 Lưu ý quan trọng về giới hạn gateway: `Gateway.Api/Program.cs` đặt global rate limit **600 request/phút/IP**. Tất cả VU chạy từ cùng một IP (localhost), nên tải 100 VU vượt giới hạn này. Phần request vượt sẽ nhận 429. Script **không** tắt hay né giới hạn đó (không đổi IP, không giả header). Đây là một phát hiện của bài test, không phải lỗi của script.
 
@@ -63,7 +63,7 @@ Lần chạy: k6 v2.4.0 (image `grafana/k6`), WSL2, stack local, gateway `localh
 | list | **0,19%** (không đạt) | 21,24 ms | < 500 ms (đạt, nhưng không có ý nghĩa, xem dưới) |
 | search | **0,17%** (không đạt) | 21,28 ms | < 800 ms (đạt, nhưng không có ý nghĩa, xem dưới) |
 | detail | **0,11%** (không đạt) | 21,16 ms | < 300 ms (đạt, nhưng không có ý nghĩa, xem dưới) |
-| login | **0,01%** (không đạt) | 20,74 ms | < 800 ms (đạt, nhưng không có ý nghĩa, xem dưới) |
+| login | **0,01%** (không đạt) | 20,74 ms | < 1000 ms (đạt, nhưng không có ý nghĩa, xem dưới) |
 
 Toàn bộ: 1.438.082 response là **429** (99,87%), chỉ 1.798 response là 200. Tổng số 429 cho thấy gateway global rate limit (600 request/phút/IP) đã chặn gần như toàn bộ tải.
 
