@@ -1,0 +1,72 @@
+# Open items backlog
+
+Status as of 2026-11-15. Items are grouped by what blocks a real deployment.
+
+## A. Must decide before a real deployment
+
+These need a decision or an external input. Nothing here can be finished by code alone.
+
+| # | Item | Options | Status |
+|---|---|---|---|
+| A1 | Where services run and how they find each other | Azure Container Apps, AKS, or one VM with compose and Consul | Open. Waiting for the teacher's expectations. Consul alone does not provide scaling. |
+| A2 | Where stateful services run | Containers on the VM, or Azure managed services (Postgres, Kafka, Redis, Elasticsearch) | Open. Hardest to change later, so decide before data exists. Backups are already decided as daily with 7-day retention. |
+| A3 | Azure subscription, VM details, and DNS | Confirm the subscription, the VM name, size and public IP. Create the DNS A record for `jobs.ioaspire.com` to the VM IP. | Open. Needed before Caddy can issue a certificate. |
+| A4 | Azure Key Vault wiring | Create the vault, give the VM a managed identity, and change the deploy script to fetch secrets. | Decided (Key Vault). Blocked on A3. |
+| A5 | Rotate committed secrets | Gateway and auth dev JWT secrets are in git history, and the profile encryption key must be replaced. Nothing is deployed yet, so this is a pre-deploy checklist. | Open. Do before the first deploy. |
+| A6 | Production values in Key Vault | Gmail address and App Password (`SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`), `WEB_URL`, `DOMAIN`, the six Postgres role passwords, and `IMAGE_TAG`. | Open. Blocked on A4. |
+| A7 | Web build variable | Set repository variable `VITE_API_URL=https://jobs.ioaspire.com` in the web repo, so the published build calls the right host. | Open. |
+| A8 | Existing Postgres volume | Init scripts run only on an empty data volume. An existing VM needs a one-off ownership migration; dev needs `docker compose down -v` once. | Open. Only if a VM already has data. |
+| A9 | Gmail sending limits | A consumer Google account has a daily sending cap. Confirm volume is acceptable, or pick a transactional mail provider. | Open. |
+
+## B. Decided, engineering in progress
+
+| # | Item | Notes |
+|---|---|---|
+| B1 | Gateway scale-out | Trust only its own network for forwarded client IPs; rate limits move to Redis. PR in progress. |
+| B2 | Auth scale-out | Rate limits move to Redis; access tokens last 15 minutes. PR in progress. |
+| B3 | Dead-letter topic | Failed Kafka messages go to `<topic>.dlq` and the partition moves on. PR in progress (shared). |
+| B4 | Mail queue | Durable outbox with retries so failed mail is not silently lost. |
+| B5 | Migrations as a separate deploy step | Stop auto-migrating on service start. |
+| B6 | Outbox coverage | job-svc create, update and delete publish directly after commit (lost events on crash). app-svc publishes after save with no outbox. Extend the existing outbox to both. Also stop the outbox giving up after five failed cycles. |
+| B7 | RS256 signing with JWKS | Only auth-svc holds the private key. Replaces the one HS256 secret shared by every service. |
+| B8 | Per-caller internal tokens | Replace the one shared `INTERNAL_SERVICE_TOKEN` with per-caller tokens. |
+| B9 | CVs to Azure Blob Storage | Private container, access by short-lived SAS URL or streaming. |
+| B10 | Backups | Daily dump of Postgres and CV blobs, 7-day retention, tested restore. |
+| B11 | Scoring worker | Runs automatically when an applicant applies. Compares CV to job description. Recruiter sees the score on the applicant list and the application detail. Applicants never see it. |
+| B12 | Invite codes for recruiter registration | Only the company creator issues codes. Single-use, 7-day expiry. Registration validates the code through job-svc. |
+| B13 | Crawled jobs as external events | Crawler publishes `job.external` to Kafka; search-svc indexes it with embeddings. |
+| B14 | Recruiter id on `application.submitted` | Add the recruiter user id to the event so notif-svc can email the recruiter. |
+| B15 | Search JSON to camelCase | search-svc responses change from snake_case to camelCase, and ai-svc and web change with it. |
+| B16 | Shared release 0.3.1 | Bump the version and add CHANGELOG.md once the DLQ PR merges. |
+| B17 | Closed jobs hidden from public detail | Decided. Implement in job-svc and confirm Pending stays hidden. |
+| B18 | Mobile and web registration flow | "Check your email" screen, `/verify-email` page, and resend-verification screen. |
+| B19 | Resend-verification endpoint | For unverified accounts whose link expired. Rate-limited, generic response. |
+| B20 | Refresh-token concurrency | Concurrency token on the refresh-token row so only one refresh wins. |
+| B21 | Mask emails in audit logs | Done in auth-svc PR #46. Confirm across other services. |
+| B22 | Web PR #42 | Mock gating and error text. Needs a rebase and `npm run lint:fix`. Remove the admin mock store that CodeQL flags. |
+| B23 | Web i18n migration | About 800 Vietnamese UI literal lines across about 52 files. Vietnamese and English through resource files. |
+| B24 | Web JSON handling | Remove the dual-format parsing after B15. |
+| B25 | Bootstrap admin | Command implemented (auth-svc #45). Run once per environment after the first deploy. |
+
+## C. Not started, lower priority
+
+| # | Item |
+|---|---|
+| C1 | Profile-svc leftovers: avatar URL scheme check, non-root Dockerfile, 404/403 existence check, committed dev connection string. |
+| C2 | job-svc and gateway test layers (contract, unit, integration). |
+| C3 | Translate the 17 Vietnamese Markdown files in docs to English. |
+| C4 | k6 login threshold: change from 800 ms to 1000 ms (PERF-01a). |
+| C5 | Mobile release signing: release builds must fail without a real keystore. Verify the Gradle guard on a machine with network access. |
+| C6 | Mobile candidate and registration copy: decide Vietnamese or English for the new strings (Vietnamese chosen; implement). |
+| C7 | Crawler: remaining Medium items after the external-event change. |
+| C8 | Test suite runtime: the search-svc suite takes about 14 minutes per run. Find the slow test or shutdown hang. |
+| C9 | Gateway HSTS consistency with the edge (Caddy sets it). |
+| C10 | Dependabot: patch bumps only. .NET 11 stays deferred. |
+| C11 | Linting: Biome is the gate in web. Mobile and backend have no equivalent check to review. |
+
+## D. Known limits accepted for now
+
+- Revocation fails open when Redis is down (documented trade-off).
+- Mail is fire-and-log until B4 lands.
+- Semantic search has no score cutoff, so weak matches still appear.
+- Company name is empty in chat job hits.
