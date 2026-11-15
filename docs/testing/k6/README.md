@@ -1,15 +1,15 @@
-# Load test k6 — Gateway local (PBL6-67)
+# k6 Load Test — Local Gateway (PBL6-67)
 
-Script: `load-test.js`. Kiểm thử tải 100 VU trên các endpoint đọc chính và đăng nhập, qua gateway `http://localhost:5000/api`.
+Script: `load-test.js`. A 100-VU load test on the main read endpoints and login, through the gateway at `http://localhost:5000/api`.
 
-**Phạm vi và giới hạn**
-- Chạy trên WSL2, toàn bộ service nằm trong một compose file (`job-platform-infra/docker-compose.yml`). Đây **không phải production** và kết quả **không** đại diện cho Azure hay bất kỳ môi trường deploy nào.
-- Script từ chối `BASE_URL` không phải `localhost` / `127.0.0.1`. Không trỏ k6 vào production hoặc Azure.
-- Không tạo dữ liệu giả: nếu DB local không có job `Active` nào, `setup()` dừng với thông báo lỗi.
+**Scope and limits**
+- Runs on WSL2; all services are in one compose file (`job-platform-infra/docker-compose.yml`). This is **not production**, and the results do **not** represent Azure or any other deployment environment.
+- The script refuses any `BASE_URL` that is not `localhost` / `127.0.0.1`. Do not point k6 at production or Azure.
+- No fake data is created: if the local DB has no `Active` job, `setup()` stops with an error message.
 
-## Cách chạy
+## How to run
 
-Yêu cầu: stack local đang chạy (gateway :5000, search-svc :5003, job-svc :5002, auth-svc :5001). Chạy bằng Docker (không cần cài k6):
+Requirements: the local stack is running (gateway :5000, search-svc :5003, job-svc :5002, auth-svc :5001). To run with Docker (no k6 install needed):
 
 ```bash
 docker run --rm --network host \
@@ -17,7 +17,7 @@ docker run --rm --network host \
   grafana/k6 run --summary-export=/scripts/summary.json /scripts/load-test.js
 ```
 
-Nếu đã cài k6 (đã kiểm thử với k6 v2.4.0):
+If k6 is already installed (tested with k6 v2.4.0):
 
 ```bash
 k6 run load-test.js
@@ -25,49 +25,49 @@ k6 run load-test.js
 BASE_URL=http://localhost:5000/api k6 run load-test.js
 ```
 
-`--network host` là bắt buộc với Docker để `localhost:5000` trỏ về máy host. Thời gian chạy khoảng 3 phút (ramp 30s, giữ 2 phút, ramp-down 10s).
+`--network host` is required with Docker so that `localhost:5000` points to the host machine. The run takes about 3 minutes (30s ramp, 2 min hold, 10s ramp-down).
 
-## Kịch bản
+## Scenarios
 
-Tổng 100 VU = 4 scenario × 25 VU, mỗi scenario gọi một endpoint:
+Total 100 VUs = 4 scenarios × 25 VUs; each scenario calls one endpoint:
 
-| Scenario | Request | Endpoint thực tế | Ghi chú |
+| Scenario | Request | Actual endpoint | Notes |
 |:--|:--|:--|:--|
-| `list` | GET `/api/search/jobs?page=0&size=20` | search-svc | Danh sách job. `job-svc` không có endpoint danh sách công khai (`GET /api/jobs` trả 405), web cũng gọi search-svc. |
-| `search` | GET `/api/search/jobs?q=<từ khóa>&page=0&size=20` | search-svc | Từ khóa lấy ngẫu nhiên: react, developer, python, java, frontend. |
-| `detail` | GET `/api/jobs/{id}` | job-svc | Id lấy từ kết quả `list` trong `setup()`, chỉ lấy job `Active` (job `Pending` trả 404). |
-| `login` | POST `/api/auth/login` | auth-svc | User test đăng ký trong `setup()` bằng `POST /api/auth/register`, role `User`, mật khẩu `Abc12345`. Email duy nhất cho mỗi lần chạy. |
+| `list` | GET `/api/search/jobs?page=0&size=20` | search-svc | Job list. `job-svc` has no public list endpoint (`GET /api/jobs` returns 405); the web app also calls search-svc. |
+| `search` | GET `/api/search/jobs?q=<keyword>&page=0&size=20` | search-svc | Keyword picked at random: react, developer, python, java, frontend. |
+| `detail` | GET `/api/jobs/{id}` | job-svc | IDs come from the `list` results in `setup()`, only `Active` jobs (a `Pending` job returns 404). |
+| `login` | POST `/api/auth/login` | auth-svc | A test user is registered in `setup()` via `POST /api/auth/register`, role `User`, password `Abc12345`. The email is unique for each run. |
 
-## Tiêu chí đạt (đặt trước khi chạy)
+## Pass criteria (set before running)
 
-1. **Tỷ lệ đúng status ≥ 95%** cho từng endpoint (metric `checks{endpoint:X}`, mong đợi HTTP 200). Request bị 429 hoặc 5xx đều tính là lỗi.
-2. **p95 latency** cho từng endpoint:
+1. **Correct-status rate ≥ 95%** for each endpoint (metric `checks{endpoint:X}`, expecting HTTP 200). Requests that get 429 or 5xx count as failures.
+2. **p95 latency** for each endpoint:
 
-| Endpoint | p95 ngưỡng |
+| Endpoint | p95 threshold |
 |:--|:--|
 | list | < 500 ms |
 | search | < 800 ms |
 | detail | < 300 ms |
-| login | < 1000 ms (PERF-01a: 95% trong 1000 ms ở 25 đăng nhập đồng thời; scenario login có 25 VU) |
+| login | < 1000 ms (PERF-01a: 95% within 1000 ms at 25 concurrent logins; the login scenario has 25 VUs) |
 
-Ngưỡng p95 bám theo NFR `PERF-01` (p95 < 500 ms), `PERF-01a` (login p95 < 1000 ms ở 25 đăng nhập đồng thời) và `PERF-02` (search p95 < 200 ms). Mức 100 đăng nhập đồng thời không có SLO: script không khẳng định p95 cho mức đó. Các ngưỡng trên nới lỏng hơn để đo trên WSL2 local; đây không phải chỉ tiêu production.
+The p95 thresholds follow the NFRs `PERF-01` (p95 < 500 ms), `PERF-01a` (login p95 < 1000 ms at 25 concurrent logins) and `PERF-02` (search p95 < 200 ms). There is no SLO for 100 concurrent logins: the script does not assert a p95 for that level. The thresholds above are looser so they can be measured on local WSL2; they are not production targets.
 
-Lưu ý quan trọng về giới hạn gateway: `Gateway.Api/Program.cs` đặt global rate limit **600 request/phút/IP**. Tất cả VU chạy từ cùng một IP (localhost), nên tải 100 VU vượt giới hạn này. Phần request vượt sẽ nhận 429. Script **không** tắt hay né giới hạn đó (không đổi IP, không giả header). Đây là một phát hiện của bài test, không phải lỗi của script.
+Important note on the gateway limit: `Gateway.Api/Program.cs` sets a global rate limit of **600 requests/minute/IP**. All VUs run from the same IP (localhost), so 100 VUs exceed this limit. The excess requests receive 429. The script does **not** disable or work around that limit (no IP changes, no spoofed headers). This is a finding of the test, not a script bug.
 
-## Kết quả lần chạy
+## Run results
 
-Lần chạy: k6 v2.4.0 (image `grafana/k6`), WSL2, stack local, gateway `localhost:5000`, 100 VU, 2 phút 40 giây, 1.439.880 request. Dữ liệu job: 8 job `Active` trong search-svc (không có dữ liệu giả thêm). Exit code k6 = 99 (threshold không đạt).
+Run: k6 v2.4.0 (image `grafana/k6`), WSL2, local stack, gateway `localhost:5000`, 100 VUs, 2 minutes 40 seconds, 1,439,880 requests. Data: 8 `Active` jobs in search-svc (no extra fake data added). k6 exit code = 99 (threshold not met).
 
-| Endpoint | Tỷ lệ đúng status (mục tiêu ≥ 95%) | p95 (mọi response, gồm cả 429) | Ngưỡng p95 |
+| Endpoint | Correct-status rate (target ≥ 95%) | p95 (all responses, including 429) | p95 threshold |
 |:--|:--|:--|:--|
-| list | **0,19%** (không đạt) | 21,24 ms | < 500 ms (đạt, nhưng không có ý nghĩa, xem dưới) |
-| search | **0,17%** (không đạt) | 21,28 ms | < 800 ms (đạt, nhưng không có ý nghĩa, xem dưới) |
-| detail | **0,11%** (không đạt) | 21,16 ms | < 300 ms (đạt, nhưng không có ý nghĩa, xem dưới) |
-| login | **0,01%** (không đạt) | 20,74 ms | < 1000 ms (đạt, nhưng không có ý nghĩa, xem dưới) |
+| list | **0.19%** (not met) | 21.24 ms | < 500 ms (met, but meaningless, see below) |
+| search | **0.17%** (not met) | 21.28 ms | < 800 ms (met, but meaningless, see below) |
+| detail | **0.11%** (not met) | 21.16 ms | < 300 ms (met, but meaningless, see below) |
+| login | **0.01%** (not met) | 20.74 ms | < 1000 ms (met, but meaningless, see below) |
 
-Toàn bộ: 1.438.082 response là **429** (99,87%), chỉ 1.798 response là 200. Tổng số 429 cho thấy gateway global rate limit (600 request/phút/IP) đã chặn gần như toàn bộ tải.
+Overall: 1,438,082 responses were **429** (99.87%); only 1,798 responses were 200. The large number of 429s shows the gateway global rate limit (600 requests/minute/IP) blocked almost all of the load.
 
-**Cách đọc kết quả này**
-- Kết quả **không** đo được độ trễ của backend. Các p95 ở trên gần như chỉ đo thời gian gateway từ chối request. Không dùng các số này để kết luận về PERF-01 hay PERF-02.
-- Tiêu chí 95% **không đạt** ở cả bốn endpoint. Đây là kết quả thật của cấu hình hiện tại, không phải lỗi script. Script không tắt rate limit và không đổi IP.
-- Để đo độ trễ backend có ý nghĩa, cần một trong các cách sau (chưa thực hiện): hạ tải xuống dưới 10 request/giây tổng (ví dụ `constant-arrival-rate`), hoặc chạy trên môi trường có rate limit tách biệt cho test. Việc nới giới hạn gateway là quyết định của chủ dự án, không làm trong script này.
+**How to read these results**
+- The results do **not** measure backend latency. The p95 values above mostly measure how fast the gateway rejects requests. Do not use these numbers to draw conclusions about PERF-01 or PERF-02.
+- The 95% criterion is **not met** on all four endpoints. This is the real result of the current configuration, not a script error. The script does not disable the rate limit and does not change the IP.
+- To measure backend latency meaningfully, one of the following is needed (not yet done): lower the load to under 10 requests/second in total (for example with `constant-arrival-rate`), or run on an environment whose rate limit is separated for testing. Relaxing the gateway limit is a decision for the project owner and is not done in this script.
