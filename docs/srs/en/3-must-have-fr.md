@@ -58,25 +58,30 @@ The Authentication Service manages user identity, registration, login, and sessi
 | AUTH-01-03 | The system shall issue access tokens with a limited validity period | - Access token valid for 1 hour<br>- Token contains user ID, email, and role claims<br>- Token is cryptographically signed |
 | AUTH-01-04 | The system shall support refresh token rotation with a defined TTL | - Refresh endpoint: `POST /api/auth/refresh`<br>- Refresh token valid for **7 days** from issuance (configurable via `REFRESH_TOKEN_TTL_DAYS`); if “Remember Me” selected → **30 days** (`REFRESH_TOKEN_REMEMBER_ME_TTL_DAYS`)<br>- Refresh token stored as **SHA-256 hash** with `expiry_date` (absolute TTL, no sliding), indexed, purged by daily cron<br>- Old refresh token invalidated on use (rotation); reuse detection → revoke entire family and require re-login<br>- Expired → `401 Unauthorized`; new token pair returned when valid |
 | AUTH-01-05 | The system shall support logout (token invalidation) | - Logout endpoint: `POST /api/auth/logout`<br>- Refresh token invalidated<br>- Access token remains valid until expiry (no blocklist; short 1-hour TTL) |
-| AUTH-01-06 | The system shall assign roles and link Company during registration | - Role field in registration form<br>- Default role = User<br>- Recruiter role requires `companyId` (FK → Company); if no Company exists, client creates it first via `POST /api/companies` or sends `companyName` (deprecated) for server-side auto-create |
+| AUTH-01-06 | The system shall assign roles and link a Recruiter to an existing Company during registration | - Role field in registration form<br>- Default role = User<br>- Recruiter registration requires a valid `inviteCode` (AUTH-01-09); the Company comes from the code, never from client input<br>- Registration never creates a Company; the deprecated `companyName` auto-create path is removed (auth-svc never implemented it)<br>- A Company is created by a signed-in Recruiter via `POST /api/companies`; that user is its `created_by` and the only issuer of its invite codes<br>- Open item A10: no onboarding path yet for the first Company of an organisation |
 | AUTH-01-07 | The system shall allow requesting a password reset via email | - Endpoint: `POST /api/auth/forgot-password { email }`<br>- If email exists, create reset_token (UUID), store **SHA-256 hash** + `expiry_date` = 15 minutes, `is_used=false`<br>- Send email with link `{WEB_URL}/reset-password?token=...` (15-min TTL, one-time)<br>- Always return `200 OK` even if email not found (anti-enumeration)<br>- Rate-limit: 5 requests / IP / hour |
 | AUTH-01-08 | The system shall allow resetting password with a token | - Endpoint: `POST /api/auth/reset-password { token, newPassword }`<br>- Token must be valid, not expired, not used<br>- `newPassword` must meet strength as AUTH-01-01<br>- Invalidate token after use (`is_used=true`), **revoke all refresh tokens** of the user (force re-login on other devices)<br>- Return `200 OK` + login guidance |
+| AUTH-01-09 | The system shall let only a Company's creator issue single-use, expiring recruiter invite codes | - Issue endpoint: `POST /api/companies/{id}/invite-codes` (job-svc). Caller must have the Recruiter role and equal `companies.created_by`; otherwise `403 INVITE_CODE_NOT_CREATOR`. A Company whose `created_by` is the empty GUID (legacy rows) cannot issue codes<br>- Code: 12 characters from `ABCDEFGHJKLMNPQRSTUVWXYZ23456789` (no 0, O, 1 or I), generated with a cryptographic random generator; displayed as `XXXX-XXXX-XXXX`<br>- The response shows the plain code once. The server stores only the SHA-256 hash of the normalised code (trimmed, uppercase, dashes removed) in a unique column. The plain code is never logged or returned again<br>- Expiry: 7 days from issuance (`INVITE_CODE_TTL_DAYS`, default 7). No sliding window<br>- Single use: auth-svc calls `check` (read-only), then checks email uniqueness, then calls `redeem`, one conditional update (`used_at IS NULL AND expires_at > now`) that returns `companyId`. A code can be redeemed once<br>- If user creation fails after redeem, auth-svc calls `release` with the `inviteCodeId`. If release also fails, the code stays used and the creator must issue a new one<br>- Every bad code (unknown, malformed, expired, used) returns the same `422 INVITE_CODE_INVALID`<br>- Internal endpoints are protected by `JOB_INTERNAL_TOKEN_FOR_AUTH` (fail-closed: 401 when unset or wrong) and are not routed by the gateway<br>- `POST /api/auth/register` keeps its existing rate limit and error rules; the invite code adds no account-existence signal |
 
 #### 3.2.3 API Specifications
 
 | Endpoint | Method | Request Body | Response | Validation Rules |
 |:---------|:-------|:-------------|:---------|:-----------------|
-| `/api/auth/register` | POST | `{ email, password, fullName, role, companyId?, companyName? (deprecated) }` | `{ userId, message }` | Email must be unique; password meets strength requirements; role must be valid; if `role=Recruiter` must provide `companyId` or `companyName`; `companyId` takes precedence |
+| `/api/auth/register` | POST | `{ email, password, fullName, role, inviteCode? }` | `{ userId, message }` | Email must be unique; password meets strength requirements; role must be valid; if `role=Recruiter` `inviteCode` is required and must redeem to a Company (AUTH-01-09), otherwise `422 INVITE_CODE_INVALID`; `companyId` and `companyName` are ignored |
 | `/api/auth/login` | POST | `{ email, password, rememberMe? }` | `{ accessToken, refreshToken, user }` | Credentials must match; account must be active; `rememberMe` decides refresh TTL (7 vs 30 days) |
 | `/api/auth/refresh` | POST | `{ refreshToken }` | `{ accessToken, refreshToken }` | Token must be valid, not expired (7/30 days) and not revoked; reuse → revoke family |
 | `/api/auth/logout` | POST | `{ refreshToken }` | `{ message }` | Token must be valid and not already revoked |
 | `/api/auth/me` | GET | (Bearer Token) | `{ user }` | Token must be valid; returns user profile |
 | `/api/auth/forgot-password` | POST | `{ email }` | `{ message }` | Always 200 OK; rate-limit 5/IP/hour |
 | `/api/auth/reset-password` | POST | `{ token, newPassword }` | `{ message }` | Token valid, not expired (15 min), not used; password meets strength |
-| `/api/companies` | POST | `{ name, tax_code?, website?, description?, logo_url?, address?, industry?, size? }` | `{ id, message }` | Requires Recruiter or Admin role; `name` unique; `tax_code` unique if provided |
+| `/api/companies` | POST | `{ name, tax_code?, website?, description?, logo_url?, address?, industry?, size? }` | `{ id, message }` | Requires Recruiter role; the caller becomes `created_by`; `name` unique; `tax_code` unique if provided |
 | `/api/companies/{id}` | GET | - | CompanyDetailDTO | Public; valid id |
 | `/api/companies` | GET | Query: `q, page, size` | Paginated `[Company]` | Public |
 | `/api/companies/{id}` | PUT | `{ name, tax_code?, website?, description?, logo_url?, address?, industry?, size? }` | `{ message }` | Requires owner Recruiter role (`created_by`); `name` unique; `tax_code` unique if provided; **extension** (NICE) enabling US-07b "create and manage company profile" |
+| `/api/companies/{id}/invite-codes` | POST | - | `{ id, code, expiresAt }` (201; `code` shown once) | Requires Recruiter role and caller = `created_by`, else `403 INVITE_CODE_NOT_CREATOR`; unknown company `404 COMPANY_NOT_FOUND`; see AUTH-01-09 |
+| `/api/internal/invite-codes/check` | POST | `{ code }` | `{ companyId, companyName }` | Internal only, not gateway-routed; bearer `JOB_INTERNAL_TOKEN_FOR_AUTH` (fail-closed `401`); read-only; bad code gives `422 INVITE_CODE_INVALID` |
+| `/api/internal/invite-codes/redeem` | POST | `{ code }` | `{ inviteCodeId, companyId }` | Same auth; atomic single use; bad code gives `422 INVITE_CODE_INVALID` |
+| `/api/internal/invite-codes/{id}/release` | POST | - | `204 No Content` | Same auth; clears `used_at` after a failed registration only |
 
 #### 3.2.4 Data Model
 
@@ -86,6 +91,7 @@ The Authentication Service manages user identity, registration, login, and sessi
 | Refresh Token | id, token_hash (unique, SHA-256), user_id, expiry_date (absolute TTL 7 days, 30 days if rememberMe), is_revoked, created_at | Many Refresh Tokens belong to one User |
 | Password Reset Token | id, user_id (FK), token_hash (SHA-256, unique), expiry_date (TTL 15 min), is_used, created_at | Many Password Reset Tokens belong to one User |
 | Company | id, name (unique), tax_code (unique, nullable), verified (bool, default false), logo_url, website, description, address, industry, size, created_by (FK → User, Recruiter owner), created_at, updated_at | One Company has many Users (Recruiters); One Company has many Jobs |
+| Invite Code | id, company_id (FK → Company), code_hash (SHA-256 hex, unique), created_by (FK → User, issuing creator), expires_at (created_at + 7 days), used_at (nullable), created_at | Many Invite Codes belong to one Company; each code is redeemed at most once |
 
 ---
 
@@ -630,7 +636,7 @@ flowchart TB
 
 | Component | ID | Key Features | Target Week | Owner |
 |:----------|:---|:-------------|:------------|:------|
-| Authentication Service | AUTH-01 | Register, Login, JWT, Refresh Tokens (7/30 days), Logout, Forgot/Reset Password (15-min TTL) | 1 | TM1 |
+| Authentication Service | AUTH-01 | Register, Login, JWT, Refresh Tokens (7/30 days), Logout, Forgot/Reset Password (15-min TTL), Recruiter invite codes (7-day, single-use) | 1 | TM1 |
 | Job Service | JOB-01 | CRUD Jobs, Categories, Saved Jobs | 2 | TM2 |
 | Search Service | SEARCH-01 | Keyword Search, Location Filter, Pagination | 2 | TM2 |
 | Application Service | APP-01 | Apply, Upload CV, Status Tracking, History | 3 | TM1 |

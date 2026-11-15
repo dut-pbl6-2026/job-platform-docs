@@ -221,6 +221,8 @@ This appendix provides the API specifications for all services. Complete OpenAPI
 | **Company** | `/api/companies/{id}` | GET | Company details | MUST |
 | **Company** | `/api/companies` | GET | List / search Companies | MUST |
 | **Company** | `/api/companies/{id}` | PUT | Update Company (owner Recruiter only) | NICE (extension: US-07b manage company profile) |
+| **Company** | `/api/companies/{id}/invite-codes` | POST | Issue recruiter invite code (creator only; plain code returned once) | MUST |
+| **Internal (job-svc)** | `/api/internal/invite-codes/check`, `/redeem`, `/{id}/release` | POST | Invite-code check, redeem and release for auth-svc; bearer `JOB_INTERNAL_TOKEN_FOR_AUTH`; not gateway-routed | MUST |
 | **Job** | `/api/jobs` | POST | Create job | MUST |
 | **Job** | `/api/jobs/recruiter` | GET | Get recruiter's jobs | MUST |
 | **Job** | `/api/jobs/{id}` | PUT | Update job | MUST |
@@ -276,6 +278,7 @@ This appendix provides the database schema for all services following the databa
 |:------|:--------|:------------|
 | **categories** | id (UUID, PK), name (unique), description, created_at | Job categories |
 | **companies** | id (UUID, PK), name (unique), tax_code (unique, nullable), verified (bool, default false), logo_url, website, description, address, industry, size, created_by (FK → users.id, Recruiter owner), created_at, updated_at | Company profile (normalized, replaces free-text company) |
+| **invite_codes** | id (UUID, PK), company_id (FK → companies.id), code_hash (SHA-256 hex, unique), created_by (FK → users.id), expires_at, used_at (nullable), created_at | Recruiter invite codes (AUTH-01-09); single use, 7-day expiry |
 | **jobs** | id (UUID, PK), title, description, company_id (FK → companies.id), location, salary_min, salary_max, salary_currency, category_id (FK), requirements, benefits, employment_type, experience_level, recruiter_id, status, view_count, created_at, updated_at | Job postings; `company` free-text deprecated → replaced by `company_id` |
 | **saved_jobs** | id (UUID, PK), user_id, job_id (FK), saved_at | Jobs saved by users |
 

@@ -641,7 +641,7 @@ Gateway áp dụng một chính sách phân quyền cho từng route YARP. Các 
 |:-----------|:------|
 | Anonymous | `/api/auth/*`, các thao tác đọc công khai dưới `/api/jobs/*`, `/api/categories/*`, `/api/companies/*`, `/api/search/*`, `/api/applications/status-flow`, `GET /api/profiles/{userId}` (hồ sơ công khai), route health |
 | `Admin` | `/api/admin/users/*`, `/api/admin/stats`, `/api/admin/jobs/*` |
-| `Recruiter` | `POST /api/jobs`, `GET /api/jobs/recruiter`, `PUT`/`DELETE /api/jobs/{id}`, `POST /api/companies`, `PUT /api/companies/{id}` |
+| `Recruiter` | `POST /api/jobs`, `GET /api/jobs/recruiter`, `PUT`/`DELETE /api/jobs/{id}`, `POST /api/companies`, `POST /api/companies/{id}/invite-codes`, `PUT /api/companies/{id}` |
 | `User` | `POST /api/applications`, `GET /api/applications/me` |
 | `Authenticated` | các `/api/applications/*` khác (theo job, cập nhật trạng thái, tải CV), các `/api/profiles/*` khác, `/api/notifications/*` |
 

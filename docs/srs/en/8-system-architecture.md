@@ -641,7 +641,7 @@ The gateway applies an authorisation policy per YARP route. Policies `Admin`, `R
 |:-------|:-------|
 | Anonymous | `/api/auth/*`, public reads under `/api/jobs/*`, `/api/categories/*`, `/api/companies/*`, `/api/search/*`, `/api/applications/status-flow`, `GET /api/profiles/{userId}` (public profile), health routes |
 | `Admin` | `/api/admin/users/*`, `/api/admin/stats`, `/api/admin/jobs/*` |
-| `Recruiter` | `POST /api/jobs`, `GET /api/jobs/recruiter`, `PUT`/`DELETE /api/jobs/{id}`, `POST /api/companies`, `PUT /api/companies/{id}` |
+| `Recruiter` | `POST /api/jobs`, `GET /api/jobs/recruiter`, `PUT`/`DELETE /api/jobs/{id}`, `POST /api/companies`, `POST /api/companies/{id}/invite-codes`, `PUT /api/companies/{id}` |
 | `User` | `POST /api/applications`, `GET /api/applications/me` |
 | `Authenticated` | other `/api/applications/*` (by job, status update, CV download), other `/api/profiles/*`, `/api/notifications/*` |
 

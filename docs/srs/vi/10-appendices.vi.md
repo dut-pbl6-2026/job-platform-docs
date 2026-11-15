@@ -221,6 +221,8 @@ Phụ lục này cung cấp đặc tả API cho tất cả dịch vụ. Tài li�
 | **Công ty** | `/api/companies/{id}` | GET | Chi tiết Company | BẮT BUỘC |
 | **Công ty** | `/api/companies` | GET | Danh sách / tìm kiếm Company | BẮT BUỘC |
 | **Công ty** | `/api/companies/{id}` | PUT | Cập nhật Company (chỉ Recruiter chủ sở hữu) | NICE (phần mở rộng: US-07b quản lý hồ sơ công ty) |
+| **Công ty** | `/api/companies/{id}/invite-codes` | POST | Phát hành mã mời Nhà tuyển dụng (chỉ người tạo; mã gốc chỉ trả về một lần) | BẮT BUỘC |
+| **Nội bộ (job-svc)** | `/api/internal/invite-codes/check`, `/redeem`, `/{id}/release` | POST | Kiểm tra, đổi và giải phóng mã mời cho auth-svc; bearer `JOB_INTERNAL_TOKEN_FOR_AUTH`; không đi qua gateway | BẮT BUỘC |
 | **Tin** | `/api/jobs` | POST | Tạo tin | BẮT BUỘC |
 | **Tin** | `/api/jobs/recruiter` | GET | Lấy tin của nhà tuyển dụng | BẮT BUỘC |
 | **Tin** | `/api/jobs/{id}` | PUT | Cập nhật tin | BẮT BUỘC |
@@ -276,6 +278,7 @@ Phụ lục này cung cấp lược đồ cơ sở dữ liệu cho tất cả d�
 |:-----|:----|:------|
 | **categories** | id (UUID, PK), name (unique), description, created_at | Danh mục tin tuyển dụng |
 | **companies** | id (UUID, PK), name (unique), tax_code (unique, nullable), verified (bool, default false), logo_url, website, description, address, industry, size, created_by (FK → users.id, chủ sở hữu Recruiter), created_at, updated_at | Hồ sơ Company (chuẩn hóa, thay free-text company) |
+| **invite_codes** | id (UUID, PK), company_id (FK → companies.id), code_hash (SHA-256 hex, duy nhất), created_by (FK → users.id), expires_at, used_at (nullable), created_at | Mã mời Nhà tuyển dụng (AUTH-01-09); dùng một lần, hết hạn sau 7 ngày |
 | **jobs** | id (UUID, PK), title, description, company_id (FK → companies.id), location, salary_min, salary_max, salary_currency, category_id (FK), requirements, benefits, employment_type, experience_level, recruiter_id, status, view_count, created_at, updated_at | Tin tuyển dụng; `company` free-text deprecated → thay bằng `company_id` |
 | **saved_jobs** | id (UUID, PK), user_id, job_id (FK), saved_at | Tin được người dùng lưu |
 
