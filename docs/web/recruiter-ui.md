@@ -14,8 +14,11 @@ The mobile app has a Recruiter role with four working screens. The web app has n
 |---|---|---|---|---|
 | Recruiter dashboard | `lib/features/recruiter/presentation/recruiter_dashboard_screen.dart` | `GET /api/jobs/recruiter`; `GET /api/applications/job/{jobId}` per job | job-svc `JobEndpoints.cs:26`; app-svc `ApplicationEndpoints.cs:39` | `jobs-recruiter` = Recruiter; `apps` = Authenticated |
 | Recruiter job list | `recruiter_jobs_screen.dart` | `GET /api/jobs/recruiter` | job-svc `JobEndpoints.cs:26` | Recruiter |
-| Post job | `post_job_screen.dart` | `POST /api/jobs`; `GET /api/profiles/me` (for `companyId`) | `JobEndpoints.cs:25`; profile-svc `ProfileEndpoints.cs:29` | `jobs-create` = Recruiter; `profiles` = Authenticated |
+| Post job | `post_job_screen.dart` | `POST /api/jobs`; `GET /api/auth/me` (for `companyId`) | `JobEndpoints.cs:25`; auth-svc `AuthEndpoints.cs:131` (`UserDto.CompanyId`) | `jobs-create` = Recruiter; `auth` = no policy at gateway (token checked by auth-svc) |
 | Candidate applications | `candidate_applications_screen.dart` | `GET /api/applications/job/{jobId}`; `PUT /api/applications/{id}/status` | app-svc `ApplicationEndpoints.cs:39`, `:42` | `apps` = Authenticated **only** (gap, see §5) |
+
+
+> **Correction (verified in code):** `companyId` is not in profile-svc `ProfileDetailDto`. It is `UserDto.CompanyId` from auth-svc `GET /api/auth/me`. The earlier `GET /api/profiles/me` row was wrong.
 
 ### Out of scope (no backend — do not build in web)
 

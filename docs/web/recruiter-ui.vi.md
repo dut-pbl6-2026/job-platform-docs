@@ -14,8 +14,11 @@
 |---|---|---|---|---|
 | Tổng quan nhà tuyển dụng | `lib/features/recruiter/presentation/recruiter_dashboard_screen.dart` | `GET /api/jobs/recruiter`; `GET /api/applications/job/{jobId}` cho từng tin | job-svc `JobEndpoints.cs:26`; app-svc `ApplicationEndpoints.cs:39` | `jobs-recruiter` = Recruiter; `apps` = Authenticated |
 | Danh sách tin tuyển dụng | `recruiter_jobs_screen.dart` | `GET /api/jobs/recruiter` | job-svc `JobEndpoints.cs:26` | Recruiter |
-| Đăng tin | `post_job_screen.dart` | `POST /api/jobs`; `GET /api/profiles/me` (lấy `companyId`) | `JobEndpoints.cs:25`; profile-svc `ProfileEndpoints.cs:29` | `jobs-create` = Recruiter; `profiles` = Authenticated |
+| Đăng tin | `post_job_screen.dart` | `POST /api/jobs`; `GET /api/auth/me` (lấy `companyId`) | `JobEndpoints.cs:25`; auth-svc `AuthEndpoints.cs:131` (`UserDto.CompanyId`) | `jobs-create` = Recruiter; `auth` = không có policy ở gateway (auth-svc kiểm tra token) |
 | Hồ sơ ứng tuyển của ứng viên | `candidate_applications_screen.dart` | `GET /api/applications/job/{jobId}`; `PUT /api/applications/{id}/status` | app-svc `ApplicationEndpoints.cs:39`, `:42` | `apps` = Authenticated **duy nhất** (khoảng trống, xem §5) |
+
+
+> **Đính chính (đã kiểm tra trong code):** `companyId` không có trong `ProfileDetailDto` của profile-svc. Nó là `UserDto.CompanyId` từ `GET /api/auth/me` của auth-svc. Dòng `GET /api/profiles/me` trước đó là sai.
 
 ### Ngoài phạm vi (CHƯA CÓ BACKEND — không xây trên web)
 
