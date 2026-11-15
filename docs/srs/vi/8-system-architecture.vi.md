@@ -641,9 +641,9 @@ Gateway áp dụng một chính sách phân quyền cho từng route YARP. Các 
 |:-----------|:------|
 | Anonymous | `/api/auth/*`, các thao tác đọc công khai dưới `/api/jobs/*`, `/api/categories/*`, `/api/companies/*`, `/api/search/*`, `/api/applications/status-flow`, `GET /api/profiles/{userId}` (hồ sơ công khai), route health |
 | `Admin` | `/api/admin/users/*`, `/api/admin/stats`, `/api/admin/jobs/*` |
-| `Recruiter` | `POST /api/jobs`, `GET /api/jobs/recruiter`, `PUT`/`DELETE /api/jobs/{id}`, `POST /api/companies`, `POST /api/companies/{id}/invite-codes`, `PUT /api/companies/{id}` |
+| `Recruiter` | `POST /api/jobs`, `GET /api/jobs/recruiter`, `PUT`/`DELETE /api/jobs/{id}`, `POST /api/companies/{id}/invite-codes`, `GET /api/companies/{id}/join-requests`, `POST /api/companies/{id}/join-requests/{requestId}/approve` và `/reject`, `PUT /api/companies/{id}` |
 | `User` | `POST /api/applications`, `GET /api/applications/me` |
-| `Authenticated` | các `/api/applications/*` khác (theo job, cập nhật trạng thái, tải CV), các `/api/profiles/*` khác, `/api/notifications/*` |
+| `Authenticated` | các `/api/applications/*` khác (theo job, cập nhật trạng thái, tải CV), các `/api/profiles/*` khác, `/api/notifications/*`, `/api/companies/me/join-request*` (yêu cầu gia nhập của chính người gửi) |
 
 Gọi route được bảo vệ khi chưa đăng nhập trả 401; token hợp lệ nhưng sai vai trò trả 403. Trạng thái: các route chính sách `Admin` đã merge (gateway #21); chính sách `Recruiter`/`User` nằm trong gateway #23 (đang mở tại thời điểm viết; PR này gộp RBAC với health/logging và SonarCloud tùy chọn). Quản lý người dùng admin, duyệt tin và thống kê do auth-svc #30/#31/#32 và job-svc #26 cung cấp (đã merge).
 
