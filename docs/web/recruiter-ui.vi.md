@@ -25,7 +25,7 @@
 - **Việc làm đã lưu** — chưa có endpoint lưu trữ.
 - **Kết nối** — chưa có endpoint.
 - **Trình tạo CV** — lưu là no-op trên mobile.
-- **Danh sách thông báo** — `GET /api/notifications` không tồn tại trong notif-svc. Chỉ có `/history`, và endpoint này yêu cầu token.
+- **Danh sách thông báo phía server** — `GET /api/notifications` không tồn tại trong notif-svc. Chỉ có `/history`, và endpoint này yêu cầu token. Vì vậy chuông ở §5 tổng hợp những dữ liệu người dùng đã được phép đọc.
 
 ## 3. Tuyến đường web (hiện tại)
 
