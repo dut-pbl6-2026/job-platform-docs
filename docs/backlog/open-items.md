@@ -14,7 +14,7 @@ These need a decision or an external input. Nothing here can be finished by code
 | A4 | Azure Key Vault wiring | Create the vault, give the VM a managed identity, and change the deploy script to fetch secrets. | Decided (Key Vault). Blocked on A3. |
 | A5 | Rotate committed secrets | Gateway and auth dev JWT secrets are in git history, and the profile encryption key must be replaced. Nothing is deployed yet, so this is a pre-deploy checklist. | Open. Do before the first deploy. |
 | A6 | Production values in Key Vault | Gmail address and App Password (`SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`), `WEB_URL`, `DOMAIN`, the six Postgres role passwords, and `IMAGE_TAG`. | Open. Blocked on A4. |
-| A7 | Web build variable | Set repository variable `VITE_API_URL=https://jobs.ioaspire.com` in the web repo, so the published build calls the right host. | Open. |
+| A7 | Web build variable | Set repository variable `VITE_API_BASE_URL=https://jobs.ioaspire.com/api` in the web repo, so the published build calls the right host. The Docker build also accepts `VITE_API_URL`, but the client reads `VITE_API_BASE_URL`. | Open. |
 | A8 | Existing Postgres volume | Init scripts run only on an empty data volume. An existing VM needs a one-off ownership migration; dev needs `docker compose down -v` once. | Open. Only if a VM already has data. |
 | A9 | Gmail sending limits | A consumer Google account has a daily sending cap. Confirm volume is acceptable, or pick a transactional mail provider. | Open. |
 | A10 | First Company of an organisation | Self-serve company sign-up with a verified work email (chosen, AUTH-01-10 and AUTH-01-11). A sign-up whose domain already belongs to a verified Company becomes a join request for that Company's admin, not a second Company (AUTH-01-12). Not chosen: (a) operator script, (b) Admin creates Companies, (c) manual approval. | Decided 2026-11-15 by the owner. Specified in AUTH-01-06, AUTH-01-10 to AUTH-01-15. |
@@ -29,31 +29,31 @@ These need a decision or an external input. Nothing here can be finished by code
 
 | # | Item | Notes |
 |---|---|---|
-| B1 | Gateway scale-out | Trust only its own network for forwarded client IPs; rate limits move to Redis. PR in progress. |
-| B2 | Auth scale-out | Rate limits move to Redis; access tokens last 15 minutes. PR in progress. |
-| B3 | Dead-letter topic | Failed Kafka messages go to `<topic>.dlq` and the partition moves on. PR in progress (shared). |
+| B1 | Gateway scale-out | Done. Trusts only its own network for forwarded client IPs; rate limits use Redis. |
+| B2 | Auth scale-out | Done. Rate limits use Redis; access tokens last 15 minutes. |
+| B3 | Dead-letter topic | Done. Failed Kafka messages go to `<topic>.dlq` and the partition moves on. |
 | B4 | Mail queue | Durable outbox with retries so failed mail is not silently lost. |
 | B5 | Migrations as a separate deploy step | Stop auto-migrating on service start. |
 | B6 | Outbox coverage | job-svc create, update and delete publish directly after commit (lost events on crash). app-svc publishes after save with no outbox. Extend the existing outbox to both. Also stop the outbox giving up after five failed cycles. |
-| B7 | RS256 signing with JWKS | Only auth-svc holds the private key. Replaces the one HS256 secret shared by every service. |
-| B8 | Per-caller internal tokens | Replace the one shared `INTERNAL_SERVICE_TOKEN` with per-caller tokens. |
+| B7 | RS256 signing with JWKS | Done. Only auth-svc holds the private key; validators read the JWKS and no service reads `JWT_SECRET`. |
+| B8 | Per-caller internal tokens | Done. The shared `INTERNAL_SERVICE_TOKEN` is replaced by one token per caller-callee pair; each internal endpoint validates only its caller's token, fail-closed. |
 | B9 | CVs to Azure Blob Storage | Private container, access by short-lived SAS URL or streaming. |
 | B10 | Backups | Daily dump of Postgres and CV blobs, 7-day retention, tested restore. |
 | B11 | Scoring worker | Runs automatically when an applicant applies. Compares CV to job description. Recruiter sees the score on the applicant list and the application detail. Applicants never see it. |
-| B12 | Invite codes for recruiter registration | Invite codes let a recruiter join an existing Company only. Only the company creator (`companies.created_by`, the company admin) issues codes. Each code is bound to one email address and is accepted only with that address. Single-use, 7-day expiry. Registration validates and redeems the code through job-svc. Company sign-up does not use codes. Specified in SRS AUTH-01-06, AUTH-01-09, AUTH-01-10 and AUTH-01-15. Engineering in progress. |
-| B13 | Crawled jobs as external events | Crawler publishes `job.external` to Kafka; search-svc indexes it with embeddings. |
+| B12 | Invite codes for recruiter registration | Done. Codes join an existing Company only, are issued by the company creator, bound to one email address, single-use with a 7-day expiry. Registration validates and redeems through job-svc; company sign-up does not use codes. |
+| B13 | Crawled jobs as external events | Done. The crawler publishes `job.external.upserted` to `job-events`; search-svc indexes it with embeddings. |
 | B14 | Recruiter id on `application.submitted` | Add the recruiter user id to the event so notif-svc can email the recruiter. |
 | B15 | Search JSON to camelCase | search-svc responses change from snake_case to camelCase, and ai-svc and web change with it. |
-| B16 | Shared release 0.3.1 | Bump the version and add CHANGELOG.md once the DLQ PR merges. |
+| B16 | Shared release 0.4.0 | Done. `JobPlatform.SharedKernel 0.4.0` is published with CHANGELOG; it removes `JwtOptions.Secret`. |
 | B17 | Closed jobs hidden from public detail | Decided. Implement in job-svc and confirm Pending stays hidden. |
-| B18 | Mobile and web registration flow | "Check your email" screen, `/verify-email` page, and resend-verification screen. Also the join-request status screen with the escalate action (AUTH-01-13, AUTH-01-14), and the invite-code field that asks for the bound email (AUTH-01-15). |
-| B19 | Resend-verification endpoint | For unverified accounts whose link expired. Rate-limited, generic response. |
+| B18 | Mobile and web registration flow | Done. "Check your email" screen, `/verify-email` page, resend-verification, the join-request status screen with escalate, and the invite-code field that asks for the bound email. |
+| B19 | Resend-verification endpoint | Done. Rate-limited, generic response. |
 | B20 | Refresh-token concurrency | Concurrency token on the refresh-token row so only one refresh wins. |
 | B21 | Mask emails in audit logs | Done in auth-svc PR #46. Confirm across other services. |
 | B22 | Web PR #42 | Mock gating and error text. Needs a rebase and `npm run lint:fix`. Remove the admin mock store that CodeQL flags. |
-| B23 | Web i18n migration | About 800 Vietnamese UI literal lines across about 52 files. Vietnamese and English through resource files. |
+| B23 | Web i18n migration | Done. Every user-facing string lives in `src/i18n/locales/vi.json` with English keys; code and comments are English. |
 | B24 | Web JSON handling | Remove the dual-format parsing after B15. |
-| B25 | Bootstrap admin | Command implemented (auth-svc #45). Run once per environment after the first deploy. |
+| B25 | Bootstrap admin | Done. Command implemented (auth-svc #45). Run once per environment after the first deploy. |
 
 ## C. Not started, lower priority
 
