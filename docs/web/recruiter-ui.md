@@ -27,27 +27,41 @@ The mobile app has a Recruiter role with four working screens. The web app has n
 - **CV builder** — save is a no-op on mobile.
 - **Notification list** — `GET /api/notifications` does not exist in notif-svc. Only `/history` exists, and it requires a token.
 
-## 3. Web routes (planned)
+## 3. Web routes (current)
 
-| Route | Role | Feature |
-|---|---|---|
-| `/recruiter` | Recruiter | Dashboard (Tổng quan) |
-| `/recruiter/jobs` | Recruiter | Job list (Tin tuyển dụng) |
-| `/recruiter/jobs/new` | Recruiter | Post job (Đăng tin) |
-| `/recruiter/jobs/:jobId/applications` | Recruiter | Candidate applications per job |
+| Route | Shell | Role | Feature |
+|---|---|---|---|
+| `/` | Public | Guest, any | Homepage: search, categories, latest jobs, companies |
+| `/jobs`, `/jobs/:id` | Public | Guest, any | Board and job detail |
+| `/companies/:id` | Public | Guest, any | Public company profile and its active jobs |
+| `/login`, `/register`, `/register-company`, `/forgot-password`, `/reset-password`, `/verify-email` | Auth | Guest | Sign-in, candidate/company sign-up, verification |
+| `/profile`, `/chat` | Authed | any signed-in | Profile and AI assistant |
+| `/applications`, `/applications/:id`, `/jobs/:id/apply` | Authed | User | Application list/detail and apply flow |
+| `/recruiter` | Workspace | Recruiter | Dashboard (Tổng quan) |
+| `/recruiter/jobs` | Workspace | Recruiter | Job list (Tin tuyển dụng) |
+| `/recruiter/jobs/new` | Workspace | Recruiter | Post job (Đăng tin); publishes immediately |
+| `/recruiter/jobs/:jobId/applications` | Workspace | Recruiter | Applications for a job, with the AI match score |
+| `/recruiter/company` | Workspace | Recruiter | Company profile; editing is Company Admin only |
+| `/recruiter/invite-codes`, `/recruiter/join-requests` | Workspace | Company Admin | Invite codes and company join requests |
+| `/admin`, `/admin/jobs`, `/admin/users` | Workspace | Admin | Overview, job moderation (takedown/restore), users |
+| `*` | Public | Guest, any | 404 with links back to the board and homepage |
 
-The recruiter pages sit behind a `RecruiterRoute` guard modelled on `AdminRoute`. Recruiter nav is shown only when `isRecruiter` is true in `src/lib/roles.ts`.
+Layouts: `PublicLayout` renders the top nav and footer; `AuthedLayout` picks the compact candidate
+header for `User` and the sidebar `WorkspaceLayout` for `Recruiter`/`Admin` (no marketing footer on
+either console). The signed-in account menu hangs off the avatar: Profile, Applications (User),
+Company (Recruiter), Admin console (Admin), Chat, Sign out. The candidate resume-score page no
+longer exists: a match score is shown to recruiters per application only.
 
-## 4. Route guards (match mobile)
+## 4. Route guards
 
-Mobile (`app_router.dart`, about lines 128–145) keeps applicant-only pages away from recruiters. Web must do the same.
+Guards live at the layout boundary: `ProtectedRoute` for sign-in and `RequireRole` for role-only
+areas. Candidate-only routes redirect away with a notice; app-svc/job-svc re-check authorization.
 
 | Route | Allowed roles | Otherwise |
 |---|---|---|
-| `/applications`, `/applications/:id`, `/jobs/:id/apply`, `/resume-score` | Applicant (User) only | Redirect to `/jobs` with a notice |
-| `/recruiter/*` | Recruiter only | Redirect away with a notice |
-
-Today web's `ProtectedRoute` checks login only. It must also check role for the routes above.
+| `/applications`, `/applications/:id`, `/jobs/:id/apply` | Applicant (User) only | Redirect to `/jobs` with a notice |
+| `/recruiter/*` | Recruiter only | Redirect to `/jobs` with a notice |
+| `/admin/*` | Admin only | Redirect to `/jobs` with a notice |
 
 ## 5. Known gaps
 
