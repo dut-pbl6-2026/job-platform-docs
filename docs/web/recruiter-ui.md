@@ -25,7 +25,7 @@ The mobile app has a Recruiter role with four working screens. The web app has n
 - **Saved jobs** — no persistence endpoint.
 - **Connections** — no endpoint.
 - **CV builder** — save is a no-op on mobile.
-- **Notification list** — `GET /api/notifications` does not exist in notif-svc. Only `/history` exists, and it requires a token.
+- **Server-side notification list** — `GET /api/notifications` does not exist in notif-svc. Only `/history` exists, and it requires a token. The bell in §5 therefore aggregates reads the user is already allowed to make.
 
 ## 3. Web routes (current)
 
