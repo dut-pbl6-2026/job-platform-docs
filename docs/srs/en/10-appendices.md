@@ -222,7 +222,9 @@ This appendix provides the API specifications for all services. Complete OpenAPI
 | **Company** | `/api/companies` | POST | Create Company; `409 ACCOUNT_ALREADY_HAS_COMPANY` for a Recruiter who already has one (AUTH-01-06) | MUST |
 | **Company** | `/api/companies/{id}` | GET | Company details | MUST |
 | **Company** | `/api/companies` | GET | List / search Companies | MUST |
-| **Company** | `/api/companies/{id}` | PUT | Update Company (owner Recruiter only) | NICE (extension: US-07b manage company profile) |
+| **Company** | `/api/companies/mine` | GET | Signed-in Recruiter's Company plus `isCompanyAdmin` (creator only); `404` when unlinked | MUST |
+| **Company** | `/api/companies/{id}/jobs` | GET | Public Company page: `Active` jobs of the Company, 0-based paging | MUST |
+| **Company** | `/api/companies/{id}` | PUT | Update Company (owner Recruiter only; `logoUrl` is a URL string, no upload) | NICE (extension: US-07b manage company profile) |
 | **Company** | `/api/companies/{id}/invite-codes` | POST | Issue recruiter invite code bound to one email to join an existing Company (creator only; plain code returned once) | MUST |
 | **Internal (job-svc)** | `/api/internal/invite-codes/check`, `/redeem`, `/{id}/release` | POST | Invite-code check and redeem (`{ code, email }`) and release for auth-svc; bearer `JOB_INTERNAL_TOKEN_FOR_AUTH`; not gateway-routed | MUST |
 | **Internal (job-svc)** | `/api/internal/companies` | POST | Create the Company for a company sign-up whose domain no verified Company holds (auth-svc only; `emailDomain`); bearer `JOB_INTERNAL_TOKEN_FOR_AUTH`; not gateway-routed | MUST |
@@ -255,7 +257,9 @@ This appendix provides the API specifications for all services. Complete OpenAPI
 | **Profile** | `/api/profiles/educations` | POST | Add education | MUST |
 | **Notification** | `/api/notifications/history` | GET | Notification history | SHOULD |
 | **Admin** | `/api/admin/users` | GET | User management | SHOULD |
-| **Admin** | `/api/admin/jobs` | GET | Jobs by status (`?status=Pending` for the moderation queue) | SHOULD |
+| **Admin** | `/api/admin/jobs` | GET | Jobs by status (e.g. `?status=Deleted` for taken-down jobs) | SHOULD |
+| **Admin** | `/api/admin/jobs/{id}/takedown` | POST | Take a job down with a required reason (max 500); sets `Deleted`, stores the moderation audit, queues `job.deleted` | SHOULD |
+| **Admin** | `/api/admin/jobs/{id}/restore` | POST | Restore a job taken down by moderation; sets `Active`, clears the audit, queues `job.updated` | SHOULD |
 | **Admin** | `/api/admin/categories` | POST | Create category | SHOULD |
 | **Admin** | `/api/admin/stats` | GET | Platform statistics | SHOULD |
 | **Admin** | `/api/health` | GET | System health (gateway aggregate) | SHOULD |
@@ -263,7 +267,7 @@ This appendix provides the API specifications for all services. Complete OpenAPI
 | **AI** | `/api/ai/session` | POST | Create chat session | NICE |
 | **AI** | `/api/ai/session/{sessionId}` | DELETE | Delete chat session | NICE |
 | **AI** | `/api/ai/session/{sessionId}/history` | GET | Session history | NICE |
-| **AI** | `/api/ai/score-resume` | POST | Resume scoring | NICE |
+| **AI** | `/api/ai/score-resume` | POST | Resume scoring (app-svc scoring token, or `Recruiter`/`Admin`; candidates `403`) | NICE |
 | **Crawler** | `/api/crawler/trigger` | POST | Trigger crawl manually (Admin) | MUST |
 | **Crawler** | `/api/crawler/status` | GET | Crawl status + fallback errors | MUST |
 
@@ -281,17 +285,17 @@ This appendix provides the database schema for all services following the databa
 | **refresh_tokens** | id (UUID, PK), user_id (FK), token_hash (SHA-256, unique), expiry_date (absolute TTL 7 days, 30 days if rememberMe, indexed), is_revoked, created_at | Refresh tokens for JWT rotation; daily purge cron |
 | **password_reset_tokens** | id (UUID, PK), user_id (FK), token_hash (SHA-256, unique), expiry_date (TTL 15 min, indexed), is_used, created_at | Password reset tokens (one-time) |
 | **pending_company_signups** | id (UUID, PK), company_name, tax_code (nullable), email, password_hash, token_hash (SHA-256, unique), full_name, expiry_date (created_at + 24 h, indexed), created_at | Company sign-up waiting for email verification (AUTH-01-10, AUTH-01-11); deleted on verification, on a later sign-up for the same email (including a notice-case sign-up, AUTH-01-10), or on expiry |
-| **companies** | id (UUID, PK), name (unique), tax_code (unique, nullable), verified (bool, default false), email_domain (unique, nullable), logo_url, website, description, address, industry, size, created_by (FK → users.id, Recruiter owner), created_at, updated_at | Company profile; one Company has many Users and many Jobs |
+| **companies** | id (UUID, PK), name (unique), tax_code (unique, nullable), verified (bool, default false), email_domain (unique, nullable), logo_url, website, description, address, industry, size, created_by (FK → users.id, Recruiter owner and Company Admin; other recruiters are members), created_at, updated_at | Company profile; one Company has many Users and many Jobs |
 
 ### E.2 Job Database (job_db)
 
 | Table | Columns | Description |
 |:------|:--------|:------------|
 | **categories** | id (UUID, PK), name (unique), description, created_at | Job categories |
-| **companies** | id (UUID, PK), name (unique), tax_code (unique, nullable), verified (bool, default false), email_domain (unique, nullable), logo_url, website, description, address, industry, size, created_by (FK → users.id, Recruiter owner), created_at, updated_at | Company profile (normalized, replaces free-text company) |
+| **companies** | id (UUID, PK), name (unique), tax_code (unique, nullable), verified (bool, default false), email_domain (unique, nullable), logo_url, website, description, address, industry, size, created_by (FK → users.id, Recruiter owner and Company Admin; other recruiters are members), created_at, updated_at | Company profile (normalized, replaces free-text company) |
 | **invite_codes** | id (UUID, PK), company_id (FK → companies.id), code_hash (SHA-256 hex, unique), email (normalised, bound address), created_by (FK → users.id), expires_at, used_at (nullable), status (Active, Revoked), revoked_at (nullable), revoke_reason (nullable, ADMIN_CHANGED), created_at | Recruiter invite codes (AUTH-01-09, AUTH-01-15); bound to one email; single use, 7-day expiry; unused codes revoked when a new admin is approved (AUTH-01-14) |
 | **company_join_requests** | id (UUID, PK), company_id (FK → companies.id), user_id (FK → users.id, unique), status (Pending, Approved, Rejected, Expired, Escalated, SupportApproved, SupportRejected), expires_at (created_at + COMPANY_JOIN_REQUEST_TTL_DAYS, indexed), decided_by (FK → users.id, nullable), decided_at, decision_reason, created_at, updated_at | Same-domain sign-up waiting for the Company admin or support (AUTH-01-12 to AUTH-01-14) |
-| **jobs** | id (UUID, PK), title, description, company_id (FK → companies.id), location, salary_min, salary_max, salary_currency, category_id (FK), requirements, benefits, employment_type, experience_level, recruiter_id, status, view_count, created_at, updated_at | Job postings; `company` free-text deprecated → replaced by `company_id` |
+| **jobs** | id (UUID, PK), title, description, company_id (FK → companies.id), location, salary_min, salary_max, salary_currency, category_id (FK), requirements, benefits, employment_type, experience_level, recruiter_id, status (Active, Closed or Deleted; legacy Pending/Rejected rows were migrated), moderation_reason (nullable), moderated_by (nullable, FK → users.id), moderated_at (nullable), view_count, created_at, updated_at | Job postings; `company` free-text deprecated → replaced by `company_id`; jobs publish `Active` immediately |
 | **saved_jobs** | id (UUID, PK), user_id, job_id (FK), saved_at | Jobs saved by users |
 
 ### E.3 Application Database (app_db)

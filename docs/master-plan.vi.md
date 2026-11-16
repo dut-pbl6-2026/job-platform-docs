@@ -38,7 +38,7 @@
 | Kafka Event Bus | Tin tuyển dụng được tạo -> đồng bộ Elasticsearch, gửi thông báo | Cao - Kiến trúc microservices |
 | Tìm kiếm Nâng cao | Lọc theo mức lương, kỹ năng, tìm kiếm toàn văn tiếng Việt | Trung bình |
 | Lưu trữ Tệp | Tải lên CV, ảnh đại diện (sử dụng Cloudflare R2) | Trung bình |
-| Bảng quản trị cơ bản | Quản lý người dùng, phê duyệt tin tuyển dụng | Trung bình - Nhu cầu quản trị |
+| Bảng quản trị cơ bản | Quản lý người dùng, kiểm duyệt tin tuyển dụng | Trung bình - Nhu cầu quản trị |
 | Phân quyền chi tiết | Quản trị viên, Nhà tuyển dụng, Người dùng với quyền rõ ràng | Trung bình |
 | WebSocket Realtime | Thông báo thời gian thực khi có tin tuyển dụng mới | Trung bình |
 | Thông báo đẩy | Thông báo Firebase trên di động | Trung bình |
@@ -250,8 +250,8 @@ Vì không thể tham chiếu thư mục trực tiếp (`../shared/`) giữa cá
 | Ngày | Nhiệm vụ | Người phụ trách | Xác nhận |
 |:---|:---|:---|:---|
 | Thứ Hai | Phân quyền chi tiết theo vai trò: Quản trị viên, Nhà tuyển dụng, Người dùng, Ủy quyền dựa trên chính sách trong API | TM1 | Kiểm tra vai trò hoạt động |
-| Thứ Ba | API Quản trị: Quản lý người dùng, phê duyệt tin tuyển dụng, thống kê cơ bản | TM2 | API Quản trị hoạt động |
-| Thứ Tư | React: Bố cục Bảng điều khiển Quản trị, Trang quản lý người dùng, Trang phê duyệt tin | TM3 | Giao diện Quản trị hoạt động |
+| Thứ Ba | API Quản trị: Quản lý người dùng, kiểm duyệt tin (gỡ/khôi phục), thống kê cơ bản | TM2 | API Quản trị hoạt động |
+| Thứ Tư | React: Bố cục Bảng điều khiển Quản trị, Trang quản lý người dùng, Trang kiểm duyệt tin | TM3 | Giao diện Quản trị hoạt động |
 | Thứ Năm | React: Thống kê cơ bản (số lượng tin, người dùng, ứng tuyển), Chart.js cho biểu đồ | TM3 | Hiển thị biểu đồ |
 | Thứ Sáu | Flutter: Chỉ hiển thị chế độ xem quản trị (không có UI đầy đủ), Điều hướng theo vai trò | TM4 | Phân quyền theo vai trò hoạt động |
 | Thứ Bảy | Kiểm thử luồng quản trị, kiểm tra bảo mật (người không phải quản trị không truy cập được), sửa lỗi | Tất cả | Bảo mật OK |

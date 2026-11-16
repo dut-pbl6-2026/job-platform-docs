@@ -18,10 +18,10 @@ This document fixes **one** convention for all repositories. The SRS says *which
 | Sub-collections are plural too | `/api/profiles/experiences`, `/api/profiles/educations` |
 | The current user is `me` | `/api/profiles/me`, `/api/applications/me` |
 | Identifiers are UUIDs in the path | `/api/jobs/{id}` |
-| State-changing actions that are not CRUD are `POST` to a verb sub-resource, **one endpoint per action** | `POST /api/admin/jobs/{id}/approve`, `POST /api/admin/jobs/{id}/reject` |
-| Filtering a collection uses query parameters, not extra path segments | `GET /api/admin/jobs?status=Pending`, not `/api/admin/jobs/pending` |
+| State-changing actions that are not CRUD are `POST` to a verb sub-resource, **one endpoint per action** | `POST /api/admin/jobs/{id}/takedown`, `POST /api/admin/jobs/{id}/restore` |
+| Filtering a collection uses query parameters, not extra path segments | `GET /api/admin/jobs?status=Deleted`, not `/api/admin/jobs/deleted` |
 
-Never encode a decision in the body of a differently named action (for example `POST /approve` with `{ "approved": false }`). One action per endpoint keeps the effect visible in logs, in gateway policies and in the code that calls it.
+Never encode a decision in the body of a differently named action (for example `POST /takedown` with `{ "takenDown": false }`). One action per endpoint keeps the effect visible in logs, in gateway policies and in the code that calls it.
 
 ## 3. JSON field names
 
@@ -99,11 +99,13 @@ Enums travel as **PascalCase strings** exactly as below. Services parse input **
 |:-----|:-------------------|:---------------------------|
 | `EmploymentType` | `FullTime`, `PartTime`, `Contract`, `Internship` | Toàn thời gian, Bán thời gian, Hợp đồng, Thực tập |
 | `ExperienceLevel` | `Entry`, `Mid`, `Senior`, `Lead` | Mới vào nghề, Trung cấp, Senior, Lead |
-| `JobStatus` | `Pending`, `Active`, `Closed`, `Rejected`, `Deleted` | Chờ duyệt, Đang tuyển, Đã đóng, Bị từ chối, Đã xoá |
+| `JobStatus` | `Active`, `Closed`, `Deleted` | Đang tuyển, Đã đóng, Đã xoá |
 | `ApplicationStatus` | `Pending`, `Reviewed`, `Shortlisted`, `Accepted`, `Rejected` | Chờ xem, Đã xem, Vào vòng sau, Nhận việc, Không đậu |
 | `Role` | `User`, `Recruiter`, `Admin` | Ứng viên, Nhà tuyển dụng, Quản trị viên |
 
 `Deleted` is never returned by public endpoints.
+
+`Pending` and `Rejected` are legacy `JobStatus` values from the removed admin approval flow. Job-svc no longer emits them, and the migration `ReplaceApprovalWithModeration` converts stored rows (`Pending` → `Active`, `Rejected` → `Closed`); internal stats and admin detail can still render an unmigrated row.
 
 **Adding a value:** add it to the owning service first (job-svc for job enums, app-svc for application status), then to this table, then to clients. A client must never offer a filter value that the owning service cannot store.
 

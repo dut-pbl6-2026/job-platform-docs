@@ -304,8 +304,7 @@ flowchart TB
 |:------------|:---------------|:----------------|:----------|:---------------------------|
 | `job.created` | Dịch vụ Tin | Dịch vụ Tìm kiếm, Dịch vụ Thông báo | Tin mới được đăng | `job_id`, `title`, `company`, `location`, `recruiter_id` |
 | `job.updated` | Dịch vụ Tin | Dịch vụ Tìm kiếm | Tin được cập nhật | `job_id`, `title`, `company`, `location` |
-| `job.deleted` | Dịch vụ Tin | Dịch vụ Tìm kiếm | Tin bị xóa | `job_id` |
-| `job.approved` | Dịch vụ Quản trị | Dịch vụ Thông báo | Tin được phê duyệt | `job_id`, `recruiter_id`, `status` |
+| `job.deleted` | Dịch vụ Tin | Dịch vụ Tìm kiếm | Tin bị xóa hoặc bị kiểm duyệt gỡ | `job_id` |
 | `application.submitted` | Dịch vụ Ứng tuyển | Dịch vụ Thông báo | Ứng tuyển được gửi | `application_id`, `job_id`, `applicant_id`, `job_title` |
 | `application.updated` | Dịch vụ Ứng tuyển | Dịch vụ Thông báo | Trạng thái thay đổi | `application_id`, `job_id`, `applicant_id`, `status` |
 
@@ -639,13 +638,13 @@ Gateway áp dụng một chính sách phân quyền cho từng route YARP. Các 
 
 | Chính sách | Route |
 |:-----------|:------|
-| Anonymous | `/api/auth/*`, các thao tác đọc công khai dưới `/api/jobs/*`, `/api/categories/*`, `/api/companies/*`, `/api/search/*`, `/api/applications/status-flow`, `GET /api/profiles/{userId}` (hồ sơ công khai), route health |
+| Anonymous | `/api/auth/*`, các thao tác đọc công khai dưới `/api/jobs/*`, `/api/categories/*`, `/api/companies/*` (trừ `GET /api/companies/mine`), `/api/search/*`, `/api/applications/status-flow`, `GET /api/profiles/{userId}` (hồ sơ công khai), route health |
 | `Admin` | `/api/admin/users/*`, `/api/admin/stats`, `/api/admin/jobs/*` |
-| `Recruiter` | `POST /api/jobs`, `GET /api/jobs/recruiter`, `PUT`/`DELETE /api/jobs/{id}`, `POST /api/companies/{id}/invite-codes`, `GET /api/companies/{id}/join-requests`, `POST /api/companies/{id}/join-requests/{requestId}/approve` và `/reject`, `PUT /api/companies/{id}` |
+| `Recruiter` | `POST /api/jobs`, `GET /api/jobs/recruiter`, `PUT`/`DELETE /api/jobs/{id}`, `GET /api/companies/mine`, `POST /api/companies/{id}/invite-codes`, `GET /api/companies/{id}/join-requests`, `POST /api/companies/{id}/join-requests/{requestId}/approve` và `/reject`, `PUT /api/companies/{id}` |
 | `User` | `POST /api/applications`, `GET /api/applications/me` |
 | `Authenticated` | các `/api/applications/*` khác (theo job, cập nhật trạng thái, tải CV), các `/api/profiles/*` khác, `/api/notifications/*`, `/api/companies/me/join-request*` (yêu cầu gia nhập của chính người gửi) |
 
-Gọi route được bảo vệ khi chưa đăng nhập trả 401; token hợp lệ nhưng sai vai trò trả 403. Trạng thái: các route chính sách `Admin` đã merge (gateway #21); chính sách `Recruiter`/`User` nằm trong gateway #23 (đang mở tại thời điểm viết; PR này gộp RBAC với health/logging và SonarCloud tùy chọn). Quản lý người dùng admin, duyệt tin và thống kê do auth-svc #30/#31/#32 và job-svc #26 cung cấp (đã merge).
+Gọi route được bảo vệ khi chưa đăng nhập trả 401; token hợp lệ nhưng sai vai trò trả 403. Trạng thái: các route chính sách `Admin` đã merge (gateway #21); chính sách `Recruiter`/`User` nằm trong gateway #23 (đang mở tại thời điểm viết; PR này gộp RBAC với health/logging và SonarCloud tùy chọn). Quản lý người dùng admin và thống kê do auth-svc #30/#31/#32 cung cấp; kiểm duyệt tin do job-svc #68 cung cấp (đã merge).
 
 ---
 

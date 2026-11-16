@@ -342,11 +342,11 @@ The following user stories represent the primary functionality of the system, or
 | US-04 | As a **Job Seeker**, I want to **view job details** so that I can assess the opportunity | - Job title, description, company<br>- Salary, location, requirements<br>- Application button |
 | US-05 | As a **Job Seeker**, I want to **apply for a job** so that I can be considered | - Apply form with CV upload<br>- Application stored in database<br>- Status tracking |
 | US-06 | As a **Job Seeker**, I want to **view my application history** | - List of applications with status<br>- Filter by status<br>- Application details |
-| US-07 | As a **Recruiter**, I want to **post a new job** so that I can attract candidates | - Job posting form<br>- Category selection<br>- Job linked to verified Company (company_id)<br>- Publish/Draft states |
+| US-07 | As a **Recruiter**, I want to **post a new job** so that I can attract candidates | - Job posting form<br>- Category selection<br>- Job linked to verified Company (company_id)<br>- Published as `Active` immediately on creation; there is no draft or approval step |
 | US-07b | As a **Recruiter**, I want to **manage my company profile** so that my postings are consistently linked to one company | - My Company is created once, at company sign-up (AUTH-01-10), or joined by invite code (AUTH-01-09, AUTH-01-15); no Company is created on first use<br>- Edit my Company profile (name, tax_code, website, logo, description)<br>- Post jobs under my Company<br>- One Recruiter account belongs to one Company; a second Company needs a separate account (AUTH-01-06)<br>- One Company has many Recruiters; one Recruiter belongs to one Company |
 | US-08 | As a **Recruiter**, I want to **edit my job postings** | - Update form<br>- Changes saved to database<br>- Search index updated |
 | US-09 | As a **Recruiter**, I want to **view applicants** for my jobs | - Applicant list per job<br>- Applicant details and CV<br>- Status update ability |
-| US-10 | As an **Administrator**, I want to **approve job postings** | - Pending jobs list<br>- Approve/Reject actions<br>- Notification to recruiter |
+| US-10 | As an **Administrator**, I want to **moderate job postings** so that spam and fraudulent listings can be removed quickly | - Jobs publish instantly, so there is no Pending list or approve/reject step<br>- Take a job down with a required reason (trimmed, max 500 characters)<br>- Restore a job that moderation took down<br>- The reason, admin and time are stored, and the job disappears from public listings immediately |
 
 #### 2.6.2 SHOULD HAVE User Stories
 
@@ -363,7 +363,7 @@ The following user stories represent the primary functionality of the system, or
 | ID | User Story | Acceptance Criteria |
 |:---|:-----------|:-------------------|
 | US-16 | As a **Job Seeker**, I want to **chat with an AI assistant** for job advice | - Chat interface<br>- AI responds with job suggestions<br>- Context-aware conversation |
-| US-17 | As a **Job Seeker**, I want to **see a match score** for my CV against a job | - Upload CV<br>- Score generated<br>- Improvement suggestions |
+| US-17 | As a **Recruiter**, I want to **see a match score for an applicant's CV against my job** | - Automatic score per application<br>- Breakdown by skills, experience and education<br>- Candidates never see the score |
 | US-18 | As a **Job Seeker**, I want to **receive job alerts via Telegram** | - Subscribe via Telegram bot<br>- Receive job alerts<br>- Unsubscribe command |
 | US-19 | As a **Job Seeker**, I want **personalised job recommendations** | - Recommendation feed<br>- Based on history and skills<br>- Refreshable |
 | US-20 | As a **User**, I want to **use the platform in Vietnamese or English** | - Language selector<br>- All UI translated<br>- Persisted preference |
@@ -395,7 +395,7 @@ flowchart TB
         EditJob["Edit Job"]
         ManageApps["Manage Applications"]
         Company["Manage Company Profile"]
-        ApproveJob["Approve Jobs"]
+        ModerateJobs["Moderate Jobs"]
         ManageUsers["Manage Users"]
         ViewStats["View Statistics"]
         AI["AI Job Copilot (NICE)"]
@@ -412,7 +412,6 @@ flowchart TB
     JS --> Apply
     JS --> ViewApps
     JS --> AI
-    JS --> Resume
     JS --> Telegram
     JS --> Social
 
@@ -423,10 +422,11 @@ flowchart TB
     RC --> PostJob
     RC --> EditJob
     RC --> ManageApps
+    RC --> Resume
 
     AD --> Login
     AD --> ResetPwd
-    AD --> ApproveJob
+    AD --> ModerateJobs
     AD --> ManageUsers
     AD --> ViewStats
 ```

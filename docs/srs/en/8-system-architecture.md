@@ -304,8 +304,7 @@ flowchart TB
 |:-----------|:----------|:------------|:--------|:-------------------|
 | `job.created` | Job Service | Search Service, Notification Service | New job posted | `job_id`, `title`, `company`, `location`, `recruiter_id` |
 | `job.updated` | Job Service | Search Service | Job updated | `job_id`, `title`, `company`, `location` |
-| `job.deleted` | Job Service | Search Service | Job deleted | `job_id` |
-| `job.approved` | Admin Service | Notification Service | Job approved | `job_id`, `recruiter_id`, `status` |
+| `job.deleted` | Job Service | Search Service | Job deleted or taken down by moderation | `job_id` |
 | `application.submitted` | Application Service | Notification Service | Application submitted | `application_id`, `job_id`, `applicant_id`, `job_title` |
 | `application.updated` | Application Service | Notification Service | Status changed | `application_id`, `job_id`, `applicant_id`, `status` |
 
@@ -639,13 +638,13 @@ The gateway applies an authorisation policy per YARP route. Policies `Admin`, `R
 
 | Policy | Routes |
 |:-------|:-------|
-| Anonymous | `/api/auth/*`, public reads under `/api/jobs/*`, `/api/categories/*`, `/api/companies/*`, `/api/search/*`, `/api/applications/status-flow`, `GET /api/profiles/{userId}` (public profile), health routes |
+| Anonymous | `/api/auth/*`, public reads under `/api/jobs/*`, `/api/categories/*`, `/api/companies/*` (except `GET /api/companies/mine`), `/api/search/*`, `/api/applications/status-flow`, `GET /api/profiles/{userId}` (public profile), health routes |
 | `Admin` | `/api/admin/users/*`, `/api/admin/stats`, `/api/admin/jobs/*` |
-| `Recruiter` | `POST /api/jobs`, `GET /api/jobs/recruiter`, `PUT`/`DELETE /api/jobs/{id}`, `POST /api/companies/{id}/invite-codes`, `GET /api/companies/{id}/join-requests`, `POST /api/companies/{id}/join-requests/{requestId}/approve` and `/reject`, `PUT /api/companies/{id}` |
+| `Recruiter` | `POST /api/jobs`, `GET /api/jobs/recruiter`, `PUT`/`DELETE /api/jobs/{id}`, `GET /api/companies/mine`, `POST /api/companies/{id}/invite-codes`, `GET /api/companies/{id}/join-requests`, `POST /api/companies/{id}/join-requests/{requestId}/approve` and `/reject`, `PUT /api/companies/{id}` |
 | `User` | `POST /api/applications`, `GET /api/applications/me` |
 | `Authenticated` | other `/api/applications/*` (by job, status update, CV download), other `/api/profiles/*`, `/api/notifications/*`, `/api/companies/me/join-request*` (requester's own join request) |
 
-An anonymous call to a protected route returns 401; a valid token with the wrong role returns 403. Status: the `Admin` policy routes are merged (gateway #21); the `Recruiter`/`User` policies are in gateway #23 (open at the time of writing; it bundles RBAC with health/logging and optional SonarCloud). Admin user management, job approval and stats are served by auth-svc #30/#31/#32 and job-svc #26 (merged).
+An anonymous call to a protected route returns 401; a valid token with the wrong role returns 403. Status: the `Admin` policy routes are merged (gateway #21); the `Recruiter`/`User` policies are in gateway #23 (open at the time of writing; it bundles RBAC with health/logging and optional SonarCloud). Admin user management and stats are served by auth-svc #30/#31/#32; job moderation is served by job-svc #68 (merged).
 
 ---
 

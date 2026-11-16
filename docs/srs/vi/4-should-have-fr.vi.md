@@ -45,14 +45,14 @@ flowchart LR
 
 #### 4.2.1 Mô tả
 
-Dịch vụ Thông báo quản lý tất cả các giao tiếp đi ra từ hệ thống. Nó xử lý thông báo email cho thay đổi trạng thái ứng tuyển, phê duyệt tin tuyển dụng và các sự kiện hệ thống khác. Nó đóng vai trò là trung tâm thông báo tập trung, đảm bảo nhắn tin nhất quán qua các kênh khác nhau.
+Dịch vụ Thông báo quản lý tất cả các giao tiếp đi ra từ hệ thống. Nó xử lý thông báo email cho thay đổi trạng thái ứng tuyển, kiểm duyệt tin tuyển dụng và các sự kiện hệ thống khác. Nó đóng vai trò là trung tâm thông báo tập trung, đảm bảo nhắn tin nhất quán qua các kênh khác nhau.
 
 #### 4.2.2 Yêu cầu chức năng
 
 | ID | Yêu cầu | Tiêu chí chấp nhận |
 |:---|:--------|:-------------------|
 | NOTIF-01-01 | Hệ thống gửi thông báo email khi trạng thái ứng tuyển thay đổi | - Email gửi khi trạng thái thay đổi thành reviewed, shortlisted, accepted hoặc rejected<br>- Mẫu email bao gồm: tiêu đề công việc, tên công ty, trạng thái và các bước tiếp theo<br>- Email gửi đến địa chỉ email đã đăng ký của ứng viên |
-| NOTIF-01-02 | Hệ thống gửi thông báo email khi tin tuyển dụng được phê duyệt | - Email gửi đến nhà tuyển dụng khi quản trị viên phê duyệt tin của họ<br>- Email bao gồm: tiêu đề công việc, ngày phê duyệt và liên kết đến công việc<br>- Thông báo khi tin bị từ chối kèm lý do |
+| NOTIF-01-02 | Hệ thống gửi thông báo email khi tin tuyển dụng bị kiểm duyệt | - Tin đăng không qua phê duyệt, nên không có email phê duyệt<br>- Email gửi đến nhà tuyển dụng khi quản trị viên gỡ tin của họ, kèm lý do gỡ<br>- Email gửi khi tin được khôi phục<br>- Chưa triển khai: notif-svc chưa tiêu thụ các sự kiện kiểm duyệt `job.deleted`/`job.updated` |
 | NOTIF-01-03 | Hệ thống gửi thông báo email đến nhà tuyển dụng khi có người ứng tuyển | - Email gửi đến nhà tuyển dụng khi có ứng tuyển mới được gửi<br>- Email bao gồm: tên ứng viên, tiêu đề công việc và liên kết đến ứng tuyển<br>- Có thể cấu hình gửi thông báo theo lô |
 | NOTIF-01-04 | Hệ thống hỗ trợ mẫu email HTML | - Mẫu hỗ trợ định dạng, hình ảnh và liên kết<br>- Mẫu có thể cấu hình<br>- Dự phòng văn bản thuần cho các email client không hỗ trợ HTML |
 | NOTIF-01-05 | Hệ thống hỗ trợ tùy chọn email | - Người dùng có thể chọn nhận/không nhận thông báo không quan trọng<br>- Thông báo quan trọng (thay đổi trạng thái) không thể tắt<br>- Tùy chọn được lưu trong cơ sở dữ liệu |
@@ -150,7 +150,6 @@ sequenceDiagram
     participant Broker as Message Broker
     participant Search as Dịch vụ Tìm kiếm
     participant Notif as Dịch vụ Thông báo
-    participant Admin as Dịch vụ Quản trị
 
     Job->>Broker: job.created
     Broker->>Search: Tiêu thụ
@@ -165,10 +164,6 @@ sequenceDiagram
     Job->>Broker: job.deleted
     Broker->>Search: Tiêu thụ
     Search->>Search: Xóa khỏi chỉ mục
-
-    Admin->>Broker: job.approved
-    Broker->>Notif: Tiêu thụ
-    Notif->>Notif: Gửi thông báo phê duyệt
 ```
 
 ---
@@ -277,7 +272,7 @@ Bảng quản trị cung cấp giao diện quản trị để quản lý ngườ
 |:---|:--------|:-------------------|
 | ADMIN-01-01 | Hệ thống cho phép quản trị viên xem tất cả người dùng | - Danh sách người dùng với tìm kiếm và bộ lọc<br>- Chi tiết người dùng: email, vai trò, ngày đăng ký, trạng thái<br>- Hỗ trợ phân trang |
 | ADMIN-01-02 | Hệ thống cho phép quản trị viên quản lý tài khoản người dùng | - Kích hoạt/hủy kích hoạt tài khoản người dùng<br>- Thay đổi vai trò người dùng (Người dùng ↔ Nhà tuyển dụng)<br>- Xem lịch sử hoạt động của người dùng |
-| ADMIN-01-03 | Hệ thống cho phép quản trị viên phê duyệt hoặc từ chối tin tuyển dụng | - Danh sách tin đang chờ<br>- Phê duyệt/Từ chối với lý do tùy chọn<br>- Thông báo gửi đến nhà tuyển dụng khi có quyết định |
+| ADMIN-01-03 | Hệ thống cho phép quản trị viên gỡ tin tuyển dụng và khôi phục tin | - Tin đăng ngay, nên không có hàng chờ và không có thao tác phê duyệt/từ chối<br>- Gỡ tin: `POST /api/admin/jobs/{id}/takedown` với `{ reason }`; lý do bắt buộc, được cắt khoảng trắng và tối đa 500 ký tự, nếu không trả `422`<br>- Gỡ tin đặt tin thành `Deleted`, lưu `moderationReason`, `moderatedBy` và `moderatedAt`, đồng thời ẩn tin khỏi danh sách công khai; gọi lặp lại vẫn trả `200` (idempotent)<br>- Khôi phục: `POST /api/admin/jobs/{id}/restore`; chỉ tin bị kiểm duyệt gỡ mới khôi phục được, nếu không trả `409`; tin trở lại `Active` và thông tin kiểm duyệt bị xóa |
 | ADMIN-01-04 | Hệ thống cho phép quản trị viên quản lý danh mục tin | - Tạo, chỉnh sửa, xóa danh mục<br>- Danh mục hiển thị cho tất cả người dùng<br>- Tin được chỉ định lại khi danh mục bị xóa |
 | ADMIN-01-05 | Hệ thống cho phép quản trị viên xem thống kê nền tảng | - Tổng số người dùng, nhà tuyển dụng, người tìm việc<br>- Tổng số tin, ứng tuyển, theo danh mục<br>- Xu hướng hoạt động hàng ngày/tuần/tháng |
 | ADMIN-01-06 | Hệ thống cho phép quản trị viên xem tình trạng hệ thống | - Trạng thái dịch vụ (trực tuyến/ngoại tuyến)<br>- Thời gian phản hồi của các API chính<br>- Nhật ký lỗi gần đây |
@@ -290,9 +285,9 @@ Bảng quản trị cung cấp giao diện quản trị để quản lý ngườ
 | `/api/admin/users/{userId}/activate` | PATCH | - | `{ message }` | Yêu cầu vai trò Quản trị viên |
 | `/api/admin/users/{userId}/deactivate` | PATCH | `{ reason? }` | `{ message }` | Yêu cầu vai trò Quản trị viên |
 | `/api/admin/users/{userId}/role` | PATCH | `{ role }` | `{ message }` | Yêu cầu vai trò Quản trị viên; chưa triển khai |
-| `/api/admin/jobs` | GET | Query: `status` (ví dụ `Pending`), `page, size` | Danh sách tin phân trang | Yêu cầu vai trò Quản trị viên |
-| `/api/admin/jobs/{jobId}/approve` | POST | `{ note? }` | `{ message, jobId }` | Yêu cầu vai trò Quản trị viên; tin phải ở trạng thái `Pending` |
-| `/api/admin/jobs/{jobId}/reject` | POST | `{ reason }` | `{ message, jobId }` | Yêu cầu vai trò Quản trị viên; tin phải ở trạng thái `Pending`; bắt buộc có `reason` |
+| `/api/admin/jobs` | GET | Query: `status` (ví dụ `Deleted`), `page, size` | Danh sách tin phân trang | Yêu cầu vai trò Quản trị viên |
+| `/api/admin/jobs/{id}/takedown` | POST | `{ reason }` | `{ message, jobId }` | Yêu cầu vai trò Quản trị viên; `reason` bắt buộc, cắt khoảng trắng, tối đa 500 ký tự (`422` nếu không); đặt `Deleted` và lưu thông tin kiểm duyệt; `200` và idempotent |
+| `/api/admin/jobs/{id}/restore` | POST | - | `{ message, jobId }` | Yêu cầu vai trò Quản trị viên; chỉ tin bị kiểm duyệt gỡ (`409` nếu không); đặt `Active` và xóa thông tin kiểm duyệt |
 | `/api/admin/categories` | POST | `{ name, description }` | `{ id, message }` | Yêu cầu vai trò Quản trị viên |
 | `/api/admin/stats` | GET | - | AdminStatsDTO `{ users, jobs, applications }` | Yêu cầu vai trò Quản trị viên; xu hướng ngày/tuần/tháng chưa triển khai |
 | `/api/health` | GET | - | `{ status, services: [ { name, status, latencyMs } ] }` | Do gateway phục vụ (tổng hợp sức khỏe các service) |
@@ -328,7 +323,7 @@ Phân quyền theo vai trò (RBAC) cung cấp quyền chi tiết cho các vai tr
 | ID | Yêu cầu | Tiêu chí chấp nhận |
 |:---|:--------|:-------------------|
 | ROLES-01-01 | Hệ thống hỗ trợ ba vai trò chính | - Quản trị viên: Truy cập toàn hệ thống<br>- Nhà tuyển dụng: Quản lý tin và xem ứng tuyển<br>- Người dùng: Tìm kiếm và ứng tuyển |
-| ROLES-01-02 | Hệ thống thực thi quyền theo vai trò | - Chỉ Quản trị viên: Quản lý người dùng, phê duyệt tin, quản lý danh mục<br>- Chỉ Nhà tuyển dụng: Đăng tin, sửa tin của mình, xem ứng tuyển<br>- Chỉ Người dùng: Tìm kiếm, ứng tuyển, xem ứng tuyển của mình |
+| ROLES-01-02 | Hệ thống thực thi quyền theo vai trò | - Chỉ Quản trị viên: Quản lý người dùng, kiểm duyệt tin (gỡ/khôi phục), quản lý danh mục<br>- Chỉ Nhà tuyển dụng: Đăng tin, sửa tin của mình, xem ứng tuyển<br>- Chỉ Người dùng: Tìm kiếm, ứng tuyển, xem ứng tuyển của mình |
 | ROLES-01-03 | Hệ thống xác thực quyền trên mọi yêu cầu API | - Kiểm tra quyền trước khi xử lý yêu cầu<br>- 403 Forbidden nếu người dùng thiếu quyền<br>- Thực thi quyền nhất quán trên tất cả điểm cuối |
 | ROLES-01-04 | Hệ thống hỗ trợ kiểm tra quyền trong UI | - Phần tử UI ẩn dựa trên vai trò người dùng<br>- Nút và liên kết hiển thị có điều kiện<br>- Điều hướng nhất quán theo vai trò |
 | ROLES-01-05 | Hệ thống hỗ trợ thay đổi vai trò người dùng | - Quản trị viên có thể thay đổi vai trò người dùng<br>- Thông báo gửi đến người dùng khi thay đổi vai trò<br>- Phiên bị vô hiệu hóa khi thay đổi vai trò |
@@ -346,7 +341,7 @@ Phân quyền theo vai trò (RBAC) cung cấp quyền chi tiết cho các vai tr
 | Xóa tin của mình | Không | Có | Có |
 | Xem ứng viên cho tin của mình | Không | Có | Có |
 | Quản lý tất cả người dùng | Không | Không | Có |
-| Phê duyệt/từ chối tin | Không | Không | Có |
+| Kiểm duyệt tin (gỡ/khôi phục) | Không | Không | Có |
 | Quản lý danh mục | Không | Không | Có |
 | Xem thống kê nền tảng | Không | Không | Có |
 | Xem tình trạng hệ thống | Không | Không | Có |
@@ -457,7 +452,7 @@ sequenceDiagram
 |:-----|:----------|:-----------|:----------|:--------|
 | Thay đổi trạng thái ứng tuyển | Trạng thái được cập nhật | Ứng viên | `job://application/{id}` | `{ appId, jobTitle, status }` |
 | Ứng tuyển mới | Ứng tuyển được gửi | Nhà tuyển dụng | `job://application/{id}` | `{ appId, applicantName, jobTitle }` |
-| Tin mới được đăng | Tin được phê duyệt | Người đăng ký | `job://job/{id}` | `{ jobId, title, company }` |
+| Tin mới được đăng | Tin mới được đăng | Người đăng ký | `job://job/{id}` | `{ jobId, title, company }` |
 
 ---
 
@@ -523,7 +518,7 @@ Giám sát cơ bản cung cấp khả năng quan sát tình trạng và hiệu n
 | Message Broker | KAFKA-01 | Xuất bản sự kiện, tiêu thụ sự kiện, phát lại sự kiện | 5 | TM1 |
 | Tìm kiếm Nâng cao | ADV-01 | Bộ lọc lương, kỹ năng, địa điểm, loại hình; tìm kiếm toàn văn tiếng Việt | 6 | TM2 |
 | Lưu trữ Tệp | STORE-01 | Tải CV, ảnh đại diện, logo công ty, URL an toàn | 6 | TM1 |
-| Bảng quản trị | ADMIN-01 | Quản lý người dùng, phê duyệt tin, quản lý danh mục, thống kê | 7 | TM1 |
+| Bảng quản trị | ADMIN-01 | Quản lý người dùng, kiểm duyệt tin, quản lý danh mục, thống kê | 7 | TM1 |
 | Phân quyền theo vai trò | ROLES-01 | Quyền chi tiết, UI theo vai trò, kiểm tra quyền | 7 | TM1 |
 | WebSocket Realtime | WS-01 | Thông báo trong ứng dụng thời gian thực, lịch sử thông báo | 7 | TM1 |
 | Thông báo đẩy | PUSH-01 | Tích hợp FCM, deep linking, tùy chọn đẩy | 7 | TM4 |

@@ -45,14 +45,14 @@ flowchart LR
 
 #### 4.2.1 Description
 
-The Notification Service manages all outbound communications from the system. It handles email notifications for application status changes, job post approvals, and other system events. It serves as the centralised notification hub, ensuring consistent messaging across different channels.
+The Notification Service manages all outbound communications from the system. It handles email notifications for application status changes, job moderation, and other system events. It serves as the centralised notification hub, ensuring consistent messaging across different channels.
 
 #### 4.2.2 Functional Requirements
 
 | ID | Requirement | Acceptance Criteria |
 |:---|:------------|:-------------------|
 | NOTIF-01-01 | The system shall send email notifications when application status changes | - Email sent when status changes to reviewed, shortlisted, accepted, or rejected<br>- Email template includes: job title, company name, status, and next steps<br>- Email sent to applicant's registered email address |
-| NOTIF-01-02 | The system shall send email notifications when a job posting is approved | - Email sent to recruiter when admin approves their job<br>- Email includes: job title, approval date, and link to the job<br>- Notification when job is rejected with reason |
+| NOTIF-01-02 | The system shall send email notifications when a job posting is moderated | - Jobs publish without approval, so there is no approval email<br>- Email sent to the recruiter when an admin takes their job down, including the takedown reason<br>- Email sent when the job is restored<br>- Not implemented yet: notif-svc does not consume the moderation `job.deleted`/`job.updated` events |
 | NOTIF-01-03 | The system shall send email notifications to recruiters when someone applies | - Email sent to recruiter when a new application is submitted<br>- Email includes: applicant name, job title, and link to application<br>- Batch notifications can be configured |
 | NOTIF-01-04 | The system shall support HTML email templates | - Templates support formatting, images, and links<br>- Templates are configurable<br>- Plain text fallback for email clients without HTML support |
 | NOTIF-01-05 | The system shall support email preferences | - Users can opt-in/opt-out of non-critical notifications<br>- Critical notifications (status changes) cannot be disabled<br>- Preferences persisted in database |
@@ -150,7 +150,6 @@ sequenceDiagram
     participant Broker as Message Broker
     participant Search as Search Service
     participant Notif as Notification Service
-    participant Admin as Admin Service
 
     Job->>Broker: job.created
     Broker->>Search: Consume
@@ -165,10 +164,6 @@ sequenceDiagram
     Job->>Broker: job.deleted
     Broker->>Search: Consume
     Search->>Search: Remove from index
-
-    Admin->>Broker: job.approved
-    Broker->>Notif: Consume
-    Notif->>Notif: Send approval notification
 ```
 
 ---
@@ -277,7 +272,7 @@ The Admin Panel provides administrative interfaces for managing users, jobs, and
 |:---|:------------|:-------------------|
 | ADMIN-01-01 | The system shall allow administrators to view all users | - User list with search and filters<br>- User details: email, role, registration date, status<br>- Pagination support |
 | ADMIN-01-02 | The system shall allow administrators to manage user accounts | - Activate/deactivate user accounts<br>- Change user role (User ↔ Recruiter)<br>- View user activity history |
-| ADMIN-01-03 | The system shall allow administrators to approve or reject job postings | - List of pending jobs<br>- Approve/Reject with optional reason<br>- Notification sent to recruiter on decision |
+| ADMIN-01-03 | The system shall allow administrators to take a job posting down and restore it | - Jobs publish instantly, so there is no pending queue and no approve/reject action<br>- Takedown: `POST /api/admin/jobs/{id}/takedown` with `{ reason }`; the reason is required, trimmed and limited to 500 characters, otherwise `422`<br>- Takedown sets the job to `Deleted`, stores `moderationReason`, `moderatedBy` and `moderatedAt`, and removes it from public listings; the call is idempotent and returns `200`<br>- Restore: `POST /api/admin/jobs/{id}/restore`; only a job taken down by moderation can be restored, otherwise `409`; it becomes `Active` again and the moderation audit is cleared |
 | ADMIN-01-04 | The system shall allow administrators to manage job categories | - Create, edit, delete categories<br>- Categories visible to all users<br>- Jobs reassigned when category deleted |
 | ADMIN-01-05 | The system shall allow administrators to view platform statistics | - Total users, recruiters, job seekers<br>- Total jobs, applications, by category<br>- Daily/weekly/monthly activity trends |
 | ADMIN-01-06 | The system shall allow administrators to view system health | - Service status (online/offline)<br>- Response times for key APIs<br>- Recent error logs |
@@ -290,9 +285,9 @@ The Admin Panel provides administrative interfaces for managing users, jobs, and
 | `/api/admin/users/{userId}/activate` | PATCH | - | `{ message }` | Admin role required |
 | `/api/admin/users/{userId}/deactivate` | PATCH | `{ reason? }` | `{ message }` | Admin role required |
 | `/api/admin/users/{userId}/role` | PATCH | `{ role }` | `{ message }` | Admin role required; not implemented yet |
-| `/api/admin/jobs` | GET | Query: `status` (e.g. `Pending`), `page, size` | Paginated job list | Admin role required |
-| `/api/admin/jobs/{jobId}/approve` | POST | `{ note? }` | `{ message, jobId }` | Admin role required; job must be `Pending` |
-| `/api/admin/jobs/{jobId}/reject` | POST | `{ reason }` | `{ message, jobId }` | Admin role required; job must be `Pending`; `reason` is required |
+| `/api/admin/jobs` | GET | Query: `status` (e.g. `Deleted`), `page, size` | Paginated job list | Admin role required |
+| `/api/admin/jobs/{id}/takedown` | POST | `{ reason }` | `{ message, jobId }` | Admin role required; `reason` required, trimmed, max 500 characters (`422` otherwise); sets `Deleted` and stores the moderation audit; `200` and idempotent |
+| `/api/admin/jobs/{id}/restore` | POST | - | `{ message, jobId }` | Admin role required; only a job taken down by moderation (`409` otherwise); sets `Active` and clears the moderation audit |
 | `/api/admin/categories` | POST | `{ name, description }` | `{ id, message }` | Admin role required |
 | `/api/admin/stats` | GET | - | AdminStatsDTO `{ users, jobs, applications }` | Admin role required; daily/weekly/monthly trends not implemented yet |
 | `/api/health` | GET | - | `{ status, services: [ { name, status, latencyMs } ] }` | Served by the gateway (aggregated upstream health) |
@@ -328,7 +323,7 @@ Role-Based Access Control (RBAC) provides fine-grained permissions for different
 | ID | Requirement | Acceptance Criteria |
 |:---|:------------|:-------------------|
 | ROLES-01-01 | The system shall support three primary roles | - Admin: Full system access<br>- Recruiter: Job management and application viewing<br>- User: Job search and application submission |
-| ROLES-01-02 | The system shall enforce role-based permissions | - Admin only: User management, job approval, category management<br>- Recruiter only: Post jobs, edit own jobs, view applications<br>- User only: Search jobs, apply, view own applications |
+| ROLES-01-02 | The system shall enforce role-based permissions | - Admin only: User management, job moderation (takedown/restore), category management<br>- Recruiter only: Post jobs, edit own jobs, view applications<br>- User only: Search jobs, apply, view own applications |
 | ROLES-01-03 | The system shall validate permissions on every API request | - Permission check before processing request<br>- 403 Forbidden if user lacks permission<br>- Consistent permission enforcement across all endpoints |
 | ROLES-01-04 | The system shall support permission checks in the UI | - UI elements hidden based on user role<br>- Buttons and links conditionally displayed<br>- Consistent role-based navigation |
 | ROLES-01-05 | The system shall support user role changes | - Admin can change user roles<br>- Notification sent to user on role change<br>- Session invalidated on role change |
@@ -346,7 +341,7 @@ Role-Based Access Control (RBAC) provides fine-grained permissions for different
 | Delete own jobs | No | Yes | Yes |
 | View applicants for own jobs | No | Yes | Yes |
 | Manage all users | No | No | Yes |
-| Approve/reject jobs | No | No | Yes |
+| Moderate jobs (take down/restore) | No | No | Yes |
 | Manage categories | No | No | Yes |
 | View platform statistics | No | No | Yes |
 | View system health | No | No | Yes |
@@ -457,7 +452,7 @@ sequenceDiagram
 |:-----|:--------|:----------|:----------|:--------|
 | Application Status Change | Status updated | Applicant | `job://application/{id}` | `{ appId, jobTitle, status }` |
 | New Application | Application submitted | Recruiter | `job://application/{id}` | `{ appId, applicantName, jobTitle }` |
-| Job Posted | New job approved | Subscribers | `job://job/{id}` | `{ jobId, title, company }` |
+| Job Posted | New job published | Subscribers | `job://job/{id}` | `{ jobId, title, company }` |
 
 ---
 
@@ -523,7 +518,7 @@ Basic Monitoring provides visibility into system health and performance. It incl
 | Message Broker | KAFKA-01 | Event publishing, event consumption, event replay | 5 | TM1 |
 | Advanced Search | ADV-01 | Salary, skill, location, employment type filters; Vietnamese full-text | 6 | TM2 |
 | File Storage | STORE-01 | CV upload, avatar upload, company logo upload, secure URLs | 6 | TM1 |
-| Admin Panel | ADMIN-01 | User management, job approval, category management, statistics | 7 | TM1 |
+| Admin Panel | ADMIN-01 | User management, job moderation, category management, statistics | 7 | TM1 |
 | Role-Based Access | ROLES-01 | Fine-grained permissions, role-based UI, permission checks | 7 | TM1 |
 | WebSocket Realtime | WS-01 | Real-time in-app notifications, notification history | 7 | TM1 |
 | Push Notification | PUSH-01 | FCM integration, deep linking, push preferences | 7 | TM4 |

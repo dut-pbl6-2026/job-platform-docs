@@ -57,10 +57,10 @@ flowchart TB
 | Trang Ứng tuyển | Người tìm việc | Tải CV, thư xin việc, nút gửi, xác nhận thành công | BẮT BUỘC |
 | Trang Hồ sơ | Tất cả | Thông tin cá nhân, kỹ năng, kinh nghiệm, quản lý giáo dục | BẮT BUỘC |
 | Lịch sử ứng tuyển | Người tìm việc | Danh sách ứng tuyển, theo dõi trạng thái, lọc theo trạng thái | BẮT BUỘC |
-| Trang Đăng tin | Nhà tuyển dụng | Form đăng tin, chọn danh mục, tùy chọn xuất bản/nháp | BẮT BUỘC |
+| Trang Đăng tin | Nhà tuyển dụng | Form đăng tin, chọn danh mục, đăng ngay | BẮT BUỘC |
 | Trang Quản lý tin | Nhà tuyển dụng | Danh sách tin đã đăng, hành động sửa/xóa, số lượng ứng viên | BẮT BUỘC |
 | Quản lý ứng viên | Nhà tuyển dụng | Danh sách ứng viên theo công việc, cập nhật trạng thái, xem CV | BẮT BUỘC |
-| Bảng điều khiển Quản trị | Quản trị viên | Quản lý người dùng, phê duyệt tin, xem thống kê | NÊN CÓ |
+| Bảng điều khiển Quản trị | Quản trị viên | Quản lý người dùng, kiểm duyệt tin (gỡ/khôi phục), xem thống kê | NÊN CÓ |
 | Thông báo | Tất cả | Danh sách thông báo thời gian thực, đánh dấu đã đọc, tùy chọn | NÊN CÓ |
 
 ##### 7.2.1.2 Cấu trúc điều hướng Web
@@ -89,7 +89,7 @@ flowchart TB
     subgraph Admin["Điều hướng Quản trị viên (bổ sung)"]
         AdminDash["Bảng điều khiển"]
         AdminUsers["Người dùng"]
-        AdminJobs["Tin chờ duyệt"]
+        AdminJobs["Kiểm duyệt tin"]
         AdminCategories["Danh mục"]
     end
 

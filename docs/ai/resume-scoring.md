@@ -137,12 +137,14 @@ Suggestions are template-based from computed gaps (missing skills, years shortfa
 
 | Endpoint | Auth | Description |
 |---|---|---|
-| `POST /api/ai/score-resume` | JWT (any authenticated user) | multipart: `cv_file` (PDF/DOCX ≤ 5 MB), `job_id` (UUID). `200` result above. |
+| `POST /api/ai/score-resume` | app-svc scoring token, or a user with role `Recruiter`/`Admin` | multipart: `cv_file` (PDF/DOCX ≤ 5 MB), `job_id` (UUID). `200` result above. |
 | `GET /api/ai/health` | none | `{status, service:"ai", models_loaded, ocr_available}` (liveness) |
 | `GET /health` | none | same, for compose healthchecks |
 
-Errors (RFC 7807 style `{type,title,status,detail,code}`): `400 bad_request` (missing/invalid `job_id`), `404 job_not_found`, `413 file_too_large`, `415 unsupported_media_type`, `422 cv_encrypted | cv_unreadable | cv_no_text`, `429 rate_limited` (default 10 req/min/user, in-memory token bucket), `503 job_service_unavailable`.
+Errors (RFC 7807 style `{type,title,status,detail,code}`): `400 bad_request` (missing/invalid `job_id`), `403 forbidden` (a user without role `Recruiter` or `Admin`), `404 job_not_found`, `413 file_too_large`, `415 unsupported_media_type`, `422 cv_encrypted | cv_unreadable | cv_no_text`, `429 rate_limited` (default 10 req/min/user, in-memory token bucket), `503 job_service_unavailable`.
 Concurrency: a semaphore limits parallel OCR to `OCR_CONCURRENCY` (default 2); excess requests wait up to 30 s then `503 busy`.
+
+A match score is **recruiter/admin-only**. `POST /api/ai/score-resume` accepts either the app-svc scoring token (`AI_SCORING_SERVICE_TOKEN`, used for the automatic per-application score) or a user identity with role `Recruiter` or `Admin`. Any other user identity, including a candidate (role `User` or no role), gets `403 forbidden`, so a candidate cannot obtain a score. The automatic per-application score is likewise visible only to recruiters and admins.
 
 ## 8. Evaluation protocol
 
@@ -176,9 +178,7 @@ Hidden/white-text stuffing (text PDF generated in tests) · tiny-font stuffing �
 
 ## 10. Web UI (M4)
 
-Route `/resume-score`: pick a job (from `?jobId=` or search), upload a CV, show the overall score with band, four breakdown cards, matching/missing/negated skills chips, evidence excerpts, suggestions, warnings, and clear error states (422/413/415/429/503). Entry points: "Check my CV match" button on `JobDetailPage`. Mobile UI is out of scope for this iteration.
-
-![Resume score page](images/resume-score-ui.png)
+There is no candidate-facing score page: a match score is recruiter/admin-only, and the web client's candidate resume-score page was removed on 2026-11-16. Recruiters see the automatic per-application score on the applicant list and the application detail (backlog B11). Web route ownership lives in `job-platform-web/README.md`.
 
 ## 11. Differences from the SRS / earlier informal spec
 
@@ -200,7 +200,7 @@ Route `/resume-score`: pick a job (from `?jobId=` or search), upload a CV, show 
 | M1 | `ai-svc` runs locally; parses text/scanned/DOCX; scores one CV against a job JSON; unit tests green |
 | M2 | Labelled set + evaluation script; weights fitted; report `eval/REPORT.md` with the metrics of §8 |
 | M3 | Docker image; compose + gateway route; works through the gateway; robustness suite green; latency measured |
-| M4 | Web page `/resume-score` working end-to-end against the local stack |
+| M4 | Recruiter/admin score request working end-to-end against the local stack; there is no candidate-facing score page |
 
 ## 13. Risks
 

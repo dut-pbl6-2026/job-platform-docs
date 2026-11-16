@@ -57,10 +57,10 @@ The web application is a Single Page Application (SPA) accessible via modern web
 | Apply Page | Job Seeker | CV upload, cover letter, submit button, success confirmation | MUST |
 | Profile Page | All | Personal info, skills, experience, education management | MUST |
 | Application History | Job Seeker | Application list, status tracking, filter by status | MUST |
-| Post Job Page | Recruiter | Job posting form, category selection, publish/draft options | MUST |
+| Post Job Page | Recruiter | Job posting form, category selection, immediate publish | MUST |
 | Manage Jobs Page | Recruiter | List of posted jobs, edit/delete actions, applicant counts | MUST |
 | Manage Applicants | Recruiter | Applicant list per job, status updates, CV view | MUST |
-| Admin Dashboard | Admin | User management, job approval, statistics view | SHOULD |
+| Admin Dashboard | Admin | User management, job moderation (takedown/restore), statistics view | SHOULD |
 | Notifications | All | Real-time notification list, mark as read, preferences | SHOULD |
 
 ##### 7.2.1.2 Web Navigation Structure
@@ -89,7 +89,7 @@ flowchart TB
     subgraph Admin["Admin Navigation (additional)"]
         AdminDash["Dashboard"]
         AdminUsers["Users"]
-        AdminJobs["Jobs Pending"]
+        AdminJobs["Job Moderation"]
         AdminCategories["Categories"]
     end
 

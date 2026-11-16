@@ -68,7 +68,7 @@ SRS này dành cho:
 
 - **Người tìm việc** tìm kiếm việc làm, ứng tuyển kèm tải lên CV, theo dõi trạng thái ứng tuyển và nhận thông báo.
 - **Nhà tuyển dụng** đăng tin tuyển dụng, quản lý hồ sơ ứng tuyển và giao tiếp với ứng viên.
-- **Quản trị viên** quản lý người dùng, phê duyệt tin tuyển dụng và xem số liệu thống kê.
+- **Quản trị viên** kiểm duyệt tin tuyển dụng, quản lý người dùng và xem số liệu thống kê.
 
 Hệ thống phải hỗ trợ cả giao diện web và di động, với phần phụ trợ được xây dựng trên nền tảng doanh nghiệp hiện đại. Tất cả các dịch vụ sẽ được container hóa để đảm bảo tính nhất quán giữa các môi trường phát triển, staging và sản phẩm. Giao tiếp giữa các dịch vụ sẽ được thực hiện thông qua REST API, nhắn tin hướng sự kiện và WebSocket cho các tính năng thời gian thực.
 
@@ -130,7 +130,7 @@ C4Context
 
     Person(jobseeker, "Người tìm việc", "Tìm kiếm việc làm, ứng tuyển, xem trạng thái")
     Person(recruiter, "Nhà tuyển dụng", "Đăng tin, quản lý ứng tuyển")
-    Person(admin, "Quản trị viên", "Quản lý người dùng, phê duyệt tin, xem thống kê")
+    Person(admin, "Quản trị viên", "Quản lý người dùng, kiểm duyệt tin, xem thống kê")
 
     System(jobPlatform, "Nền tảng Việc làm Việt Nam", "Thị trường việc làm dựa trên microservices với ứng dụng web và di động")
 
