@@ -385,9 +385,12 @@ are applied to both retrievers as pre-filters, so a filtered page is never short
 `sortBy` other than `relevance` keeps the requested order. Any embedding or kNN failure falls back
 to keyword search and logs a warning. Embeddings are generated locally by the ONNX model in
 `ai-svc` (no OpenAI/Gemini call, per project constraint). Pagination stays `page/size` over the
-fused list, with the candidate pool capped (default 600). The raw
-`GET /api/search/jobs/semantic` endpoint remains for evaluation; the product UI ranks through the
-hybrid path and needs no change.
+fused list, with the candidate pool capped (default 600). Keyword matching requires every word
+(`minimum_should_match: 100%`), and a vector-only job is added only when the keyword side found
+nothing and its score clears `SEARCH_HYBRID_MIN_VECTOR_SCORE` (default 0.72): without that gate every
+query returned the whole index, because the local model scores an unrelated job only ~0.1 below a
+real match. The raw `GET /api/search/jobs/semantic` endpoint remains for evaluation; the product UI
+ranks through the hybrid path and needs no change.
 
 #### 5.8.2 Functional Requirements
 

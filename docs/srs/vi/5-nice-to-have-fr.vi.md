@@ -385,8 +385,12 @@ lọc được áp dụng cho cả hai bộ truy xuất dưới dạng tiền l�
 `sortBy` khác `relevance` giữ nguyên thứ tự yêu cầu. Mọi lỗi embedding hoặc kNN đều quay về tìm theo
 từ khoá và ghi cảnh báo. Embedding được tạo cục bộ bằng mô hình ONNX trong `ai-svc` (không gọi
 OpenAI/Gemini, theo ràng buộc dự án). Phân trang vẫn là `page/size` trên danh sách đã hợp nhất, với
-số ứng viên mỗi bên bị giới hạn (mặc định 600). Endpoint thô `GET /api/search/jobs/semantic` vẫn
-giữ để đánh giá; giao diện sản phẩm xếp hạng qua đường hybrid và không cần thay đổi.
+số ứng viên mỗi bên bị giới hạn (mặc định 600). Tìm theo từ khoá yêu cầu đủ mọi từ
+(`minimum_should_match: 100%`), và một tin chỉ được thêm từ phía vector khi phía từ khoá không tìm
+được gì và điểm vượt `SEARCH_HYBRID_MIN_VECTOR_SCORE` (mặc định 0.72): nếu không có ngưỡng này mọi
+truy vấn trả về toàn bộ chỉ mục, vì mô hình cục bộ chỉ chấm tin không liên quan thấp hơn tin khớp
+khoảng 0.1. Endpoint thô `GET /api/search/jobs/semantic` vẫn giữ để đánh giá; giao diện sản phẩm
+xếp hạng qua đường hybrid và không cần thay đổi.
 
 #### 5.8.2 Yêu cầu chức năng
 
