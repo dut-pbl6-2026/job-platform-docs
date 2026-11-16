@@ -18,10 +18,10 @@ Tài liệu này chốt **một** quy ước cho mọi repo. SRS quy định *c�
 | Tập con cũng dùng số nhiều | `/api/profiles/experiences`, `/api/profiles/educations` |
 | Người dùng hiện tại là `me` | `/api/profiles/me`, `/api/applications/me` |
 | Định danh trên đường dẫn là UUID | `/api/jobs/{id}` |
-| Hành động thay đổi trạng thái không phải CRUD dùng `POST` vào tài nguyên con mang tên động từ, **mỗi hành động một endpoint** | `POST /api/admin/jobs/{id}/approve`, `POST /api/admin/jobs/{id}/reject` |
-| Lọc danh sách dùng query parameter, không thêm đoạn đường dẫn | `GET /api/admin/jobs?status=Pending`, không dùng `/api/admin/jobs/pending` |
+| Hành động thay đổi trạng thái không phải CRUD dùng `POST` vào tài nguyên con mang tên động từ, **mỗi hành động một endpoint** | `POST /api/admin/jobs/{id}/takedown`, `POST /api/admin/jobs/{id}/restore` |
+| Lọc danh sách dùng query parameter, không thêm đoạn đường dẫn | `GET /api/admin/jobs?status=Deleted`, không dùng `/api/admin/jobs/deleted` |
 
-Không bao giờ mã hoá quyết định vào body của một hành động mang tên khác (ví dụ `POST /approve` với `{ "approved": false }`). Mỗi hành động một endpoint giúp nhìn rõ tác động trong log, trong policy của gateway và trong code gọi nó.
+Không bao giờ mã hoá quyết định vào body của một hành động mang tên khác (ví dụ `POST /takedown` với `{ "takenDown": false }`). Mỗi hành động một endpoint giúp nhìn rõ tác động trong log, trong policy của gateway và trong code gọi nó.
 
 ## 3. Tên field JSON
 
@@ -99,11 +99,13 @@ Enum được truyền dưới dạng **chuỗi PascalCase** đúng như bảng 
 |:-----|:----------------|:-------------------------|
 | `EmploymentType` | `FullTime`, `PartTime`, `Contract`, `Internship` | Toàn thời gian, Bán thời gian, Hợp đồng, Thực tập |
 | `ExperienceLevel` | `Entry`, `Mid`, `Senior`, `Lead` | Mới vào nghề, Trung cấp, Senior, Lead |
-| `JobStatus` | `Pending`, `Active`, `Closed`, `Rejected`, `Deleted` | Chờ duyệt, Đang tuyển, Đã đóng, Bị từ chối, Đã xoá |
+| `JobStatus` | `Active`, `Closed`, `Deleted` | Đang tuyển, Đã đóng, Đã xoá |
 | `ApplicationStatus` | `Pending`, `Reviewed`, `Shortlisted`, `Accepted`, `Rejected` | Chờ xem, Đã xem, Vào vòng sau, Nhận việc, Không đậu |
 | `Role` | `User`, `Recruiter`, `Admin` | Ứng viên, Nhà tuyển dụng, Quản trị viên |
 
 Endpoint công khai không bao giờ trả về `Deleted`.
+
+`Pending` và `Rejected` là giá trị `JobStatus` cũ từ luồng phê duyệt của quản trị viên đã bị gỡ. Job-svc không còn phát ra các giá trị này, và migration `ReplaceApprovalWithModeration` chuyển các dòng đã lưu (`Pending` → `Active`, `Rejected` → `Closed`); thống kê nội bộ và chi tiết quản trị vẫn có thể hiển thị một dòng chưa được chuyển.
 
 **Thêm một giá trị:** thêm vào service sở hữu trước (job-svc cho enum của tin tuyển dụng, app-svc cho trạng thái ứng tuyển), sau đó cập nhật bảng này, cuối cùng mới tới client. Client không bao giờ được đưa ra giá trị lọc mà service sở hữu không lưu được.
 

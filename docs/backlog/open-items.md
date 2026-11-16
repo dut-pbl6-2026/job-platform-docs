@@ -1,6 +1,6 @@
 # Open items backlog
 
-Status as of 2026-11-15. Items are grouped by what blocks a real deployment.
+Status as of 2026-11-16. Items are grouped by what blocks a real deployment.
 
 ## A. Must decide before a real deployment
 
@@ -45,7 +45,7 @@ These need a decision or an external input. Nothing here can be finished by code
 | B14 | Recruiter id on `application.submitted` | Add the recruiter user id to the event so notif-svc can email the recruiter. |
 | B15 | Search JSON to camelCase | search-svc responses change from snake_case to camelCase, and ai-svc and web change with it. |
 | B16 | Shared release 0.4.0 | Done. `JobPlatform.SharedKernel 0.4.0` is published with CHANGELOG; it removes `JwtOptions.Secret`. |
-| B17 | Closed jobs hidden from public detail | Decided. Implement in job-svc and confirm Pending stays hidden. |
+| B17 | Closed jobs hidden from public detail | Decided. Implement in job-svc and confirm legacy Pending/Rejected rows stay hidden. |
 | B18 | Mobile and web registration flow | Done. "Check your email" screen, `/verify-email` page, resend-verification, the join-request status screen with escalate, and the invite-code field that asks for the bound email. |
 | B19 | Resend-verification endpoint | Done. Rate-limited, generic response. |
 | B20 | Refresh-token concurrency | Concurrency token on the refresh-token row so only one refresh wins. |
@@ -54,6 +54,7 @@ These need a decision or an external input. Nothing here can be finished by code
 | B23 | Web i18n migration | Done. Every user-facing string lives in `src/i18n/locales/vi.json` with English keys; code and comments are English. |
 | B24 | Web JSON handling | Remove the dual-format parsing after B15. |
 | B25 | Bootstrap admin | Done. Command implemented (auth-svc #45). Run once per environment after the first deploy. |
+| B26 | Instant job publishing replaces admin approval | Done. `POST /api/jobs` creates an `Active` job; the approve/reject endpoints and `FEATURE_ADMIN_APPROVAL` are gone. Web-admin moderation is `POST /api/admin/jobs/{id}/takedown` (required reason, max 500) and `POST /api/admin/jobs/{id}/restore`; migration `ReplaceApprovalWithModeration` converts legacy `Pending` → `Active` and `Rejected` → `Closed`. Follow-up: notif-svc still contains the disabled approval-email consumer (`NOTIF_JOB_EVENTS_ENABLED` off) that expects the removed Pending→Active transition; remove it when the notification contract is reworked. |
 
 ## C. Not started, lower priority
 

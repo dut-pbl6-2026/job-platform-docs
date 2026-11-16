@@ -1,5 +1,7 @@
 # Cross-Browser and Device Testing (PBL6-68)
 
+> **Historical report.** The suite at the time included `tests/resume-score.spec.ts` for the candidate-facing score page. That page and its spec were removed on 2026-11-16 (a match score is recruiter/admin-only), so the run commands below no longer match the current suite; the results are kept as recorded.
+
 Runs the same E2E suite (`password-reset`, `profile`, `resume-score`) on 5 Playwright projects. Demo-record is out of scope.
 
 ## Scope and limits

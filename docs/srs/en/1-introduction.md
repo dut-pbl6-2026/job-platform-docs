@@ -68,7 +68,7 @@ The **Vietnam Job Platform** is a microservices-based application that enables:
 
 - **Job Seekers** to search for jobs, apply with CV upload, track application status, and receive notifications.
 - **Employers (Recruiters)** to post job openings, manage applications, and communicate with candidates.
-- **Administrators** to manage users, approve job posts, and view analytics.
+- **Administrators** to manage users, moderate job posts, and view analytics.
 
 The system must support both web and mobile interfaces, with a backend built on a modern enterprise framework. All services will be containerised for consistency across development, staging, and production environments. Communication between services will be handled via REST APIs, event-driven messaging, and WebSocket for real-time features.
 
@@ -130,7 +130,7 @@ C4Context
 
     Person(jobseeker, "Job Seeker", "Searches for jobs, applies, views status")
     Person(recruiter, "Recruiter", "Posts jobs, manages applications")
-    Person(admin, "Administrator", "Manages users, approves jobs, views stats")
+    Person(admin, "Administrator", "Manages users, moderates jobs, views stats")
 
     System(jobPlatform, "Vietnam Job Platform", "Microservices-based employment marketplace with web and mobile clients")
 

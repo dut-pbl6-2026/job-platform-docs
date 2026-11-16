@@ -342,11 +342,11 @@ Các user stories sau đây đại diện cho chức năng chính của hệ th�
 | US-04 | Với vai trò **Người tìm việc**, tôi muốn **xem chi tiết công việc** để đánh giá cơ hội | - Tiêu đề, mô tả, công ty<br>- Lương, địa điểm, yêu cầu<br>- Nút ứng tuyển |
 | US-05 | Với vai trò **Người tìm việc**, tôi muốn **ứng tuyển** vào một công việc để được xem xét | - Form ứng tuyển có tải CV lên<br>- Hồ sơ ứng tuyển được lưu trong cơ sở dữ liệu<br>- Theo dõi trạng thái |
 | US-06 | Với vai trò **Người tìm việc**, tôi muốn **xem lịch sử ứng tuyển** | - Danh sách ứng tuyển với trạng thái<br>- Lọc theo trạng thái<br>- Chi tiết ứng tuyển |
-| US-07 | Với vai trò **Nhà tuyển dụng**, tôi muốn **đăng tin tuyển dụng mới** để thu hút ứng viên | - Form đăng tin<br>- Chọn danh mục<br>- Tin gắn với Company đã xác minh (company_id)<br>- Trạng thái Xuất bản/Nháp |
+| US-07 | Với vai trò **Nhà tuyển dụng**, tôi muốn **đăng tin tuyển dụng mới** để thu hút ứng viên | - Form đăng tin<br>- Chọn danh mục<br>- Tin gắn với Company đã xác minh (company_id)<br>- Đăng ngay ở trạng thái `Active` khi tạo; không có bản nháp hay bước phê duyệt |
 | US-07b | Với vai trò **Nhà tuyển dụng**, tôi muốn **quản lý hồ sơ công ty của mình** để tin tuyển dụng luôn gắn với cùng một công ty | - Company của tôi được tạo một lần khi doanh nghiệp đăng ký (AUTH-01-10), hoặc tôi gia nhập bằng mã mời (AUTH-01-09, AUTH-01-15); không tạo Company ở lần dùng đầu tiên<br>- Chỉnh sửa hồ sơ Company của tôi (name, tax_code, website, logo, mô tả)<br>- Đăng tin dưới Company của tôi<br>- Một tài khoản Nhà tuyển dụng thuộc một Company; Company thứ hai cần một tài khoản khác (AUTH-01-06)<br>- Một Company có nhiều Recruiter; một Recruiter thuộc một Company |
 | US-08 | Với vai trò **Nhà tuyển dụng**, tôi muốn **chỉnh sửa tin tuyển dụng** | - Form cập nhật<br>- Thay đổi được lưu vào cơ sở dữ liệu<br>- Cập nhật chỉ mục tìm kiếm |
 | US-09 | Với vai trò **Nhà tuyển dụng**, tôi muốn **xem danh sách ứng viên** cho các tin tuyển dụng | - Danh sách ứng viên theo công việc<br>- Chi tiết ứng viên và CV<br>- Khả năng cập nhật trạng thái |
-| US-10 | Với vai trò **Quản trị viên**, tôi muốn **phê duyệt tin tuyển dụng** | - Danh sách tin chờ duyệt<br>- Phê duyệt/Từ chối<br>- Thông báo đến nhà tuyển dụng |
+| US-10 | Với vai trò **Quản trị viên**, tôi muốn **kiểm duyệt tin tuyển dụng** để nhanh chóng gỡ tin rác và tin lừa đảo | - Tin đăng ngay, nên không có hàng chờ duyệt hay bước phê duyệt/từ chối<br>- Gỡ tin kèm lý do bắt buộc (cắt khoảng trắng, tối đa 500 ký tự)<br>- Khôi phục tin đã bị kiểm duyệt gỡ<br>- Lý do, quản trị viên và thời điểm được lưu, tin biến mất khỏi danh sách công khai ngay |
 
 #### 2.6.2 User Stories NÊN CÓ
 
@@ -363,7 +363,7 @@ Các user stories sau đây đại diện cho chức năng chính của hệ th�
 | ID | User Story | Tiêu chí chấp nhận |
 |:---|:-----------|:-------------------|
 | US-16 | Với vai trò **Người tìm việc**, tôi muốn **trò chuyện với trợ lý AI** để được tư vấn việc làm | - Giao diện chat<br>- AI phản hồi với gợi ý việc làm<br>- Hội thoại nhận biết ngữ cảnh |
-| US-17 | Với vai trò **Người tìm việc**, tôi muốn **xem điểm số phù hợp** của CV với một công việc | - Tải CV lên<br>- Điểm số được tạo<br>- Gợi ý cải thiện |
+| US-17 | Với vai trò **Nhà tuyển dụng**, tôi muốn **xem điểm phù hợp của CV ứng viên với tin của mình** | - Điểm tự động cho mỗi hồ sơ ứng tuyển<br>- Phân tích theo kỹ năng, kinh nghiệm và học vấn<br>- Ứng viên không bao giờ thấy điểm này |
 | US-18 | Với vai trò **Người tìm việc**, tôi muốn **nhận cảnh báo việc làm qua Telegram** | - Đăng ký qua bot Telegram<br>- Nhận cảnh báo việc làm<br>- Lệnh hủy đăng ký |
 | US-19 | Với vai trò **Người tìm việc**, tôi muốn **gợi ý việc làm cá nhân hóa** | - Nguồn gợi ý<br>- Dựa trên lịch sử và kỹ năng<br>- Có thể làm mới |
 | US-20 | Với vai trò **Người dùng**, tôi muốn **sử dụng nền tảng bằng tiếng Việt hoặc tiếng Anh** | - Bộ chọn ngôn ngữ<br>- Tất cả giao diện được dịch<br>- Tùy chọn được lưu lại |
@@ -395,7 +395,7 @@ flowchart TB
         EditJob["Sửa tin"]
         ManageApps["Quản lý ứng tuyển"]
         Company["Quản lý hồ sơ Công ty"]
-        ApproveJob["Phê duyệt tin"]
+        ModerateJobs["Kiểm duyệt tin"]
         ManageUsers["Quản lý người dùng"]
         ViewStats["Xem thống kê"]
         AI["Trợ lý AI việc làm (TỐT NÊN CÓ)"]
@@ -412,7 +412,6 @@ flowchart TB
     JS --> Apply
     JS --> ViewApps
     JS --> AI
-    JS --> Resume
     JS --> Telegram
     JS --> Social
 
@@ -423,10 +422,11 @@ flowchart TB
     RC --> PostJob
     RC --> EditJob
     RC --> ManageApps
+    RC --> Resume
 
     AD --> Login
     AD --> ResetPwd
-    AD --> ApproveJob
+    AD --> ModerateJobs
     AD --> ManageUsers
     AD --> ViewStats
 ```

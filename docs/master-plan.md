@@ -38,7 +38,7 @@
 | Kafka Event Bus | Job created -> sync Elasticsearch, send notifications | High - Microservices architecture |
 | Advanced Search | Filter by salary, skills, full-text Vietnamese search | Medium |
 | File Storage | Upload CV, avatar (use Cloudflare R2) | Medium |
-| Basic Admin Panel | Manage users, approve job postings | Medium - Admin needs |
+| Basic Admin Panel | Manage users, moderate job postings | Medium - Admin needs |
 | Detailed Role-Based Access | Admin, Recruiter, User with clear permissions | Medium |
 | WebSocket Realtime | Real-time notification when new job posted | Medium |
 | Push Notification | Firebase notifications on mobile | Medium |
@@ -253,8 +253,8 @@ Since direct folder references (`../shared/`) are not possible across repositori
 | Day | Tasks | Assignee | Validation |
 |:---|:---|:---|:---|
 | Monday | Detailed role-based access: Admin, Recruiter, User, Policy-based authorization in API | TM1 | Role check works |
-| Tuesday | Admin APIs: User management, job approval, basic statistics | TM2 | Admin API works |
-| Wednesday | React: Admin Dashboard layout, User management page, Job approval page | TM3 | Admin UI works |
+| Tuesday | Admin APIs: User management, job moderation (takedown/restore), basic statistics | TM2 | Admin API works |
+| Wednesday | React: Admin Dashboard layout, User management page, Job moderation page | TM3 | Admin UI works |
 | Thursday | React: Basic statistics (job count, user count, applications), Chart.js for charts | TM3 | Charts display |
 | Friday | Flutter: Admin view only (no full UI), Role-based navigation | TM4 | Role-based works |
 | Saturday | Test admin flows, security check (non-admin cannot access admin), bug fixes | All | Security OK |

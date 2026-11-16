@@ -222,7 +222,9 @@ Phụ lục này cung cấp đặc tả API cho tất cả dịch vụ. Tài li�
 | **Công ty** | `/api/companies` | POST | Tạo Company; `409 ACCOUNT_ALREADY_HAS_COMPANY` với Nhà tuyển dụng đã có Company (AUTH-01-06) | BẮT BUỘC |
 | **Công ty** | `/api/companies/{id}` | GET | Chi tiết Company | BẮT BUỘC |
 | **Công ty** | `/api/companies` | GET | Danh sách / tìm kiếm Company | BẮT BUỘC |
-| **Công ty** | `/api/companies/{id}` | PUT | Cập nhật Company (chỉ Recruiter chủ sở hữu) | NICE (phần mở rộng: US-07b quản lý hồ sơ công ty) |
+| **Công ty** | `/api/companies/mine` | GET | Company của Nhà tuyển dụng đang đăng nhập kèm `isCompanyAdmin` (chỉ người tạo); `404` khi chưa gắn Company | BẮT BUỘC |
+| **Công ty** | `/api/companies/{id}/jobs` | GET | Trang Company công khai: tin `Active` của Company, phân trang đếm từ 0 | BẮT BUỘC |
+| **Công ty** | `/api/companies/{id}` | PUT | Cập nhật Company (chỉ Recruiter chủ sở hữu; `logoUrl` là chuỗi URL, không tải lên) | NICE (phần mở rộng: US-07b quản lý hồ sơ công ty) |
 | **Công ty** | `/api/companies/{id}/invite-codes` | POST | Phát hành mã mời Nhà tuyển dụng ràng buộc một email để gia nhập Company đã có (chỉ người tạo; mã gốc chỉ trả về một lần) | BẮT BUỘC |
 | **Nội bộ (job-svc)** | `/api/internal/invite-codes/check`, `/redeem`, `/{id}/release` | POST | Kiểm tra và đổi mã mời (`{ code, email }`) và giải phóng mã cho auth-svc; bearer `JOB_INTERNAL_TOKEN_FOR_AUTH`; không đi qua gateway | BẮT BUỘC |
 | **Nội bộ (job-svc)** | `/api/internal/companies` | POST | Tạo Company cho đăng ký doanh nghiệp mà tên miền chưa thuộc Company đã xác minh nào (chỉ auth-svc; `emailDomain`); bearer `JOB_INTERNAL_TOKEN_FOR_AUTH`; không đi qua gateway | BẮT BUỘC |
@@ -255,7 +257,9 @@ Phụ lục này cung cấp đặc tả API cho tất cả dịch vụ. Tài li�
 | **Hồ sơ** | `/api/profiles/educations` | POST | Thêm giáo dục | BẮT BUỘC |
 | **Thông báo** | `/api/notifications/history` | GET | Lịch sử thông báo | NÊN CÓ |
 | **Quản trị** | `/api/admin/users` | GET | Quản lý người dùng | NÊN CÓ |
-| **Quản trị** | `/api/admin/jobs` | GET | Tin theo trạng thái (`?status=Pending` cho hàng chờ duyệt) | NÊN CÓ |
+| **Quản trị** | `/api/admin/jobs` | GET | Tin theo trạng thái (ví dụ `?status=Deleted` cho tin đã bị gỡ) | NÊN CÓ |
+| **Quản trị** | `/api/admin/jobs/{id}/takedown` | POST | Gỡ tin kèm lý do bắt buộc (tối đa 500); đặt `Deleted`, lưu thông tin kiểm duyệt, phát `job.deleted` | NÊN CÓ |
+| **Quản trị** | `/api/admin/jobs/{id}/restore` | POST | Khôi phục tin bị kiểm duyệt gỡ; đặt `Active`, xóa thông tin kiểm duyệt, phát `job.updated` | NÊN CÓ |
 | **Quản trị** | `/api/admin/categories` | POST | Tạo danh mục | NÊN CÓ |
 | **Quản trị** | `/api/admin/stats` | GET | Thống kê nền tảng | NÊN CÓ |
 | **Quản trị** | `/api/health` | GET | Sức khỏe hệ thống (gateway tổng hợp) | NÊN CÓ |
@@ -263,7 +267,7 @@ Phụ lục này cung cấp đặc tả API cho tất cả dịch vụ. Tài li�
 | **AI** | `/api/ai/session` | POST | Tạo phiên chat | TỐT NÊN CÓ |
 | **AI** | `/api/ai/session/{sessionId}` | DELETE | Xóa phiên chat | TỐT NÊN CÓ |
 | **AI** | `/api/ai/session/{sessionId}/history` | GET | Lịch sử phiên | TỐT NÊN CÓ |
-| **AI** | `/api/ai/score-resume` | POST | Chấm điểm CV | TỐT NÊN CÓ |
+| **AI** | `/api/ai/score-resume` | POST | Chấm điểm CV (token chấm điểm của app-svc, hoặc `Recruiter`/`Admin`; ứng viên `403`) | TỐT NÊN CÓ |
 | **Trình thu thập** | `/api/crawler/trigger` | POST | Kích hoạt crawl thủ công (Admin) | BẮT BUỘC |
 | **Trình thu thập** | `/api/crawler/status` | GET | Trạng thái crawl + lỗi fallback | BẮT BUỘC |
 
@@ -281,17 +285,17 @@ Phụ lục này cung cấp lược đồ cơ sở dữ liệu cho tất cả d�
 | **refresh_tokens** | id (UUID, PK), user_id (FK), token_hash (SHA-256, unique), expiry_date (TTL tuyệt đối 7 ngày, 30 ngày nếu rememberMe, indexed), is_revoked, created_at | Refresh tokens cho cơ chế làm mới JWT; purge cron hàng ngày |
 | **password_reset_tokens** | id (UUID, PK), user_id (FK), token_hash (SHA-256, unique), expiry_date (TTL 15 phút, indexed), is_used, created_at | Token đặt lại mật khẩu (one-time) |
 | **pending_company_signups** | id (UUID, PK), company_name, tax_code (nullable), email, password_hash, token_hash (SHA-256, duy nhất), full_name, expiry_date (created_at + 24 giờ, indexed), created_at | Đăng ký Company chờ xác minh email (AUTH-01-10, AUTH-01-11); bị xóa khi xác minh, khi có đăng ký sau cho cùng email (kể cả đăng ký thuộc trường hợp thông báo, AUTH-01-10), hoặc khi hết hạn |
-| **companies** | id (UUID, PK), name (unique), tax_code (unique, nullable), verified (bool, default false), email_domain (unique, nullable), logo_url, website, description, address, industry, size, created_by (FK → users.id, chủ sở hữu Recruiter), created_at, updated_at | Hồ sơ Company; một Company có nhiều Users và nhiều Jobs |
+| **companies** | id (UUID, PK), name (unique), tax_code (unique, nullable), verified (bool, default false), email_domain (unique, nullable), logo_url, website, description, address, industry, size, created_by (FK → users.id, chủ sở hữu Recruiter và Quản trị viên Company; các recruiter khác là thành viên), created_at, updated_at | Hồ sơ Company; một Company có nhiều Users và nhiều Jobs |
 
 ### E.2 Cơ sở dữ liệu Tin (job_db)
 
 | Bảng | Cột | Mô tả |
 |:-----|:----|:------|
 | **categories** | id (UUID, PK), name (unique), description, created_at | Danh mục tin tuyển dụng |
-| **companies** | id (UUID, PK), name (unique), tax_code (unique, nullable), verified (bool, default false), email_domain (unique, nullable), logo_url, website, description, address, industry, size, created_by (FK → users.id, chủ sở hữu Recruiter), created_at, updated_at | Hồ sơ Company (chuẩn hóa, thay free-text company) |
+| **companies** | id (UUID, PK), name (unique), tax_code (unique, nullable), verified (bool, default false), email_domain (unique, nullable), logo_url, website, description, address, industry, size, created_by (FK → users.id, chủ sở hữu Recruiter và Quản trị viên Company; các recruiter khác là thành viên), created_at, updated_at | Hồ sơ Company (chuẩn hóa, thay free-text company) |
 | **invite_codes** | id (UUID, PK), company_id (FK → companies.id), code_hash (SHA-256 hex, duy nhất), email (đã chuẩn hóa, địa chỉ được ràng buộc), created_by (FK → users.id), expires_at, used_at (nullable), status (Active, Revoked), revoked_at (nullable), revoke_reason (nullable, ADMIN_CHANGED), created_at | Mã mời Nhà tuyển dụng (AUTH-01-09, AUTH-01-15); ràng buộc một email; dùng một lần, hết hạn sau 7 ngày; thu hồi các mã chưa dùng khi duyệt quản trị viên mới (AUTH-01-14) |
 | **company_join_requests** | id (UUID, PK), company_id (FK → companies.id), user_id (FK → users.id, duy nhất), status (Pending, Approved, Rejected, Expired, Escalated, SupportApproved, SupportRejected), expires_at (created_at + COMPANY_JOIN_REQUEST_TTL_DAYS, indexed), decided_by (FK → users.id, nullable), decided_at, decision_reason, created_at, updated_at | Đăng ký cùng tên miền đang chờ quản trị viên Company hoặc hỗ trợ quyết định (AUTH-01-12 đến AUTH-01-14) |
-| **jobs** | id (UUID, PK), title, description, company_id (FK → companies.id), location, salary_min, salary_max, salary_currency, category_id (FK), requirements, benefits, employment_type, experience_level, recruiter_id, status, view_count, created_at, updated_at | Tin tuyển dụng; `company` free-text deprecated → thay bằng `company_id` |
+| **jobs** | id (UUID, PK), title, description, company_id (FK → companies.id), location, salary_min, salary_max, salary_currency, category_id (FK), requirements, benefits, employment_type, experience_level, recruiter_id, status (Active, Closed hoặc Deleted; các dòng Pending/Rejected cũ đã được chuyển), moderation_reason (nullable), moderated_by (nullable, FK → users.id), moderated_at (nullable), view_count, created_at, updated_at | Tin tuyển dụng; `company` free-text deprecated → thay bằng `company_id`; tin đăng `Active` ngay |
 | **saved_jobs** | id (UUID, PK), user_id, job_id (FK), saved_at | Tin được người dùng lưu |
 
 ### E.3 Cơ sở dữ liệu Ứng tuyển (app_db)

@@ -95,10 +95,12 @@ Trọng số `W` và hiệu chuẩn được **học** trên các JD huấn luy�
 
 | Endpoint | Xác thực | Mô tả |
 |---|---|---|
-| `POST /api/ai/score-resume` | JWT | multipart `cv_file` (PDF/DOCX ≤ 5 MB), `job_id` (UUID) |
+| `POST /api/ai/score-resume` | token chấm điểm của app-svc, hoặc người dùng có vai trò `Recruiter`/`Admin` | multipart `cv_file` (PDF/DOCX ≤ 5 MB), `job_id` (UUID) |
 | `GET /api/ai/health`, `GET /health` | không | trạng thái, mô hình đã nạp, OCR có sẵn |
 
-Lỗi: `400`, `404 job_not_found`, `413`, `415`, `422 cv_encrypted|cv_unreadable|cv_no_text`, `429` (10 yêu cầu/phút/người dùng), `503 job_service_unavailable|busy`. OCR đồng thời bị giới hạn bằng semaphore (`OCR_CONCURRENCY`, mặc định 2).
+Lỗi: `400`, `403 forbidden` (người dùng không có vai trò `Recruiter` hoặc `Admin`), `404 job_not_found`, `413`, `415`, `422 cv_encrypted|cv_unreadable|cv_no_text`, `429` (10 yêu cầu/phút/người dùng), `503 job_service_unavailable|busy`. OCR đồng thời bị giới hạn bằng semaphore (`OCR_CONCURRENCY`, mặc định 2).
+
+Điểm phù hợp **chỉ dành cho Nhà tuyển dụng/Quản trị viên**. `POST /api/ai/score-resume` chấp nhận token chấm điểm của app-svc (`AI_SCORING_SERVICE_TOKEN`, dùng cho điểm tự động theo từng hồ sơ) hoặc danh tính người dùng có vai trò `Recruiter` hoặc `Admin`. Mọi danh tính người dùng khác, kể cả ứng viên (vai trò `User` hoặc không có vai trò), nhận `403 forbidden`, nên ứng viên không thể lấy điểm. Điểm tự động theo từng hồ sơ cũng chỉ nhà tuyển dụng và quản trị viên thấy.
 
 ## 8. Quy trình đánh giá
 
@@ -114,9 +116,7 @@ Image `python:3.12-slim` + `tesseract-ocr` (eng, vie); mô hình ONNX tải **l�
 
 ## 10. Giao diện web (M4)
 
-Trang `/resume-score`: chọn job (từ `?jobId=` hoặc tìm kiếm), tải CV, hiển thị điểm + mức, bốn thẻ phân tích, nhãn kỹ năng khớp/thiếu/bị phủ định, đoạn bằng chứng, gợi ý, cảnh báo, và trạng thái lỗi rõ ràng (422/413/415/429/503). Nút "Kiểm tra độ phù hợp CV" ở `JobDetailPage`. Mobile chưa làm trong đợt này.
-
-![Trang chấm điểm CV](images/resume-score-ui.png)
+Không có trang chấm điểm dành cho ứng viên: điểm phù hợp chỉ dành cho Nhà tuyển dụng/Quản trị viên, và trang chấm điểm CV dành cho ứng viên trong web client đã bị gỡ ngày 2026-11-16. Nhà tuyển dụng thấy điểm tự động theo từng hồ sơ trên danh sách ứng viên và chi tiết ứng tuyển (backlog B11). Việc quản lý route web thuộc `job-platform-web/README.md`.
 
 ## 11. Khác biệt so với SRS và bản nháp trước
 
@@ -129,7 +129,7 @@ Không dùng LLM bên ngoài (ràng buộc C1); trọng số **học từ dữ l
 | M1 | `ai-svc` chạy local; đọc text/scan/DOCX; chấm được CV với job; test đơn vị xanh |
 | M2 | Có tập nhãn + script đánh giá; trọng số đã học; báo cáo `eval/REPORT.md` |
 | M3 | Docker image; compose + gateway; chạy qua gateway; bộ độ bền xanh; đã đo độ trễ |
-| M4 | Trang web `/resume-score` chạy end-to-end với stack local |
+| M4 | Yêu cầu chấm điểm của Nhà tuyển dụng/Quản trị viên chạy end-to-end với stack local; không có trang chấm điểm dành cho ứng viên |
 
 ## 13. Rủi ro
 

@@ -106,14 +106,14 @@ flowchart TB
 
 #### 5.3.1 Description
 
-Smart Resume Scoring automatically evaluates a candidate's CV against job requirements and provides a match score with improvement suggestions. It helps job seekers understand their fit for a position and identify areas for improvement.
+Smart Resume Scoring automatically evaluates a candidate's CV against job requirements and provides a match score with improvement suggestions. It helps recruiters triage applications and identify skill gaps. A match score is recruiter/admin-only: candidates cannot request one and never see the stored per-application score.
 
 #### 5.3.2 Functional Requirements
 
 | ID | Requirement | Acceptance Criteria |
 |:---|:------------|:-------------------|
 | SCORE-01-01 | The system shall parse uploaded CVs to extract text content | - Parse PDF and DOCX files<br>- Extract sections: personal info, skills, experience, education<br>- Handle multiple formats and layouts |
-| SCORE-01-02 | The system shall calculate a match score against a job | - Score calculation endpoint: `POST /api/ai/score-resume`<br>- Score based on: skills match, experience match, education match<br>- Score range: 0-100 |
+| SCORE-01-02 | The system shall calculate a match score against a job | - Score calculation endpoint: `POST /api/ai/score-resume`<br>- Score based on: skills match, experience match, education match<br>- Score range: 0-100<br>- Callers: app-svc's scoring token, or a user with role `Recruiter` or `Admin`; a candidate (role `User`) gets `403 forbidden` |
 | SCORE-01-03 | The system shall identify matching skills | - Extract skills from both CV and job description<br>- Identify matching, missing, and extra skills<br>- Categorise skills by importance (required vs nice-to-have) |
 | SCORE-01-04 | The system shall generate improvement suggestions | - Suggestions based on missing skills<br>- Recommendations for CV improvement<br>- Specific, actionable advice |
 | SCORE-01-05 | The system shall cache scoring results | - Results cached for 24 hours<br>- Cache key: `cv_hash + job_id`<br>- Cached results returned for repeated requests |
@@ -123,7 +123,7 @@ Smart Resume Scoring automatically evaluates a candidate's CV against job requir
 
 | Endpoint | Method | Request Body | Response | Validation Rules |
 |:---------|:-------|:-------------|:---------|:-----------------|
-| `/api/ai/score-resume` | POST | FormData: `cv_file`, `job_id` | `{ score, skills, suggestions }` | User authenticated; job exists; file size <= 5MB |
+| `/api/ai/score-resume` | POST | FormData: `cv_file`, `job_id` | `{ score, skills, suggestions }` | Authenticated as app-svc's scoring token or a user with role `Recruiter`/`Admin`; candidate `403 forbidden`; job exists; file size <= 5MB |
 | `/api/ai/score-resume/{scoreId}` | GET | - | `{ score, skills, suggestions }` | User owns score |
 | `/api/ai/score-resume/{scoreId}` | DELETE | - | `{ message }` | User owns score |
 
@@ -592,7 +592,7 @@ Dark Mode provides a dark-themed user interface option, reducing eye strain in l
 | Recommended Selection | Justification |
 |:----------------------|:--------------|
 | **AI Job Copilot** | Highest WOW factor, demonstrates modern AI integration, provides real user value |
-| **Smart Resume Scoring** | Complements AI Copilot, practical value for job seekers, showcases NLP capabilities |
+| **Smart Resume Scoring** | Complements AI Copilot, practical value for recruiters, showcases NLP capabilities |
 
 **Alternative Selections:**
 

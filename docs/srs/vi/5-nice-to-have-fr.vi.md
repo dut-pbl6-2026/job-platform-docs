@@ -106,14 +106,14 @@ flowchart TB
 
 #### 5.3.1 Mô tả
 
-Chấm điểm CV thông minh tự động đánh giá CV của ứng viên so với yêu cầu công việc và cung cấp điểm số phù hợp kèm gợi ý cải thiện. Nó giúp người tìm việc hiểu được mức độ phù hợp của họ với vị trí và xác định các lĩnh vực cần cải thiện.
+Chấm điểm CV thông minh tự động đánh giá CV của ứng viên so với yêu cầu công việc và cung cấp điểm số phù hợp kèm gợi ý cải thiện. Nó giúp nhà tuyển dụng phân loại hồ sơ ứng tuyển và xác định khoảng trống kỹ năng. Điểm phù hợp chỉ dành cho Nhà tuyển dụng/Quản trị viên: ứng viên không thể yêu cầu chấm điểm và không bao giờ thấy điểm được lưu theo từng hồ sơ.
 
 #### 5.3.2 Yêu cầu chức năng
 
 | ID | Yêu cầu | Tiêu chí chấp nhận |
 |:---|:--------|:-------------------|
 | SCORE-01-01 | Hệ thống phân tích CV đã tải lên để trích xuất nội dung văn bản | - Phân tích file PDF và DOCX<br>- Trích xuất các phần: thông tin cá nhân, kỹ năng, kinh nghiệm, giáo dục<br>- Xử lý nhiều định dạng và bố cục |
-| SCORE-01-02 | Hệ thống tính điểm phù hợp với một công việc | - Điểm cuối tính điểm: `POST /api/ai/score-resume`<br>- Điểm dựa trên: khớp kỹ năng, khớp kinh nghiệm, khớp giáo dục<br>- Khoảng điểm: 0-100 |
+| SCORE-01-02 | Hệ thống tính điểm phù hợp với một công việc | - Điểm cuối tính điểm: `POST /api/ai/score-resume`<br>- Điểm dựa trên: khớp kỹ năng, khớp kinh nghiệm, khớp giáo dục<br>- Khoảng điểm: 0-100<br>- Bên gọi: token chấm điểm của app-svc, hoặc người dùng có vai trò `Recruiter`/`Admin`; ứng viên (vai trò `User`) nhận `403 forbidden` |
 | SCORE-01-03 | Hệ thống xác định kỹ năng khớp | - Trích xuất kỹ năng từ cả CV và mô tả công việc<br>- Xác định kỹ năng khớp, thiếu và thừa<br>- Phân loại kỹ năng theo mức độ quan trọng (bắt buộc vs nên có) |
 | SCORE-01-04 | Hệ thống tạo gợi ý cải thiện | - Gợi ý dựa trên kỹ năng thiếu<br>- Đề xuất cải thiện CV<br>- Lời khuyên cụ thể, có thể hành động |
 | SCORE-01-05 | Hệ thống lưu đệm kết quả chấm điểm | - Kết quả được đệm trong 24 giờ<br>- Khóa đệm: `cv_hash + job_id`<br>- Kết quả đệm được trả về cho yêu cầu lặp lại |
@@ -123,7 +123,7 @@ Chấm điểm CV thông minh tự động đánh giá CV của ứng viên so v
 
 | Điểm cuối | Phương thức | Body yêu cầu | Phản hồi | Quy tắc xác thực |
 |:----------|:------------|:-------------|:---------|:-----------------|
-| `/api/ai/score-resume` | POST | FormData: `cv_file`, `job_id` | `{ score, skills, suggestions }` | Người dùng được xác thực; công việc tồn tại; kích thước file <= 5MB |
+| `/api/ai/score-resume` | POST | FormData: `cv_file`, `job_id` | `{ score, skills, suggestions }` | Xác thực bằng token chấm điểm của app-svc hoặc người dùng có vai trò `Recruiter`/`Admin`; ứng viên nhận `403 forbidden`; công việc tồn tại; kích thước file <= 5MB |
 | `/api/ai/score-resume/{scoreId}` | GET | - | `{ score, skills, suggestions }` | Người dùng sở hữu điểm số |
 | `/api/ai/score-resume/{scoreId}` | DELETE | - | `{ message }` | Người dùng sở hữu điểm số |
 
@@ -592,7 +592,7 @@ Chế độ tối cung cấp tùy chọn giao diện người dùng với nền 
 | Lựa chọn được khuyến nghị | Lý do |
 |:--------------------------|:------|
 | **Trợ lý AI việc làm** | Yếu tố WOW cao nhất, thể hiện tích hợp AI hiện đại, mang lại giá trị thực cho người dùng |
-| **Chấm điểm CV thông minh** | Bổ sung cho Trợ lý AI, giá trị thực tiễn cho người tìm việc, thể hiện khả năng NLP |
+| **Chấm điểm CV thông minh** | Bổ sung cho Trợ lý AI, giá trị thực tiễn cho nhà tuyển dụng, thể hiện khả năng NLP |
 
 **Các lựa chọn thay thế:**
 
