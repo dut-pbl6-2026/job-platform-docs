@@ -66,10 +66,17 @@ Trợ lý AI việc làm là một trợ lý trò chuyện giúp người tìm v
 
 | Điểm cuối | Phương thức | Body yêu cầu | Phản hồi | Quy tắc xác thực |
 |:----------|:------------|:-------------|:---------|:-----------------|
-| `/api/ai/chat` | POST | `{ message, sessionId?, stream?, maxTokens?, temperature? }` | `{ response, sessionId }` hoặc Server-Sent Events stream | Người dùng được xác thực; tin nhắn không rỗng; `429` khi vượt 20 req/giờ; `maxTokens` ≤ 512 |
-| `/api/ai/session` | POST | - | `{ sessionId }` | Người dùng được xác thực |
-| `/api/ai/session/{sessionId}` | DELETE | - | `{ message }` | Người dùng sở hữu phiên |
-| `/api/ai/session/{sessionId}/history` | GET | - | `[ { role, content, timestamp } ]` | Người dùng sở hữu phiên |
+| `/api/ai/chat` | POST | `{ message, sessionId?, stream? }` | Sự kiện SSE `token` / `jobs` / `error` / `done`, hoặc `{ response, sessionId, jobs }` khi `stream: false` | Người dùng được xác thực; `message` 1–2000 ký tự; `stream` kiểu boolean, mặc định `true`; `429` khi vượt 20 tin/người dùng/giờ. `maxTokens` và `temperature` không được dùng: không có mô hình để giới hạn hay lấy mẫu. |
+| `/api/ai/session` | POST | - | `201 { sessionId, createdAt }` | Người dùng được xác thực |
+| `/api/ai/session/{sessionId}` | GET | - | `{ sessionId, createdAt, updatedAt, messages }` | Người dùng sở hữu phiên; ngược lại `404 session_not_found` |
+| `/api/ai/session/{sessionId}` | DELETE | - | `204` (không body) | Người dùng sở hữu phiên; phiên thiếu, hết hạn hoặc của người khác cũng `204` |
+| `/api/ai/session/{sessionId}/history` | GET | - | `[ { id, role, content, createdAt, jobs? } ]` | Người dùng sở hữu phiên; phiên thiếu, hết hạn hoặc của người khác trả `[]` |
+
+> **Ghi chú triển khai (ai-svc).** Cả năm điểm cuối trên đã có. Phiên lưu trong Redis dưới khoá `ai:chat:{id}`, hết hạn sau 24 giờ không hoạt động, giữ tối đa 20 tin nhắn gần nhất; giới hạn chat là 20 tin/người dùng/giờ (`429`), và sự kiện `done` mang `{ sessionId }` để client bắt đầu không có phiên vẫn biết id.
+>
+> Phần truy xuất đã có, phần sinh văn bản thì chưa. Câu hỏi về việc làm được gửi tới tìm kiếm embedding của search-svc (`GET /api/search/jobs/semantic`, tối đa 3 kết quả `{ id, title, company }`), và câu trả lời là mẫu câu theo quy tắc bằng tiếng Việt dựng trên các kết quả đó. Không gọi mô hình ngôn ngữ nào, theo ràng buộc "không dùng API AI/LLM bên thứ ba"; dịch vụ chỉ trả lời về việc làm, CV và phỏng vấn.
+>
+> So với tiêu chí nghiệm thu: AI-01-01 đạt. AI-01-02 phần truy xuất đạt, phần sinh văn bản không đạt (không có LLM nên không phải RAG sinh văn bản). AI-01-03 đạt cửa sổ 20 tin và TTL 24 giờ, không đạt giới hạn 8.000 token, tóm tắt ngữ cảnh và thông báo "chỉ nhớ 20 tin gần nhất". AI-01-04 đạt phát luồng SSE; huỷ sinh phản hồi chính là client đóng luồng (không có quá trình sinh để huỷ). AI-01-05 một phần: có tiêu đề và công ty, không giải thích yêu cầu công việc, client tự dựng liên kết từ `id`. AI-01-06 một phần: mẹo CV và phỏng vấn là mẫu cố định, không có kỳ vọng lương hay lộ trình nghề nghiệp. AI-01-07 một phần: hiểu câu hỏi tiếng Việt và tiếng Anh đã bỏ dấu, nhưng chỉ trả lời bằng tiếng Việt. AI-01-08 đạt: từ chối câu hỏi ngoài chủ đề và câu trả lời về việc làm có tuyên bố miễn trừ. AI-01-09 không đạt: không tóm tắt ngữ cảnh, không giới hạn 512 token và không ghi log token; chỉ có giới hạn 20 tin/giờ.
 
 #### 5.2.4 Luồng đường ống RAG
 

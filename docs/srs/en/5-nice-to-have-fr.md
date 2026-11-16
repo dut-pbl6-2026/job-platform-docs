@@ -66,10 +66,17 @@ The AI Job Copilot is a conversational assistant that helps job seekers with car
 
 | Endpoint | Method | Request Body | Response | Validation Rules |
 |:---------|:-------|:-------------|:---------|:-----------------|
-| `/api/ai/chat` | POST | `{ message, sessionId?, stream?, maxTokens?, temperature? }` | `{ response, sessionId }` or Server-Sent Events stream | User authenticated; message not empty; `429` when >20 req/hour; `maxTokens` ≤ 512 |
-| `/api/ai/session` | POST | - | `{ sessionId }` | User authenticated |
-| `/api/ai/session/{sessionId}` | DELETE | - | `{ message }` | User owns session |
-| `/api/ai/session/{sessionId}/history` | GET | - | `[ { role, content, timestamp } ]` | User owns session |
+| `/api/ai/chat` | POST | `{ message, sessionId?, stream? }` | SSE `token` / `jobs` / `error` / `done` events, or `{ response, sessionId, jobs }` when `stream: false` | User authenticated; `message` 1–2000 characters; `stream` boolean, default `true`; `429` above 20 messages per user per hour. `maxTokens` and `temperature` are not used: there is no model to cap or sample. |
+| `/api/ai/session` | POST | - | `201 { sessionId, createdAt }` | User authenticated |
+| `/api/ai/session/{sessionId}` | GET | - | `{ sessionId, createdAt, updatedAt, messages }` | User owns session; otherwise `404 session_not_found` |
+| `/api/ai/session/{sessionId}` | DELETE | - | `204` (no body) | User owns session; a missing, expired or foreign session is also `204` |
+| `/api/ai/session/{sessionId}/history` | GET | - | `[ { id, role, content, createdAt, jobs? } ]` | User owns session; a missing, expired or foreign session reads as `[]` |
+
+> **Implementation note (ai-svc).** All five endpoints above exist. Sessions live in Redis as `ai:chat:{id}` for 24 h of inactivity and keep the last 20 messages; the chat limit is 20 messages per user per hour (`429`), and `done` carries `{ sessionId }` so a client that started without one learns its id.
+>
+> Retrieval is implemented, generation is not. A job question goes to search-svc's embedding search (`GET /api/search/jobs/semantic`, top 3 hits of `{ id, title, company }`) and the reply is a rule-based Vietnamese template over those hits. No language model is called, per the "no third-party AI/LLM API" constraint; the service's own rule is jobs, CV and interview answers only.
+>
+> Against the acceptance criteria: AI-01-01 yes. AI-01-02 retrieval yes, generation no (no LLM, so no retrieval-augmented generation). AI-01-03 the 20-message window and the 24 h TTL yes, the 8,000-token limit, the context summary and the "I will only remember the last 20 messages" notice no. AI-01-04 SSE streaming yes, and cancellation is the client closing the stream (nothing is generated to cancel). AI-01-05 partial: title and company, no requirement explanation, and the client builds the job link from `id`. AI-01-06 partial: fixed CV and interview tips, no salary expectations or career paths. AI-01-07 partial: Vietnamese and accent-folded English queries are understood, replies are Vietnamese only. AI-01-08 yes: off-topic messages are refused and job answers carry a disclaimer. AI-01-09 no: no context summary, no 512-token cap and no token-usage log; only the 20/hour limit exists.
 
 #### 5.2.4 RAG Pipeline Flow
 
