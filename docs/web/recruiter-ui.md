@@ -36,11 +36,15 @@ The mobile app has a Recruiter role with four working screens. The web app has n
 | `/companies/:id` | Public | Guest, any | Public company profile and its active jobs |
 | `/login`, `/register`, `/register-company`, `/forgot-password`, `/reset-password`, `/verify-email` | Auth | Guest | Sign-in, candidate/company sign-up, verification |
 | `/profile` | Authed | any signed-in | Profile (avatar menu); the AI assistant is not surfaced |
-| `/applications`, `/applications/:id`, `/jobs/:id/apply` | Authed | User | Application list/detail and apply flow |
+| `/applications`, `/applications/:id`, `/jobs/:id/apply` | Authed | User | Application list/detail and the three-step apply wizard |
+| `/interviews` | Authed | User | The candidate's interview calendar, with `.ics` downloads |
 | `/recruiter` | Workspace | Recruiter | Dashboard (Tổng quan) |
 | `/recruiter/jobs` | Workspace | Recruiter | Job list (Tin tuyển dụng) |
 | `/recruiter/jobs/new` | Workspace | Recruiter | Post job (Đăng tin); publishes immediately |
-| `/recruiter/jobs/:jobId/applications` | Workspace | Recruiter | Applications for a job, with the AI match score |
+| `/recruiter/candidates` | Workspace | Recruiter | Candidate kanban for one job; drag a card or use its menu to advance it |
+| `/recruiter/jobs/:jobId/applications` | Workspace | Recruiter | Applications for a job, with the AI match score, email and scheduling actions |
+| `/recruiter/interviews` | Workspace | Recruiter | Month calendar of scheduled interviews, cancel and `.ics` download |
+| `/recruiter/email-templates` | Workspace | Recruiter | Saved email templates (create, edit, delete) |
 | `/recruiter/company` | Workspace | Recruiter | Company profile; editing is Company Admin only |
 | `/recruiter/invite-codes`, `/recruiter/join-requests` | Workspace | Company Admin | Invite codes and company join requests |
 | `/admin`, `/admin/jobs`, `/admin/users` | Workspace | Admin | Overview, job moderation (takedown/restore), users |
@@ -63,12 +67,36 @@ areas. Candidate-only routes redirect away with a notice; app-svc/job-svc re-che
 | `/recruiter/*` | Recruiter only | Redirect to `/jobs` with a notice |
 | `/admin/*` | Admin only | Redirect to `/jobs` with a notice |
 
-## 5. Known gaps
+## 5. Engagement flows (2026-11)
+
+**Apply** is a three-step wizard, not one long form: (1) review the profile that the recruiter will see,
+with a checklist of missing fields and an explicit confirmation; (2) choose the CV and write an optional
+cover letter; (3) review and submit. The profile step is mandatory because the application carries that
+identity into the recruiter's pipeline. **Post job** is likewise three steps: basics → description →
+salary and a preview of the finished card.
+
+| Surface | Web route | app-svc endpoint(s) |
+|---|---|---|
+| Candidate board | `/recruiter/candidates` | `GET /api/applications/job/{jobId}`; `PUT /api/applications/{id}/status` |
+| Email a candidate | dialog on the board and applications page | `POST /api/applications/{id}/email` |
+| Templates | `/recruiter/email-templates` | `GET/POST /api/email-templates`; `PUT/DELETE /api/email-templates/{id}` |
+| Schedule an interview | dialog on the board and applications page | `POST /api/interviews` |
+| Interview calendars | `/recruiter/interviews`, `/interviews` | `GET /api/interviews`; `PUT /api/interviews/{id}`; `POST /api/interviews/{id}/cancel`; `GET /api/interviews/{id}/ics` |
+| Notification bell | every signed-in shell | Aggregates `GET /api/applications/me`, `GET /api/applications/job/{id}` and `GET /api/interviews`; the last-opened instant is per account in `localStorage` |
+
+An interview saves a snapshot of the job title, company, candidate and recruiter identity, so the
+calendar and the `.ics` file do not depend on later edits. Sending an invite goes through notif-svc's
+internal `POST /api/internal/email` with an RFC 5545 `text/calendar` attachment; a mail failure never
+rolls back the saved interview, and the API reports `inviteSent`. Templates may use
+`{{candidate_name}}`, `{{job_title}}` and `{{recruiter_name}}`, resolved on the server. Templates are
+private to the recruiter who created them.
+
+## 6. Known gaps
 
 1. **Applications route has no Recruiter policy at the gateway.** The `apps` route is `Authenticated` only, so any logged-in user passes the gateway. Enforcement for recruiter-only actions is in app-svc only. This spec records the gap. The gateway is not changed in this work.
 2. **Post job uses the Recruiter endpoint, not the admin endpoint.** The web form must call `POST /api/jobs`. It must not call `POST /api/admin/jobs` (used by `AdminJobForm`).
 3. **No real-backend test.** Web work is verified with mocked API calls in Playwright.
 
-## 6. Verification
+## 7. Verification
 
 Each implementation PR must pass `npx tsc -b`, `npm run build`, and the Playwright e2e suite with reduced workers, with no new failures against the recorded baseline. Lint is not runnable in the current environment (eslint is not installed).

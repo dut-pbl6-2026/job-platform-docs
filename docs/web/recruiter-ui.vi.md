@@ -36,11 +36,15 @@
 | `/companies/:id` | Công khai | Khách, mọi vai trò | Hồ sơ công ty công khai và các tin đang tuyển |
 | `/login`, `/register`, `/register-company`, `/forgot-password`, `/reset-password`, `/verify-email` | Xác thực | Khách | Đăng nhập, đăng ký ứng viên/công ty, xác minh email |
 | `/profile` | Đã đăng nhập | Mọi vai trò | Hồ sơ (menu avatar); trợ lý AI không còn hiển thị |
-| `/applications`, `/applications/:id`, `/jobs/:id/apply` | Đã đăng nhập | Ứng viên | Danh sách/chi tiết đơn và luồng ứng tuyển |
+| `/applications`, `/applications/:id`, `/jobs/:id/apply` | Đã đăng nhập | Ứng viên | Danh sách/chi tiết đơn và luồng ứng tuyển ba bước |
+| `/interviews` | Đã đăng nhập | Ứng viên | Lịch phỏng vấn của ứng viên, tải tệp `.ics` |
 | `/recruiter` | Khu làm việc | Nhà tuyển dụng | Tổng quan |
 | `/recruiter/jobs` | Khu làm việc | Nhà tuyển dụng | Tin tuyển dụng |
 | `/recruiter/jobs/new` | Khu làm việc | Nhà tuyển dụng | Đăng tin; tin hiển thị ngay |
-| `/recruiter/jobs/:jobId/applications` | Khu làm việc | Nhà tuyển dụng | Hồ sơ ứng tuyển của tin, kèm điểm phù hợp AI |
+| `/recruiter/candidates` | Khu làm việc | Nhà tuyển dụng | Kanban ứng viên của một tin; kéo thẻ hoặc dùng menu để chuyển bước |
+| `/recruiter/jobs/:jobId/applications` | Khu làm việc | Nhà tuyển dụng | Hồ sơ ứng tuyển của tin, kèm điểm phù hợp, gửi email và đặt lịch |
+| `/recruiter/interviews` | Khu làm việc | Nhà tuyển dụng | Lịch tháng các buổi phỏng vấn, huỷ và tải `.ics` |
+| `/recruiter/email-templates` | Khu làm việc | Nhà tuyển dụng | Mẫu email đã lưu (tạo, sửa, xoá) |
 | `/recruiter/company` | Khu làm việc | Nhà tuyển dụng | Hồ sơ công ty; chỉ quản trị viên công ty được sửa |
 | `/recruiter/invite-codes`, `/recruiter/join-requests` | Khu làm việc | Quản trị viên công ty | Mã mời và yêu cầu tham gia công ty |
 | `/admin`, `/admin/jobs`, `/admin/users` | Khu làm việc | Quản trị viên | Tổng quan, kiểm duyệt tin (gỡ/khôi phục), người dùng |
@@ -64,12 +68,34 @@ quyền lại ở máy chủ.
 | `/recruiter/*` | Chỉ nhà tuyển dụng | Chuyển hướng về `/jobs` kèm thông báo |
 | `/admin/*` | Chỉ quản trị viên | Chuyển hướng về `/jobs` kèm thông báo |
 
-## 5. Khoảng trống đã biết
+## 5. Luồng tương tác (2026-11)
+
+**Ứng tuyển** là wizard ba bước, không phải một biểu mẫu dài: (1) xem lại hồ sơ mà nhà tuyển dụng sẽ
+nhận, kèm danh sách thông tin còn thiếu và bước xác nhận rõ ràng; (2) chọn CV và viết thư giới thiệu nếu
+muốn; (3) xem lại và gửi. Bước hồ sơ là bắt buộc vì đơn ứng tuyển mang danh tính đó vào pipeline của
+nhà tuyển dụng. **Đăng tin** cũng ba bước: thông tin cơ bản → mô tả → lương và xem trước thẻ tin.
+
+| Bề mặt | Route web | Endpoint app-svc |
+|---|---|---|
+| Bảng ứng viên | `/recruiter/candidates` | `GET /api/applications/job/{jobId}`; `PUT /api/applications/{id}/status` |
+| Gửi email | hộp thoại trên bảng và trang hồ sơ | `POST /api/applications/{id}/email` |
+| Mẫu email | `/recruiter/email-templates` | `GET/POST /api/email-templates`; `PUT/DELETE /api/email-templates/{id}` |
+| Đặt lịch phỏng vấn | hộp thoại trên bảng và trang hồ sơ | `POST /api/interviews` |
+| Lịch phỏng vấn | `/recruiter/interviews`, `/interviews` | `GET /api/interviews`; `PUT /api/interviews/{id}`; `POST /api/interviews/{id}/cancel`; `GET /api/interviews/{id}/ics` |
+| Chuông thông báo | mọi khung đã đăng nhập | Tổng hợp `GET /api/applications/me`, `GET /api/applications/job/{id}` và `GET /api/interviews`; mốc mở gần nhất lưu theo tài khoản trong `localStorage` |
+
+Mỗi buổi phỏng vấn lưu ảnh chụp tên tin, công ty, ứng viên và nhà tuyển dụng, nên lịch và tệp `.ics`
+không phụ thuộc vào thay đổi sau đó. Thư mời đi qua endpoint nội bộ `POST /api/internal/email` của
+notif-svc với tệp `text/calendar` theo RFC 5545; lỗi gửi mail không làm mất buổi phỏng vấn đã lưu và API
+trả `inviteSent`. Mẫu email dùng được `{{candidate_name}}`, `{{job_title}}`, `{{recruiter_name}}` và được
+thay ở server. Mẫu là riêng của từng nhà tuyển dụng.
+
+## 6. Khoảng trống đã biết
 
 1. **Route hồ sơ ứng tuyển không có chính sách Recruiter ở gateway.** Route `apps` chỉ yêu cầu `Authenticated`, nên mọi người dùng đã đăng nhập đều qua được gateway. Việc thực thi cho hành động chỉ dành cho nhà tuyển dụng chỉ nằm ở app-svc. Tài liệu ghi nhận khoảng trống này. Gateway không được thay đổi trong công việc này.
 2. **Đăng tin dùng endpoint Recruiter, không dùng endpoint admin.** Form web phải gọi `POST /api/jobs`. Không được gọi `POST /api/admin/jobs` (được `AdminJobForm` dùng).
 3. **Chưa có kiểm thử với backend thật.** Công việc web được xác minh bằng lời gọi API giả lập trong Playwright.
 
-## 6. Kiểm chứng
+## 7. Kiểm chứng
 
 Mỗi PR triển khai phải vượt qua `npx tsc -b`, `npm run build`, và bộ e2e Playwright với số worker giảm, không có lỗi mới so với baseline đã ghi. Lint không chạy được trong môi trường hiện tại (chưa cài eslint).
