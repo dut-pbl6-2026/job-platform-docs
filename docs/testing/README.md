@@ -12,6 +12,6 @@ Run: `cd playwright && WEB_URL=http://localhost:3000 ./run-tests.sh`; view the r
 Every test records a trace and a screenshot (video on failure) → use these as evidence for the report.
 
 Notes:
-- The dev `docker-compose.yml` sets `SMTP_HOST=localhost`, so reset emails do not reach MailHog; `playwright/docker-compose.smtp.override.yml` should only be applied when testing.
+- The dev `docker-compose.yml` gives notif-svc `SMTP_HOST=mailhog`, but auth-svc reads the value from `envs/.env.dev`: use `SMTP_HOST=mailhog` when auth-svc runs in compose, and `SMTP_HOST=localhost` when it runs on the host next to `docker compose up mailhog` (the example file uses `localhost`). The MailHog web UI is `http://localhost:8025`.
 - The web container on `:5173` is an old build; when testing, run the web app from `main` (Vite, port 3000 because the gateway only allows CORS from 5173/3000) and set `VITE_API_BASE_URL=http://localhost:5000/api`.
-- **Known issue (PROF-UI-09):** the web app calls `/api/profile/*` (singular), but the gateway only has `/api/profiles/*` → 404 → the web app falls back to mock data in localStorage.
+- **Resolved (PROF-UI-09):** the web app now calls `/api/profiles/*`, matching the gateway route; it no longer falls back to mock data for profile calls.

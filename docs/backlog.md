@@ -3,24 +3,20 @@
 > PBL6-16 E2E auth — tracked debt.
 
 ## 1) Web register → explicit login
-- File: `job-platform-web/src/contexts/AuthContext.tsx:43` `src/lib/api.ts:81`
-- Log: `POST /api/auth/register` returns `201 {userId}` not tokens; web does `await register` then `await login` extra call.
-- Fix: if backend returns tokens on register, remove second `login` call.
+- Status: resolved.
+- Now: `POST /api/auth/register` returns `202 { message }` and no tokens; the web shows the "check your email" state and links to `/verify-email`. Login happens only after verification.
 
 ## 2) Mobile secure storage not wired
-- File: `job-platform-mobile/pubspec.yaml` `lib/core/session/auth_session.dart` `lib/features/auth/data/repositories/api_auth_repository.dart`
-- Log: `dio/secure_storage/shared_prefs` added, `AuthSession.load()/setSession()` with `encryptedSharedPreferences` and `ApiAuthRepository` ready, but screens still use `MockAuthRepository`, `main.dart` not calling `load()`, `android minSdk 23` not set, `flutter analyze` not run.
-- Fix: wire `main.dart await AuthSession.instance.load()`, inject `ApiAuthRepository` via `FLUTTER_API_URL`, set `minSdk 23`, run `flutter analyze`.
+- Status: resolved.
+- Now: `lib/features/splash/splash_screen.dart` calls `AuthSession.instance.load()` and `ApiAuthRepository().validateRestoredSession()`; the auth screens default to `ApiAuthRepository`; `minSdk = 31`.
 
 ## 3) GHCR local-feed pinned
-- File: `job-platform-auth-svc/nuget.config` `local-feed/JobPlatform.SharedKernel.0.1.0.nupkg` `job-platform-gateway/nuget.config`
-- Log: CI `dotnet restore` uses committed `0.1.0.nupkg`; not rebuilding `SharedKernel` in auth/gateway CI.
-- Fix: on `SharedKernel` bump run `mise run pack && cp artifacts/*.nupkg ../job-platform-auth-svc/local-feed/ ../job-platform-gateway/local-feed/`.
+- Status: resolved. There is no committed `local-feed/` directory.
+- Now: every consumer takes `JobPlatform.SharedKernel` from GitHub Packages `https://nuget.pkg.github.com/dut-pbl6-2026/index.json` via `nuget.config`. Authentication is still required even though the package is public: restore needs `GITHUB_TOKEN` with `read:packages`; Docker builds mount it as the BuildKit secret `nuget_token`.
 
 ## 4) Missing HSTS + security headers (MitM: SSL-strip)
-- File: `job-platform-gateway/src/Gateway.Api/Program.cs` `job-platform-auth-svc/src/Auth.Api/Program.cs` (neither has `UseHsts`/headers)
-- Log: With the Azure VM target (PBL6-51/PBL6-83, infra PR #18) the compose stack ships no TLS terminator (gateway/web are published directly; a reverse proxy on the VM is optional per the infra README); no `Strict-Transport-Security` so first-visit over HTTP is SSL-strippable. SRS `7-eir.md:400` requires headers at SHOULD.
-- Fix: centralized headers middleware at gateway (covers all downstream): `Strict-Transport-Security: max-age=2592000` (30 days, no preload), `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`; enable HSTS only when non-Development.
+- Status: resolved at the production edge.
+- Now: `docker/caddy/Caddyfile` sends `Strict-Transport-Security: max-age=31536000; includeSubDomains`; the gateway also sends HSTS over HTTPS. The Caddy edge drops the upstream copy so clients see one header.
 
 ## 5) SMTP STARTTLS opportunistic → STRIPTLS-able
 - File: `job-platform-auth-svc/src/Auth.Infrastructure/Services/SmtpEmailSender.cs:52` (`StartTlsWhenAvailable`)
