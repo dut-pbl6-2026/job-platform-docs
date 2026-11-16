@@ -27,27 +27,42 @@
 - **Trình tạo CV** — lưu là no-op trên mobile.
 - **Danh sách thông báo** — `GET /api/notifications` không tồn tại trong notif-svc. Chỉ có `/history`, và endpoint này yêu cầu token.
 
-## 3. Route web (dự kiến)
+## 3. Tuyến đường web (hiện tại)
 
-| Route | Vai trò | Chức năng |
+| Tuyến | Khung | Vai trò | Chức năng |
+|---|---|---|---|
+| `/` | Công khai | Khách, mọi vai trò | Trang chủ: tìm kiếm, ngành nghề, việc làm mới, công ty |
+| `/jobs`, `/jobs/:id` | Công khai | Khách, mọi vai trò | Bảng việc làm và chi tiết tin |
+| `/companies/:id` | Công khai | Khách, mọi vai trò | Hồ sơ công ty công khai và các tin đang tuyển |
+| `/login`, `/register`, `/register-company`, `/forgot-password`, `/reset-password`, `/verify-email` | Xác thực | Khách | Đăng nhập, đăng ký ứng viên/công ty, xác minh email |
+| `/profile`, `/chat` | Đã đăng nhập | Mọi vai trò | Hồ sơ và trợ lý AI |
+| `/applications`, `/applications/:id`, `/jobs/:id/apply` | Đã đăng nhập | Ứng viên | Danh sách/chi tiết đơn và luồng ứng tuyển |
+| `/recruiter` | Khu làm việc | Nhà tuyển dụng | Tổng quan |
+| `/recruiter/jobs` | Khu làm việc | Nhà tuyển dụng | Tin tuyển dụng |
+| `/recruiter/jobs/new` | Khu làm việc | Nhà tuyển dụng | Đăng tin; tin hiển thị ngay |
+| `/recruiter/jobs/:jobId/applications` | Khu làm việc | Nhà tuyển dụng | Hồ sơ ứng tuyển của tin, kèm điểm phù hợp AI |
+| `/recruiter/company` | Khu làm việc | Nhà tuyển dụng | Hồ sơ công ty; chỉ quản trị viên công ty được sửa |
+| `/recruiter/invite-codes`, `/recruiter/join-requests` | Khu làm việc | Quản trị viên công ty | Mã mời và yêu cầu tham gia công ty |
+| `/admin`, `/admin/jobs`, `/admin/users` | Khu làm việc | Quản trị viên | Tổng quan, kiểm duyệt tin (gỡ/khôi phục), người dùng |
+| `*` | Công khai | Khách, mọi vai trò | Trang 404 với liên kết về bảng việc làm và trang chủ |
+
+Khung: `PublicLayout` hiển thị thanh điều hướng trên và chân trang; `AuthedLayout` chọn đầu trang
+gọn cho `User` và thanh bên `WorkspaceLayout` cho `Recruiter`/`Admin` (không có chân trang tiếp thị
+trong hai khu làm việc). Menu tài khoản nằm sau ảnh đại diện: Hồ sơ, Đơn ứng tuyển (ứng viên),
+Công ty (nhà tuyển dụng), Quản trị (quản trị viên), Trợ lý AI, Đăng xuất. Trang chấm điểm CV của ứng
+viên đã bị bỏ: điểm phù hợp chỉ hiển thị cho nhà tuyển dụng theo từng hồ sơ.
+
+## 4. Bảo vệ tuyến đường
+
+Việc kiểm tra nằm ở ranh giới khung: `ProtectedRoute` cho đăng nhập và `RequireRole` cho khu vực
+theo vai trò. Tuyến chỉ dành cho ứng viên sẽ chuyển hướng kèm thông báo; app-svc/job-svc kiểm tra
+quyền lại ở máy chủ.
+
+| Tuyến | Vai trò được phép | Ngược lại |
 |---|---|---|
-| `/recruiter` | Recruiter | Tổng quan |
-| `/recruiter/jobs` | Recruiter | Danh sách tin tuyển dụng |
-| `/recruiter/jobs/new` | Recruiter | Đăng tin |
-| `/recruiter/jobs/:jobId/applications` | Recruiter | Hồ sơ ứng tuyển theo từng tin |
-
-Các trang nhà tuyển dụng nằm sau guard `RecruiterRoute`, được mô phỏng theo `AdminRoute`. Menu nhà tuyển dụng chỉ hiển thị khi `isRecruiter` là true trong `src/lib/roles.ts`.
-
-## 4. Guard route (khớp mobile)
-
-Mobile (`app_router.dart`, khoảng dòng 128–145) giữ các trang chỉ dành cho ứng viên tách khỏi nhà tuyển dụng. Web phải làm tương tự.
-
-| Route | Vai trò được phép | Trường hợp khác |
-|---|---|---|
-| `/applications`, `/applications/:id`, `/jobs/:id/apply`, `/resume-score` | Chỉ ứng viên (User) | Chuyển hướng về `/jobs` kèm thông báo |
-| `/recruiter/*` | Chỉ Recruiter | Chuyển hướng đi kèm thông báo |
-
-Hiện `ProtectedRoute` của web chỉ kiểm tra đăng nhập. Cần bổ sung kiểm tra vai trò cho các route trên.
+| `/applications`, `/applications/:id`, `/jobs/:id/apply` | Chỉ ứng viên (User) | Chuyển hướng về `/jobs` kèm thông báo |
+| `/recruiter/*` | Chỉ nhà tuyển dụng | Chuyển hướng về `/jobs` kèm thông báo |
+| `/admin/*` | Chỉ quản trị viên | Chuyển hướng về `/jobs` kèm thông báo |
 
 ## 5. Khoảng trống đã biết
 
