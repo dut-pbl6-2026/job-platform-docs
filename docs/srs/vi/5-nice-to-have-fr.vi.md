@@ -48,6 +48,11 @@ flowchart LR
 
 Trợ lý AI việc làm là một trợ lý trò chuyện giúp người tìm việc với các câu hỏi liên quan đến sự nghiệp. Sử dụng Phương pháp Tăng cường Truy xuất (RAG), nó cung cấp phản hồi nhận biết ngữ cảnh dựa trên dữ liệu việc làm, thông tin công ty và lời khuyên nghề nghiệp chung. Tính năng này thể hiện tích hợp AI hiện đại và cung cấp giá trị đáng kể cho người dùng.
 
+**Tình trạng triển khai (16/11/2026):** các endpoint trò chuyện (`POST /api/ai/chat`, `/api/ai/session*`)
+có trong `ai-svc` và trả lời theo mẫu với nhận diện ý định bằng quy tắc cùng kết quả việc làm theo
+ngữ nghĩa; không có LLM/RAG. Web và mobile không còn hiển thị trợ lý (quyết định của chủ dự án), nên
+không có thành phần nào trong sản phẩm gọi các endpoint này.
+
 #### 5.2.2 Yêu cầu chức năng
 
 | ID | Yêu cầu | Tiêu chí chấp nhận |
@@ -372,6 +377,16 @@ Hỗ trợ đa ngôn ngữ cho phép người dùng tương tác với nền t�
 #### 5.8.1 Mô tả
 
 Tìm kiếm Vector mở rộng Elasticsearch với khả năng tìm kiếm ngữ nghĩa. Thay vì chỉ dựa vào khớp từ khóa, nó sử dụng embeddings để tìm công việc có ý nghĩa tương tự, ngay cả khi từ khóa chính xác không khớp. Điều này cung cấp trải nghiệm tìm kiếm thông minh hơn.
+
+**Tình trạng triển khai (16/11/2026):** VECTOR-01-03/04/05 đã được triển khai trong `search-svc`
+(`SearchJobsAsync`). Ứng viên BM25 và kNN được chuẩn hoá min-max (điểm thô của hai bên không so
+sánh được) rồi hợp nhất với trọng số cấu hình được, mặc định từ khoá 40% / vector 60%. Cùng một bộ
+lọc được áp dụng cho cả hai bộ truy xuất dưới dạng tiền lọc, nên trang đã lọc không bị thiếu kết quả;
+`sortBy` khác `relevance` giữ nguyên thứ tự yêu cầu. Mọi lỗi embedding hoặc kNN đều quay về tìm theo
+từ khoá và ghi cảnh báo. Embedding được tạo cục bộ bằng mô hình ONNX trong `ai-svc` (không gọi
+OpenAI/Gemini, theo ràng buộc dự án). Phân trang vẫn là `page/size` trên danh sách đã hợp nhất, với
+số ứng viên mỗi bên bị giới hạn (mặc định 600). Endpoint thô `GET /api/search/jobs/semantic` vẫn
+giữ để đánh giá; giao diện sản phẩm xếp hạng qua đường hybrid và không cần thay đổi.
 
 #### 5.8.2 Yêu cầu chức năng
 

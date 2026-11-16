@@ -166,4 +166,6 @@ Những phần triển khai **chưa** theo tài liệu này. Client xử lý t�
 | D9 | Đồng bộ search-svc / job-svc | `created_at` trong Elasticsearch bị ghi đè mỗi lần có `job.updated` | shared + job-svc + search-svc: đưa `CreatedAt` vào event và payload đồng bộ |
 | D10 | Lỗi của app-svc | 401/403/409 trả `{ message }` thay vì Problem Details | app-svc (ưu tiên thấp) |
 
-**Đã đặc tả nhưng chưa triển khai** (là tính năng còn thiếu, không phải điểm lệch): `GET /api/search/skills`, `GET /api/search/locations`, facet tìm kiếm, đổi vai trò người dùng ở trang quản trị, `POST /api/admin/categories`, thông báo trong ứng dụng (`/api/notifications`, đăng ký thiết bị, trạng thái đã đọc), WebSocket `/ws/notifications`, chat AI (`/api/ai/chat`, `/api/ai/session*`). Client phải hiển thị các tính năng này là chưa khả dụng và không được giả lập ngoài mock khi phát triển.
+**Đã đặc tả nhưng chưa triển khai** (là tính năng còn thiếu, không phải điểm lệch): `GET /api/search/skills`, `GET /api/search/locations`, facet tìm kiếm, đổi vai trò người dùng ở trang quản trị, `POST /api/admin/categories`, thông báo trong ứng dụng (`/api/notifications`, đăng ký thiết bị, trạng thái đã đọc), WebSocket `/ws/notifications`. Client phải hiển thị các tính năng này là chưa khả dụng và không được giả lập ngoài mock khi phát triển.
+
+Chat AI (`/api/ai/chat`, `/api/ai/session*`) đã được triển khai trong `ai-svc` (mẫu theo quy tắc, không LLM) nhưng **không còn client nào hiển thị** từ 16/11/2026; web và mobile không được đưa trở lại giao diện.

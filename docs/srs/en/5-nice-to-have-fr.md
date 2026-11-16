@@ -48,6 +48,11 @@ flowchart LR
 
 The AI Job Copilot is a conversational assistant that helps job seekers with career-related queries. Using Retrieval-Augmented Generation (RAG), it provides context-aware responses based on job data, company information, and general career advice. This feature demonstrates modern AI integration and provides significant user value.
 
+**Implementation status (2026-11-16):** the chat endpoints (`POST /api/ai/chat`, `/api/ai/session*`)
+exist in `ai-svc` and answer from templates with rule-based intent detection plus semantic job hits;
+there is no LLM/RAG. The web and mobile clients no longer surface the assistant (owner decision), so
+nothing in the product calls these endpoints.
+
 #### 5.2.2 Functional Requirements
 
 | ID | Requirement | Acceptance Criteria |
@@ -372,6 +377,17 @@ Multi-language support enables users to interact with the platform in their pref
 #### 5.8.1 Description
 
 Vector Search extends Elasticsearch with semantic search capabilities. Instead of relying solely on keyword matching, it uses embeddings to find jobs with similar meaning, even if exact keywords don't match. This provides a more intelligent search experience.
+
+**Implementation status (2026-11-16):** VECTOR-01-03/04/05 are implemented in `search-svc`
+(`SearchJobsAsync`). BM25 and kNN candidates are min-max normalised (their raw scores are not
+comparable) and fused with configurable weights, default keyword 40% / vector 60%. The same filters
+are applied to both retrievers as pre-filters, so a filtered page is never short; an explicit
+`sortBy` other than `relevance` keeps the requested order. Any embedding or kNN failure falls back
+to keyword search and logs a warning. Embeddings are generated locally by the ONNX model in
+`ai-svc` (no OpenAI/Gemini call, per project constraint). Pagination stays `page/size` over the
+fused list, with the candidate pool capped (default 600). The raw
+`GET /api/search/jobs/semantic` endpoint remains for evaluation; the product UI ranks through the
+hybrid path and needs no change.
 
 #### 5.8.2 Functional Requirements
 

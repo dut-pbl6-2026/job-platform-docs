@@ -166,4 +166,6 @@ Implementation that does **not** yet follow this document. Clients handle each o
 | D9 | search-svc / job-svc sync | `created_at` in Elasticsearch is overwritten on every `job.updated` | shared + job-svc + search-svc: carry `CreatedAt` in job events and sync payload |
 | D10 | app-svc errors | 401/403/409 return `{ message }` instead of Problem Details | app-svc (low priority) |
 
-**Specified but not implemented yet** (features, not deviations): `GET /api/search/skills`, `GET /api/search/locations`, search facets, admin role change, `POST /api/admin/categories`, in-app notifications (`/api/notifications`, devices, read state), WebSocket `/ws/notifications`, AI chat (`/api/ai/chat`, `/api/ai/session*`). Clients must show these as unavailable and must not simulate them outside development mocks.
+**Specified but not implemented yet** (features, not deviations): `GET /api/search/skills`, `GET /api/search/locations`, search facets, admin role change, `POST /api/admin/categories`, in-app notifications (`/api/notifications`, devices, read state), WebSocket `/ws/notifications`. Clients must show these as unavailable and must not simulate them outside development mocks.
+
+AI chat (`/api/ai/chat`, `/api/ai/session*`) is implemented in `ai-svc` (rule-based templates, no LLM) but **not exposed by any client** since 2026-11-16; web and mobile must not surface it.

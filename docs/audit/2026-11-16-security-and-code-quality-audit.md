@@ -151,7 +151,7 @@ cannot fail is worse than no gate, because it is cited as evidence.
 | M18 | ai-svc accepts a 5 MB DOCX that expands to ~50 MB of XML, parsed twice concurrently in a 1 GB container (OOM risk, magnitude unverified). | `ai-svc` upload path |
 | M19 | Score records keep unmasked CV excerpts for 30 days, contradicting the "never persists CV text" claim. | `ai-svc` retention |
 | M20 | Web de-authenticates the UI on a transient `/auth/me` 5xx while keeping the tokens. | `web/src/contexts/AuthContext.tsx:40-59` |
-| M21 | Web chat streams with raw `fetch`, bypassing refresh-on-401, so the copilot dies when the access token expires. | `web/src/lib/chatApi.ts:298-330` |
+| M21 | Web chat streams with raw `fetch`, bypassing refresh-on-401, so the copilot dies when the access token expires. **Moot 2026-11-16: the chat UI was removed.** | `web/src/lib/chatApi.ts:298-330` |
 | M22 | Recruiter join-request row can double-submit; busy state is keyed to one mutation's variables. | `web/src/pages/RecruiterJoinRequestsPage.tsx:130,179-192` |
 
 ## Low (open, abbreviated)

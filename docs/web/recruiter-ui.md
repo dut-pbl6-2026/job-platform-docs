@@ -35,7 +35,7 @@ The mobile app has a Recruiter role with four working screens. The web app has n
 | `/jobs`, `/jobs/:id` | Public | Guest, any | Board and job detail |
 | `/companies/:id` | Public | Guest, any | Public company profile and its active jobs |
 | `/login`, `/register`, `/register-company`, `/forgot-password`, `/reset-password`, `/verify-email` | Auth | Guest | Sign-in, candidate/company sign-up, verification |
-| `/profile`, `/chat` | Authed | any signed-in | Profile and AI assistant |
+| `/profile` | Authed | any signed-in | Profile (avatar menu); the AI assistant is not surfaced |
 | `/applications`, `/applications/:id`, `/jobs/:id/apply` | Authed | User | Application list/detail and apply flow |
 | `/recruiter` | Workspace | Recruiter | Dashboard (Tổng quan) |
 | `/recruiter/jobs` | Workspace | Recruiter | Job list (Tin tuyển dụng) |

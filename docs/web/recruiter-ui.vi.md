@@ -35,7 +35,7 @@
 | `/jobs`, `/jobs/:id` | Công khai | Khách, mọi vai trò | Bảng việc làm và chi tiết tin |
 | `/companies/:id` | Công khai | Khách, mọi vai trò | Hồ sơ công ty công khai và các tin đang tuyển |
 | `/login`, `/register`, `/register-company`, `/forgot-password`, `/reset-password`, `/verify-email` | Xác thực | Khách | Đăng nhập, đăng ký ứng viên/công ty, xác minh email |
-| `/profile`, `/chat` | Đã đăng nhập | Mọi vai trò | Hồ sơ và trợ lý AI |
+| `/profile` | Đã đăng nhập | Mọi vai trò | Hồ sơ (menu avatar); trợ lý AI không còn hiển thị |
 | `/applications`, `/applications/:id`, `/jobs/:id/apply` | Đã đăng nhập | Ứng viên | Danh sách/chi tiết đơn và luồng ứng tuyển |
 | `/recruiter` | Khu làm việc | Nhà tuyển dụng | Tổng quan |
 | `/recruiter/jobs` | Khu làm việc | Nhà tuyển dụng | Tin tuyển dụng |
