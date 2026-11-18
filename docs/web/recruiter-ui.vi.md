@@ -57,6 +57,10 @@ trong hai khu làm việc). Menu tài khoản nằm sau ảnh đại diện: H�
 Công ty (nhà tuyển dụng), Quản trị (quản trị viên), Trợ lý AI, Đăng xuất. Trang chấm điểm CV của ứng
 viên đã bị bỏ: điểm phù hợp chỉ hiển thị cho nhà tuyển dụng theo từng hồ sơ.
 
+Thanh bên của nhà tuyển dụng gồm: Tổng quan, Ứng viên, Tin tuyển dụng, Lịch phỏng vấn, Mẫu email — rồi
+nhóm **QUẢN TRỊ CÔNG TY** với Công ty (mọi nhà tuyển dụng) và, với quản trị viên công ty, Mã mời và Yêu
+cầu tham gia. Không còn mục "Đăng tin" riêng: đăng tin là hộp thoại mở từ Tin tuyển dụng.
+
 ## 4. Bảo vệ tuyến đường
 
 Việc kiểm tra nằm ở ranh giới khung: `ProtectedRoute` cho đăng nhập và `RequireRole` cho khu vực
@@ -78,9 +82,11 @@ nhà tuyển dụng. **Đăng tin** cũng ba bước: thông tin cơ bản → m
 thoại trên danh sách tin (không còn trang riêng).
 
 Danh sách hồ sơ là bảng. Một dòng mở `/recruiter/applications/:id`: cột trái là thư ứng tuyển và CV đã
-nộp (tải bằng token phiên và hiển thị bằng trình xem PDF của trình duyệt trong `<object>`, không mở tab
-mới và không có nút tải riêng), cột phải là báo cáo đầy đủ của ai-svc đã tạo ra điểm — giống màn hình
-chấm CV thử đã bị xoá, bỏ phần gợi ý cải thiện CV vì người đọc là nhà tuyển dụng. Bấm avatar hoặc tên ứng
+nộp, cột phải là báo cáo đầy đủ của ai-svc đã tạo ra điểm — giống màn hình chấm CV thử đã bị xoá, bỏ
+phần gợi ý cải thiện CV vì người đọc là nhà tuyển dụng. CV được tải bằng token phiên và **render bằng
+pdf.js thành các canvas ngay trong trang**, nên vẫn xem được khi trình duyệt không có trình xem PDF
+(Chrome headless, trình duyệt nhúng): không mở tab mới và không có nút tải riêng. Khi triển khai, worker
+phải nạp được: nginx trả `.mjs` với `application/javascript` và CSP cho phép `worker-src 'self' blob:`. Bấm avatar hoặc tên ứng
 viên, ở bảng hay kanban, mở hồ sơ công khai `/candidates/:id` (không có PII).
 
 | Bề mặt | Route web | Endpoint app-svc |
@@ -94,8 +100,8 @@ viên, ở bảng hay kanban, mở hồ sơ công khai `/candidates/:id` (không
 
 Mỗi buổi phỏng vấn lưu ảnh chụp tên tin, công ty, ứng viên và nhà tuyển dụng, nên lịch và tệp `.ics`
 không phụ thuộc vào thay đổi sau đó. Thư mời luôn kèm tệp `.ics`, nên lịch không có nút tải riêng.
-**Xem CV** tải CV bằng token phiên rồi mở blob trong tab mới để trình xem PDF của trình duyệt hiển
-thị (nếu popup bị chặn thì quay về tải tệp). Thư mời đi qua endpoint nội bộ `POST /api/internal/email` của
+Thao tác CV trên bảng mở trang hồ sơ, nơi CV hiển thị tại chỗ (xem ở trên); trình xem trong trang cũng
+thay thế cách mở tab mới trước đây. Thư mời đi qua endpoint nội bộ `POST /api/internal/email` của
 notif-svc với tệp `text/calendar` theo RFC 5545; lỗi gửi mail không làm mất buổi phỏng vấn đã lưu và API
 trả `inviteSent`. Mẫu email dùng được `{{candidate_name}}`, `{{job_title}}`, `{{recruiter_name}}` và được
 thay ở server. Mẫu là riêng của từng nhà tuyển dụng.

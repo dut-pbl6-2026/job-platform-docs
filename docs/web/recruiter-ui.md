@@ -58,6 +58,10 @@ either console). The signed-in account menu hangs off the avatar: Profile, Appli
 Company (Recruiter), Admin console (Admin), Chat, Sign out. The candidate resume-score page no
 longer exists: a match score is shown to recruiters per application only.
 
+The recruiter sidebar is: Tổng quan, Ứng viên, Tin tuyển dụng, Lịch phỏng vấn, Mẫu email — then the
+**QUẢN TRỊ CÔNG TY** group with Công ty (every recruiter) and, for the company admin, Mã mời and Yêu cầu
+tham gia. There is no separate "Đăng tin" item: posting is the dialog opened from Tin tuyển dụng.
+
 ## 4. Route guards
 
 Guards live at the layout boundary: `ProtectedRoute` for sign-in and `RequireRole` for role-only
@@ -78,10 +82,12 @@ identity into the recruiter's pipeline. **Post job** is likewise three steps: ba
 salary → preview only, inside a dialog on the job list (no separate page).
 
 The applications list is a table. A row opens `/recruiter/applications/:id`: the left column holds the
-cover letter and the submitted CV (fetched with the session token and shown by the browser's PDF viewer
-in an `<object>`, no new tab and no extra download button), the right column holds the full ai-svc report
-that produced the score — the breakdown the removed trial-scoring screen showed, minus the CV-improvement
-suggestions because the reader is the recruiter. Clicking a candidate's avatar or name, in the table or on
+cover letter and the submitted CV, the right column holds the full ai-svc report that produced the score —
+the breakdown the removed trial-scoring screen showed, minus the CV-improvement suggestions because the
+reader is the recruiter. The CV is fetched with the session token and rendered by **pdf.js into canvases
+inside the page**, so it shows even where the browser has no PDF plugin (headless Chrome, embedded
+browsers): no new tab and no separate download button. Deployment needs the worker to load: nginx serves
+`.mjs` as `application/javascript` and the CSP allows `worker-src 'self' blob:`. Clicking a candidate's avatar or name, in the table or on
 the kanban, opens their public profile at `/candidates/:id` (no PII).
 
 | Surface | Web route | app-svc endpoint(s) |
@@ -95,9 +101,9 @@ the kanban, opens their public profile at `/candidates/:id` (no PII).
 
 An interview saves a snapshot of the job title, company, candidate and recruiter identity, so the
 calendar and the `.ics` file do not depend on later edits. The invite always carries the `.ics`
-attachment, so the calendars do not offer a separate download. **Xem CV** fetches the CV with the
-session token and opens the blob in a new tab, where the browser's own PDF viewer renders it (a
-blocked popup falls back to a download). Sending an invite goes through notif-svc's
+attachment, so the calendars do not offer a separate download. The board's CV action opens the
+application page, where the CV renders in place (see above); the in-page viewer also replaced the old
+new-tab preview. Sending an invite goes through notif-svc's
 internal `POST /api/internal/email` with an RFC 5545 `text/calendar` attachment; a mail failure never
 rolls back the saved interview, and the API reports `inviteSent`. Templates may use
 `{{candidate_name}}`, `{{job_title}}` and `{{recruiter_name}}`, resolved on the server. Templates are
