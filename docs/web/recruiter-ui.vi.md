@@ -40,9 +40,10 @@
 | `/interviews` | Đã đăng nhập | Ứng viên | Lịch phỏng vấn của ứng viên |
 | `/recruiter` | Khu làm việc | Nhà tuyển dụng | Tổng quan |
 | `/recruiter/jobs` | Khu làm việc | Nhà tuyển dụng | Tin tuyển dụng |
-| `/recruiter/jobs/new` | Khu làm việc | Nhà tuyển dụng | Đăng tin; tin hiển thị ngay |
-| `/recruiter/candidates` | Khu làm việc | Nhà tuyển dụng | Kanban ứng viên của một tin; kéo thẻ để chuyển bước |
-| `/recruiter/jobs/:jobId/applications` | Khu làm việc | Nhà tuyển dụng | Hồ sơ ứng tuyển của tin, kèm điểm phù hợp, gửi email và đặt lịch |
+| `/recruiter/jobs?new=1`, `/recruiter/jobs?edit=<id>` | Khu làm việc | Nhà tuyển dụng | Wizard đăng/sửa ba bước dưới dạng hộp thoại trên danh sách tin (`/recruiter/jobs/new` và `/:id/edit` chuyển hướng về đây) |
+| `/recruiter/candidates` | Khu làm việc | Nhà tuyển dụng | Kanban ứng viên; kéo để chuyển bước, bấm thẻ để mở hồ sơ, bấm avatar/tên để xem hồ sơ công khai |
+| `/recruiter/jobs/:jobId/applications` | Khu làm việc | Nhà tuyển dụng | Hồ sơ của tin dưới dạng bảng: ứng viên, ngày, điểm AI, trạng thái, thao tác |
+| `/recruiter/applications/:id` | Khu làm việc | Nhà tuyển dụng | Một hồ sơ: báo cáo AI, thư ứng tuyển và CV đã nộp, bố cục hai cột |
 | `/recruiter/interviews` | Khu làm việc | Nhà tuyển dụng | Lịch tháng các buổi phỏng vấn, kèm thao tác huỷ |
 | `/recruiter/email-templates` | Khu làm việc | Nhà tuyển dụng | Mẫu email đã lưu (tạo, sửa, xoá) |
 | `/recruiter/company` | Khu làm việc | Nhà tuyển dụng | Hồ sơ công ty; chỉ quản trị viên công ty được sửa |
@@ -73,7 +74,14 @@ quyền lại ở máy chủ.
 **Ứng tuyển** là wizard ba bước, không phải một biểu mẫu dài: (1) xem lại hồ sơ mà nhà tuyển dụng sẽ
 nhận, kèm danh sách thông tin còn thiếu và bước xác nhận rõ ràng; (2) chọn CV và viết thư giới thiệu nếu
 muốn; (3) xem lại và gửi. Bước hồ sơ là bắt buộc vì đơn ứng tuyển mang danh tính đó vào pipeline của
-nhà tuyển dụng. **Đăng tin** cũng ba bước: thông tin cơ bản → mô tả → lương và xem trước thẻ tin.
+nhà tuyển dụng. **Đăng tin** cũng ba bước: thông tin cơ bản → mô tả kèm lương → chỉ xem trước, trong hộp
+thoại trên danh sách tin (không còn trang riêng).
+
+Danh sách hồ sơ là bảng. Một dòng mở `/recruiter/applications/:id`: cột trái là thư ứng tuyển và CV đã
+nộp (tải bằng token phiên và hiển thị bằng trình xem PDF của trình duyệt trong `<object>`, không mở tab
+mới và không có nút tải riêng), cột phải là báo cáo đầy đủ của ai-svc đã tạo ra điểm — giống màn hình
+chấm CV thử đã bị xoá, bỏ phần gợi ý cải thiện CV vì người đọc là nhà tuyển dụng. Bấm avatar hoặc tên ứng
+viên, ở bảng hay kanban, mở hồ sơ công khai `/candidates/:id` (không có PII).
 
 | Bề mặt | Route web | Endpoint app-svc |
 |---|---|---|

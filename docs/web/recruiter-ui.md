@@ -38,11 +38,13 @@ The mobile app has a Recruiter role with four working screens. The web app has n
 | `/profile` | Authed | any signed-in | Profile (avatar menu); the AI assistant is not surfaced |
 | `/applications`, `/applications/:id`, `/jobs/:id/apply` | Authed | User | Application list/detail and the three-step apply wizard |
 | `/interviews` | Authed | User | The candidate's interview calendar |
+| `/candidates/:id` | Public | anyone | A candidate's public profile (no phone, address or date of birth) |
 | `/recruiter` | Workspace | Recruiter | Dashboard (Tổng quan) |
 | `/recruiter/jobs` | Workspace | Recruiter | Job list (Tin tuyển dụng) |
-| `/recruiter/jobs/new` | Workspace | Recruiter | Post job (Đăng tin); publishes immediately |
-| `/recruiter/candidates` | Workspace | Recruiter | Candidate kanban for one job; drag a card to advance it |
-| `/recruiter/jobs/:jobId/applications` | Workspace | Recruiter | Applications for a job, with the AI match score, email and scheduling actions |
+| `/recruiter/jobs?new=1`, `/recruiter/jobs?edit=<id>` | Workspace | Recruiter | The three-step post/edit wizard as a dialog on the job list (`/recruiter/jobs/new` and `/:id/edit` redirect here) |
+| `/recruiter/candidates` | Workspace | Recruiter | Candidate kanban; drag to advance, click for the application, click the avatar or name for the public profile |
+| `/recruiter/jobs/:jobId/applications` | Workspace | Recruiter | Applications as a table: candidate, date, AI score, status, actions |
+| `/recruiter/applications/:id` | Workspace | Recruiter | One application: AI report, cover letter and the submitted CV in a two-column page |
 | `/recruiter/interviews` | Workspace | Recruiter | Month calendar of scheduled interviews, with cancel |
 | `/recruiter/email-templates` | Workspace | Recruiter | Saved email templates (create, edit, delete) |
 | `/recruiter/company` | Workspace | Recruiter | Company profile; editing is Company Admin only |
@@ -72,8 +74,15 @@ areas. Candidate-only routes redirect away with a notice; app-svc/job-svc re-che
 **Apply** is a three-step wizard, not one long form: (1) review the profile that the recruiter will see,
 with a checklist of missing fields and an explicit confirmation; (2) choose the CV and write an optional
 cover letter; (3) review and submit. The profile step is mandatory because the application carries that
-identity into the recruiter's pipeline. **Post job** is likewise three steps: basics → description →
-salary and a preview of the finished card.
+identity into the recruiter's pipeline. **Post job** is likewise three steps: basics → description with
+salary → preview only, inside a dialog on the job list (no separate page).
+
+The applications list is a table. A row opens `/recruiter/applications/:id`: the left column holds the
+cover letter and the submitted CV (fetched with the session token and shown by the browser's PDF viewer
+in an `<object>`, no new tab and no extra download button), the right column holds the full ai-svc report
+that produced the score — the breakdown the removed trial-scoring screen showed, minus the CV-improvement
+suggestions because the reader is the recruiter. Clicking a candidate's avatar or name, in the table or on
+the kanban, opens their public profile at `/candidates/:id` (no PII).
 
 | Surface | Web route | app-svc endpoint(s) |
 |---|---|---|
