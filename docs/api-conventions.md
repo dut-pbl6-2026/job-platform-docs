@@ -155,7 +155,6 @@ Implementation that does **not** yet follow this document. Clients handle each o
 
 | # | Where | Deviation | Fix (owner repo) |
 |:--|:------|:----------|:-----------------|
-| D1 | search-svc `GET /api/search/jobs` | Returns the Elasticsearch document directly: snake_case (`company_name`, `salary_min`, `currency`, `created_at`), flat company/category | search-svc: add a camelCase `JobSearchItemDto` with nested `company`/`category` and map to it |
 | D2 | job-svc `GET /api/jobs/{id}` | Flat `companyName`/`categoryName`, no nested objects | job-svc: add `company`/`category` objects, keep `categoryName` for ai-svc |
 | D3 | app-svc `GET /api/applications/me`, `/job/{jobId}` | `page` is 1-based, no `totalPages` | app-svc: shared `PaginatedResponse<T>`, 0-based |
 | D4 | auth-svc `GET /api/admin/users` | `{ data, pagination{ page, pageSize, totalItems, totalPages } }`, 1-based, free-text parameter is `search` | auth-svc: §5 envelope, 0-based, accept `q` (keep `search` as a deprecated alias) |

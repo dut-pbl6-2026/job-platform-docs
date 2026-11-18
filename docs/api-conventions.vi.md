@@ -155,7 +155,6 @@ Những phần triển khai **chưa** theo tài liệu này. Client xử lý t�
 
 | # | Ở đâu | Điểm lệch | Cách sửa (repo phụ trách) |
 |:--|:------|:----------|:--------------------------|
-| D1 | search-svc `GET /api/search/jobs` | Trả thẳng document Elasticsearch: snake_case (`company_name`, `salary_min`, `currency`, `created_at`), company/category dạng phẳng | search-svc: thêm `JobSearchItemDto` camelCase có `company`/`category` lồng nhau và map sang |
 | D2 | job-svc `GET /api/jobs/{id}` | `companyName`/`categoryName` dạng phẳng, không có object lồng | job-svc: thêm object `company`/`category`, giữ `categoryName` cho ai-svc |
 | D3 | app-svc `GET /api/applications/me`, `/job/{jobId}` | `page` đếm từ 1, thiếu `totalPages` | app-svc: dùng `PaginatedResponse<T>` chung, đếm từ 0 |
 | D4 | auth-svc `GET /api/admin/users` | `{ data, pagination{ page, pageSize, totalItems, totalPages } }`, đếm từ 1, tham số tìm kiếm là `search` | auth-svc: envelope §5, đếm từ 0, nhận `q` (giữ `search` làm alias deprecated) |
