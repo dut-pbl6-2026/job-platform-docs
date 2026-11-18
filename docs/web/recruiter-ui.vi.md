@@ -37,13 +37,13 @@
 | `/login`, `/register`, `/register-company`, `/forgot-password`, `/reset-password`, `/verify-email` | Xác thực | Khách | Đăng nhập, đăng ký ứng viên/công ty, xác minh email |
 | `/profile` | Đã đăng nhập | Mọi vai trò | Hồ sơ (menu avatar); trợ lý AI không còn hiển thị |
 | `/applications`, `/applications/:id`, `/jobs/:id/apply` | Đã đăng nhập | Ứng viên | Danh sách/chi tiết đơn và luồng ứng tuyển ba bước |
-| `/interviews` | Đã đăng nhập | Ứng viên | Lịch phỏng vấn của ứng viên, tải tệp `.ics` |
+| `/interviews` | Đã đăng nhập | Ứng viên | Lịch phỏng vấn của ứng viên |
 | `/recruiter` | Khu làm việc | Nhà tuyển dụng | Tổng quan |
 | `/recruiter/jobs` | Khu làm việc | Nhà tuyển dụng | Tin tuyển dụng |
 | `/recruiter/jobs/new` | Khu làm việc | Nhà tuyển dụng | Đăng tin; tin hiển thị ngay |
-| `/recruiter/candidates` | Khu làm việc | Nhà tuyển dụng | Kanban ứng viên của một tin; kéo thẻ hoặc dùng menu để chuyển bước |
+| `/recruiter/candidates` | Khu làm việc | Nhà tuyển dụng | Kanban ứng viên của một tin; kéo thẻ để chuyển bước |
 | `/recruiter/jobs/:jobId/applications` | Khu làm việc | Nhà tuyển dụng | Hồ sơ ứng tuyển của tin, kèm điểm phù hợp, gửi email và đặt lịch |
-| `/recruiter/interviews` | Khu làm việc | Nhà tuyển dụng | Lịch tháng các buổi phỏng vấn, huỷ và tải `.ics` |
+| `/recruiter/interviews` | Khu làm việc | Nhà tuyển dụng | Lịch tháng các buổi phỏng vấn, kèm thao tác huỷ |
 | `/recruiter/email-templates` | Khu làm việc | Nhà tuyển dụng | Mẫu email đã lưu (tạo, sửa, xoá) |
 | `/recruiter/company` | Khu làm việc | Nhà tuyển dụng | Hồ sơ công ty; chỉ quản trị viên công ty được sửa |
 | `/recruiter/invite-codes`, `/recruiter/join-requests` | Khu làm việc | Quản trị viên công ty | Mã mời và yêu cầu tham gia công ty |
@@ -85,7 +85,9 @@ nhà tuyển dụng. **Đăng tin** cũng ba bước: thông tin cơ bản → m
 | Chuông thông báo | mọi khung đã đăng nhập | Tổng hợp `GET /api/applications/me`, `GET /api/applications/job/{id}` và `GET /api/interviews`; mốc mở gần nhất lưu theo tài khoản trong `localStorage` |
 
 Mỗi buổi phỏng vấn lưu ảnh chụp tên tin, công ty, ứng viên và nhà tuyển dụng, nên lịch và tệp `.ics`
-không phụ thuộc vào thay đổi sau đó. Thư mời đi qua endpoint nội bộ `POST /api/internal/email` của
+không phụ thuộc vào thay đổi sau đó. Thư mời luôn kèm tệp `.ics`, nên lịch không có nút tải riêng.
+**Xem CV** tải CV bằng token phiên rồi mở blob trong tab mới để trình xem PDF của trình duyệt hiển
+thị (nếu popup bị chặn thì quay về tải tệp). Thư mời đi qua endpoint nội bộ `POST /api/internal/email` của
 notif-svc với tệp `text/calendar` theo RFC 5545; lỗi gửi mail không làm mất buổi phỏng vấn đã lưu và API
 trả `inviteSent`. Mẫu email dùng được `{{candidate_name}}`, `{{job_title}}`, `{{recruiter_name}}` và được
 thay ở server. Mẫu là riêng của từng nhà tuyển dụng.

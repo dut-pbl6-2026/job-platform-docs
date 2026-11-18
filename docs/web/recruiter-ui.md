@@ -37,13 +37,13 @@ The mobile app has a Recruiter role with four working screens. The web app has n
 | `/login`, `/register`, `/register-company`, `/forgot-password`, `/reset-password`, `/verify-email` | Auth | Guest | Sign-in, candidate/company sign-up, verification |
 | `/profile` | Authed | any signed-in | Profile (avatar menu); the AI assistant is not surfaced |
 | `/applications`, `/applications/:id`, `/jobs/:id/apply` | Authed | User | Application list/detail and the three-step apply wizard |
-| `/interviews` | Authed | User | The candidate's interview calendar, with `.ics` downloads |
+| `/interviews` | Authed | User | The candidate's interview calendar |
 | `/recruiter` | Workspace | Recruiter | Dashboard (Tổng quan) |
 | `/recruiter/jobs` | Workspace | Recruiter | Job list (Tin tuyển dụng) |
 | `/recruiter/jobs/new` | Workspace | Recruiter | Post job (Đăng tin); publishes immediately |
-| `/recruiter/candidates` | Workspace | Recruiter | Candidate kanban for one job; drag a card or use its menu to advance it |
+| `/recruiter/candidates` | Workspace | Recruiter | Candidate kanban for one job; drag a card to advance it |
 | `/recruiter/jobs/:jobId/applications` | Workspace | Recruiter | Applications for a job, with the AI match score, email and scheduling actions |
-| `/recruiter/interviews` | Workspace | Recruiter | Month calendar of scheduled interviews, cancel and `.ics` download |
+| `/recruiter/interviews` | Workspace | Recruiter | Month calendar of scheduled interviews, with cancel |
 | `/recruiter/email-templates` | Workspace | Recruiter | Saved email templates (create, edit, delete) |
 | `/recruiter/company` | Workspace | Recruiter | Company profile; editing is Company Admin only |
 | `/recruiter/invite-codes`, `/recruiter/join-requests` | Workspace | Company Admin | Invite codes and company join requests |
@@ -85,7 +85,10 @@ salary and a preview of the finished card.
 | Notification bell | every signed-in shell | Aggregates `GET /api/applications/me`, `GET /api/applications/job/{id}` and `GET /api/interviews`; the last-opened instant is per account in `localStorage` |
 
 An interview saves a snapshot of the job title, company, candidate and recruiter identity, so the
-calendar and the `.ics` file do not depend on later edits. Sending an invite goes through notif-svc's
+calendar and the `.ics` file do not depend on later edits. The invite always carries the `.ics`
+attachment, so the calendars do not offer a separate download. **Xem CV** fetches the CV with the
+session token and opens the blob in a new tab, where the browser's own PDF viewer renders it (a
+blocked popup falls back to a download). Sending an invite goes through notif-svc's
 internal `POST /api/internal/email` with an RFC 5545 `text/calendar` attachment; a mail failure never
 rolls back the saved interview, and the API reports `inviteSent`. Templates may use
 `{{candidate_name}}`, `{{job_title}}` and `{{recruiter_name}}`, resolved on the server. Templates are
