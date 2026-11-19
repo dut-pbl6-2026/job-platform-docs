@@ -65,7 +65,7 @@ These need a decision or an external input. Nothing here can be finished by code
 | C1 | Profile-svc leftovers: avatar URL scheme check, non-root Dockerfile, 404/403 existence check, committed dev connection string. |
 | C2 | job-svc and gateway test layers (contract, unit, integration). |
 | C3 | Translate the 17 Vietnamese Markdown files in docs to English. |
-| C4 | k6 login threshold: change from 800 ms to 1000 ms (PERF-01a). |
+| C4 | k6 login threshold: change from 800 ms to 1000 ms (PERF-01a). Done (PR #17 and k6 test report updated). |
 | C5 | Mobile release signing: release builds must fail without a real keystore. Verify the Gradle guard on a machine with network access. |
 | C6 | Mobile candidate and registration copy: decide Vietnamese or English for the new strings (Vietnamese chosen; implement). |
 | C7 | Crawler: remaining Medium items after the external-event change. |
