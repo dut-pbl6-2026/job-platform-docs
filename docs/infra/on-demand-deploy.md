@@ -38,7 +38,7 @@ is optional: only an `A` record is needed, managed with `scripts/cloudflare-dns.
 az login
 scripts/preflight.sh
 
-# Creates RG, VNet/NSG, static IP + DNS label, VM (Docker via cloud-init), nightly auto-shutdown.
+# Creates RG, VNet/NSG, static IP + DNS label, VM (Docker via cloud-init). No auto-shutdown.
 # Writes envs/azure.local, generates envs/.env.prod, upserts DNS, then deallocates the VM.
 scripts/stack.sh bootstrap --domain demo.example.com
 
@@ -63,13 +63,15 @@ scripts/stack.sh down      # deallocate, data stays
 | Convenience | Effect |
 |---|---|
 | `mise run stack-up` / `stack-down` / `stack-status` | same commands |
-| `stack.sh up --hours 4` | daily auto-shutdown four hours from now (long demo) |
+| `stack.sh up --hours 4` | opt into a daily auto-shutdown four hours from now (long demo) |
 | `stack.sh down --clean` | stop the containers first, then deallocate (volumes never removed) |
 | `stack.sh logs gateway` | follow one service's logs over SSH |
 | `stack.sh url` | print the public URL |
 | `stack.sh destroy` | delete VM, disk, IP and data (asks for the resource group name) |
 
-A nightly auto-shutdown (22:00 Vietnam by default) is the safety net for a forgotten `down`.
+There is no automatic shutdown by default: stopping is an explicit `stack.sh down`. If you want a
+net for a long demo, `up --hours N` arms a recurring daily shutdown; remember it repeats every day
+until changed or removed.
 
 ## 4.1 Email (SMTP) through gcloud
 

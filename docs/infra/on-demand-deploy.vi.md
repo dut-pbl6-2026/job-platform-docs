@@ -38,7 +38,7 @@ Không dùng wrangler (Workers/Pages).
 az login
 scripts/preflight.sh
 
-# Tạo RG, VNet/NSG, IP tĩnh + DNS label, VM (Docker qua cloud-init), lịch tự tắt hằng đêm.
+# Tạo RG, VNet/NSG, IP tĩnh + DNS label, VM (Docker qua cloud-init). Không có lịch tự tắt.
 # Ghi envs/azure.local, sinh envs/.env.prod, cập nhật DNS, rồi deallocate VM.
 scripts/stack.sh bootstrap --domain demo.example.com
 
@@ -63,13 +63,14 @@ scripts/stack.sh down      # deallocate, dữ liệu giữ nguyên
 | Tiện ích | Tác dụng |
 |---|---|
 | `mise run stack-up` / `stack-down` / `stack-status` | các lệnh tương đương |
-| `stack.sh up --hours 4` | đặt tự tắt hằng ngày sau 4 giờ (buổi demo dài) |
+| `stack.sh up --hours 4` | chủ động bật lịch tự tắt hằng ngày sau 4 giờ (buổi demo dài) |
 | `stack.sh down --clean` | dừng container trước rồi deallocate (không bao giờ xoá volume) |
 | `stack.sh logs gateway` | theo dõi log một service qua SSH |
 | `stack.sh url` | in URL công khai |
 | `stack.sh destroy` | xoá VM, đĩa, IP và dữ liệu (phải gõ tên resource group) |
 
-Lịch tự tắt hằng đêm (mặc định 22:00 giờ Việt Nam) là lưới an toàn khi quên `down`.
+Mặc định không có lịch tự tắt: dừng là thao tác chủ động `stack.sh down`. Nếu muốn lưới an toàn cho
+buổi demo dài, `up --hours N` bật lịch tắt lặp hằng ngày; lịch này lặp mỗi ngày cho tới khi đổi hoặc bỏ.
 
 ## 4.1 Email (SMTP) qua gcloud
 
