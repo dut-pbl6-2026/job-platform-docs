@@ -12,7 +12,7 @@ tuần mà giữa các buổi không mang lại giá trị gì.
 
 | Trạng thái | Thành phần chạy | Chi phí |
 |---|---|---|
-| Bật (`stack.sh up`) | 1 VM `Standard_B2ms` + toàn bộ compose (Postgres, Redis, Elasticsearch, Kafka, 9 service, Caddy) | ~$0.09/giờ |
+| Bật (`stack.sh up`) | 1 VM `Standard_B2s_v2` + toàn bộ compose (Postgres, Redis, Elasticsearch, Kafka, 9 service, Caddy) | ~$0.09/giờ |
 | Tắt (`stack.sh down`, mặc định) | không có gì; chỉ còn đĩa OS + IP công khai tĩnh | ~$5–8 + ~$3.6 mỗi tháng |
 
 Dữ liệu (database, tệp CV, chứng chỉ Caddy) nằm trên đĩa VM, nên một chu kỳ tắt/bật vẫn giữ nguyên
@@ -111,6 +111,5 @@ SSL/TLS là Full (strict); chế độ Flexible sẽ lặp vô hạn vì Caddy c
 - `deploy.sh` từ chối tag `latest` và mọi giá trị placeholder.
 - `destroy` buộc gõ tên resource group; mọi lệnh khác đều có thể đảo ngược.
 - `--dry-run` có ở cả `stack.sh` và `deploy.sh`.
-- CI tương đương (`terraform.yml`, `deploy-azure.yml`) chỉ chạy thủ công (`workflow_dispatch`), nên CI
-  không tự bật VM.
+- `job-platform-infra` không có CI/CD: không có gì tự bật VM hay tiêu credit khi push.
 - Không bao giờ chạy `docker compose down -v` trên VM: sẽ mất dữ liệu demo và chứng chỉ.

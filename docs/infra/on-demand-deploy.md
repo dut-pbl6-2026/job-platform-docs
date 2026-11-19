@@ -12,7 +12,7 @@ running 24/7 would consume a student credit in a few weeks and provide no value 
 
 | State | What runs | Cost |
 |---|---|---|
-| On (`stack.sh up`) | 1 × `Standard_B2ms` VM + full compose stack (Postgres, Redis, Elasticsearch, Kafka, 9 services, Caddy) | ~$0.09/h |
+| On (`stack.sh up`) | 1 × `Standard_B2s_v2` VM + full compose stack (Postgres, Redis, Elasticsearch, Kafka, 9 services, Caddy) | ~$0.09/h |
 | Off (`stack.sh down`, default) | nothing; OS disk + static public IP remain | ~$5–8 + ~$3.6 per month |
 
 Data (databases, CV files, Caddy certificate) lives on the VM disk, so an off/on cycle keeps the same
@@ -111,6 +111,5 @@ unless SSL/TLS mode is Full (strict); Flexible loops on the HTTPS redirect.
 - `deploy.sh` refuses `latest` and any placeholder value.
 - `destroy` requires typing the resource group; every other command is reversible.
 - `--dry-run` exists on `stack.sh` and `deploy.sh`.
-- The CI equivalents (`terraform.yml`, `deploy-azure.yml`) are manual (`workflow_dispatch`), so CI does
-  not start the VM by itself.
+- There is no CI/CD in `job-platform-infra`: nothing starts the VM or spends credit on a push.
 - Never `docker compose down -v` on the VM: it would delete the demo data and the certificate.
