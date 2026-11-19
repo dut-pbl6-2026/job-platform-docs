@@ -101,10 +101,14 @@ automatically and never pins `latest`, so two `up` runs without new images resta
 
 ## 6. Public edge
 
-Caddy is the only published container (80 for ACME/redirect, 443 TLS/HSTS). The hostname must have an
-`A` record pointing at the VM's **static** IP before the first `up`; Caddy obtains and renews the
-Let's Encrypt certificate in the `caddy_data` volume. Keep the record DNS-only (Cloudflare proxy off)
-unless SSL/TLS mode is Full (strict); Flexible loops on the HTTPS redirect.
+Caddy is the only published container (80 for ACME/redirect, 443 TLS/HSTS). The hostname has an `A`
+record pointing at the VM's **static** IP; Caddy obtains and renews the Let's Encrypt certificate in
+the `caddy_data` volume.
+
+The record is proxied through Cloudflare (orange cloud) with SSL/TLS mode **Full (strict)**. Caddy
+trusts Cloudflare's published ranges and reads `CF-Connecting-IP`, so the gateway and auth-svc
+rate-limit the real client rather than one edge IP; refresh that CIDR list when it changes. Flexible
+mode loops on Caddy's HTTPS redirect. DNS-only also works if direct TLS is preferred.
 
 ## 7. Guardrails
 

@@ -101,10 +101,14 @@ không có image mới sẽ chạy đúng bản cũ.
 
 ## 6. Edge công khai
 
-Caddy là container duy nhất mở cổng (80 cho ACME/chuyển hướng, 443 TLS/HSTS). Hostname phải có bản
-ghi `A` trỏ tới IP **tĩnh** của VM trước lần `up` đầu tiên; Caddy lấy và gia hạn chứng chỉ Let's
-Encrypt trong volume `caddy_data`. Giữ bản ghi ở chế độ DNS-only (tắt proxy Cloudflare) trừ khi đặt
-SSL/TLS là Full (strict); chế độ Flexible sẽ lặp vô hạn vì Caddy chuyển hướng HTTPS.
+Caddy là container duy nhất mở cổng (80 cho ACME/chuyển hướng, 443 TLS/HSTS). Hostname có bản ghi
+`A` trỏ tới IP **tĩnh** của VM; Caddy lấy và gia hạn chứng chỉ Let's Encrypt trong volume
+`caddy_data`.
+
+Bản ghi đang đi qua Cloudflare (bật proxy) với SSL/TLS **Full (strict)**. Caddy tin các dải IP của
+Cloudflare và đọc `CF-Connecting-IP`, nên gateway và auth-svc vẫn giới hạn theo IP thật của người
+dùng thay vì một IP edge; nhớ cập nhật danh sách CIDR khi Cloudflare thay đổi. Chế độ Flexible sẽ
+lặp vô hạn vì Caddy chuyển hướng HTTPS. DNS-only cũng dùng được nếu muốn TLS trực tiếp.
 
 ## 7. Chốt an toàn
 
