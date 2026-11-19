@@ -84,10 +84,13 @@ salary → preview only, inside a dialog on the job list (no separate page).
 The applications list is a table. A row opens `/recruiter/applications/:id`: the left column holds the
 cover letter and the submitted CV, the right column holds the full ai-svc report that produced the score —
 the breakdown the removed trial-scoring screen showed, minus the CV-improvement suggestions because the
-reader is the recruiter. The CV is fetched with the session token and rendered by **pdf.js into canvases
-inside the page**, so it shows even where the browser has no PDF plugin (headless Chrome, embedded
-browsers): no new tab and no separate download button. Deployment needs the worker to load: nginx serves
-`.mjs` as `application/javascript` and the CSP allows `worker-src 'self' blob:`. Clicking a candidate's avatar or name, in the table or on
+reader is the recruiter. The CV is fetched with the session token and shown in the page, never in a new
+tab and with no separate download button. If the browser has its own PDF viewer
+(`navigator.pdfViewerEnabled`) the file is embedded in an `iframe`, so the viewer's **frame** stays —
+page navigation, zoom, print and save. Where there is no viewer (headless Chrome, embedded browsers)
+**pdf.js renders the pages into canvases** instead, so the CV is never a blank box. Deployment needs
+both paths to load: nginx serves `.mjs` as `application/javascript`, and the CSP allows
+`worker-src 'self' blob:` and `frame-src 'self' blob:`. Clicking a candidate's avatar or name, in the table or on
 the kanban, opens their public profile at `/candidates/:id` (no PII).
 
 | Surface | Web route | app-svc endpoint(s) |

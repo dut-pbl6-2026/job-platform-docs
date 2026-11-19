@@ -83,10 +83,12 @@ thoại trên danh sách tin (không còn trang riêng).
 
 Danh sách hồ sơ là bảng. Một dòng mở `/recruiter/applications/:id`: cột trái là thư ứng tuyển và CV đã
 nộp, cột phải là báo cáo đầy đủ của ai-svc đã tạo ra điểm — giống màn hình chấm CV thử đã bị xoá, bỏ
-phần gợi ý cải thiện CV vì người đọc là nhà tuyển dụng. CV được tải bằng token phiên và **render bằng
-pdf.js thành các canvas ngay trong trang**, nên vẫn xem được khi trình duyệt không có trình xem PDF
-(Chrome headless, trình duyệt nhúng): không mở tab mới và không có nút tải riêng. Khi triển khai, worker
-phải nạp được: nginx trả `.mjs` với `application/javascript` và CSP cho phép `worker-src 'self' blob:`. Bấm avatar hoặc tên ứng
+phần gợi ý cải thiện CV vì người đọc là nhà tuyển dụng. CV được tải bằng token phiên và hiển thị ngay
+trong trang, không mở tab mới và không có nút tải riêng. Nếu trình duyệt có trình xem PDF
+(`navigator.pdfViewerEnabled`), tệp nằm trong `iframe` nên **giữ được khung của trình duyệt** — chuyển
+trang, phóng to, in và lưu. Nơi không có trình xem (Chrome headless, trình duyệt nhúng), **pdf.js render
+thành các canvas** để CV không bao giờ là ô trống. Khi triển khai cần cả hai đường nạp: nginx trả `.mjs`
+với `application/javascript`, CSP cho phép `worker-src 'self' blob:` và `frame-src 'self' blob:`. Bấm avatar hoặc tên ứng
 viên, ở bảng hay kanban, mở hồ sơ công khai `/candidates/:id` (không có PII).
 
 | Bề mặt | Route web | Endpoint app-svc |
